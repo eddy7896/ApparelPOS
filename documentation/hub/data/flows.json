@@ -1,0 +1,18 @@
+{
+  "updatedAt": "2026-11-17",
+  "legend": [{ "label": "Built and tested", "class": "built" }, { "label": "Planned, nothing built yet", "class": "plan" }],
+  "diagrams": [
+    {
+      "id": "connect", "title": "How the pieces connect",
+      "note": "Nothing is built yet. Dashed lines are release 2 (sync, cloud, mobile app). Not shown: backups.",
+      "kind": "mermaid",
+      "source": "flowchart LR\n  C1[\"pos_windows counter 1<br/>encrypted SQLite\"]:::plan -. \"sync, release 2\" .-> F[(\"Firestore + Auth\")]:::plan\n  C2[\"Future counter 2\"]:::plan -.-> F\n  M[\"manager_mobile\"]:::plan -.-> F\n  F -.->|commands| C1\n  classDef built fill:#dcf4e7,stroke:#0f7a4a\n  classDef plan fill:#eceef6,stroke:#9aa1bd,stroke-dasharray: 4 3"
+    },
+    {
+      "id": "sale", "title": "What happens in one sale",
+      "note": "Not shown: payment details and receipt printing.",
+      "kind": "mermaid",
+      "source": "flowchart LR\n  S[\"Scan barcode\"]:::plan --> R[\"core_domain prices the cart\"]:::plan --> T[\"One local transaction: sale, items, daybook, audit, outbox\"]:::plan --> A[\"Article marked SOLD\"]:::plan\n  classDef built fill:#dcf4e7,stroke:#0f7a4a\n  classDef plan fill:#eceef6,stroke:#9aa1bd,stroke-dasharray: 4 3"
+    }
+  ]
+}
