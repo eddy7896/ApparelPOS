@@ -7,7 +7,7 @@
     },
     {
       "tone": "warn",
-      "text": "PR #4 (feat/p1-1-money into develop) is open for the owner to review."
+      "text": "PR #5 (feat/p1-2-barcodes into develop) is open for the owner to review."
     }
   ],
   "branches": [
@@ -20,8 +20,8 @@
       "note": "integration"
     },
     {
-      "name": "feat/p1-1-money",
-      "note": "PR #4"
+      "name": "feat/p1-2-barcodes",
+      "note": "PR #5"
     }
   ],
   "ledger": [
@@ -43,6 +43,11 @@
     {
       "pr": "#4",
       "title": "P1-1: Money type in integer paise",
+      "state": "merged"
+    },
+    {
+      "pr": "#5",
+      "title": "P1-2: Barcode encoder and lot ranges",
       "state": "open"
     }
   ],
@@ -53,7 +58,7 @@
   "ownerActions": [
     "Switch on branch protection for main and develop in GitHub.",
     "Review ADR-0006, ADR-0013 and ADR-0014 (Proposed).",
-    "Review and merge PR #4; confirm negative-amount rounding in ADR-0007 point 9.",
+    "Review and merge PR #5; confirm Luhn as the check digit and negative-amount rounding (ADR-0006 point 7, ADR-0007 point 9).",
     "Tell us the printer and scanner models when known."
   ]
 }

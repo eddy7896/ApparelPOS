@@ -9,6 +9,7 @@ Purpose: one definition per term.
 | Batch | One purchase receipt (GRN) with a code `YYMM` + 3-digit lot | lot (lot is the 3-digit part) |
 | Blind close | Cash close where the cashier enters denominations and does not see the expected amount | |
 | Counter | One billing station with its own local database and `counterId` | till, terminal |
+| Lot | A 3-digit number in the barcode; each counter owns a range of lots so counters never issue the same barcode | batch (a purchase entry; one lot is used at a time) |
 | Credit note | Barcode voucher issued on a return, with an expiry | store credit |
 | Daybook | Ledger of all money movements | |
 | GRN | Goods received note: entry of new stock | |

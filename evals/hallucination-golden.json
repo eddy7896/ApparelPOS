@@ -10,7 +10,7 @@
     { "id": "G-06", "severity": "critical", "type": "fact", "question": "What is the minimum cashier PIN length?", "mustInclude": [["6", "six"]] },
     { "id": "G-07", "severity": "critical", "type": "fact", "question": "Can the same barcode be sold twice?", "mustInclude": [["no", "cannot"], ["sold"]] },
     { "id": "G-08", "severity": "high", "type": "fact", "question": "How do multiple counters avoid issuing the same barcode?", "mustInclude": [["range"], ["counter"]] },
-    { "id": "G-09", "severity": "high", "type": "fact", "question": "What is the barcode format?", "mustInclude": [["11"], ["yymm"], ["lot"], ["serial"]] },
+    { "id": "G-09", "severity": "high", "type": "fact", "question": "What is the barcode format?", "mustInclude": [["12"], ["yymm"], ["lot"], ["serial"], ["check"]] },
     { "id": "G-10", "severity": "high", "type": "fact", "question": "What happens if the same garment is sold on two counters while offline?", "mustInclude": [["earlier", "first"], ["flag"]] },
     { "id": "G-11", "severity": "high", "type": "fact", "question": "Is GST enabled by default?", "mustInclude": [["no", "off"], ["default"]] },
     { "id": "G-12", "severity": "high", "type": "fact", "question": "Who chooses inclusive or exclusive GST billing, and when?", "mustInclude": [["owner"], ["setup", "enable"]] },
