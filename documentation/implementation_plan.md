@@ -19,12 +19,12 @@ Purpose: phases and task IDs. Size S <= 1 day, M <= 3 days, L <= 1 week. Phases 
 | P0-2 | Documents and ADRs | M | Gate 3 passed | Gate 2 | done |
 | P0-3 | Drift check, evals, golden set | M | Gate 4 green | P0-2 | done |
 | P0-4 | Branching, CI, PR template | S | Gate 5 | P0-3 | done |
-| P0-5 | Skeletons for `pos_windows`, `core_domain` that build and test | M | builds on Windows (unverified) | P0-4 | doing |
+| P0-5 | Skeletons for `pos_windows`, `core_domain` that build and test | M | builds on Windows (unverified) | P0-4 | done |
 
 ## P1 core domain
 | ID | Task | Size | Acceptance | Depends on | Status |
 |---|---|---|---|---|---|
-| P1-1 | Money type and rounding in paise | S | E-MONEY-1 | P0-5 | todo |
+| P1-1 | Money type and rounding in paise | S | E-MONEY-1 | P0-5 | doing |
 | P1-2 | Barcode encoder and serial ranges | M | E-SERIAL-1 | P1-1 | todo |
 | P1-3 | Pricing engine (MRP, markdown) | M | unit tests | P1-1 | todo |
 | P1-4 | Permission matrix | S | E-AUTHZ-2 | P0-5 | todo |

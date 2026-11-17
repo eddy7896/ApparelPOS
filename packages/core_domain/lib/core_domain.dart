@@ -2,5 +2,7 @@
 /// Money is integer paise; there is no `double` in money code (E-MONEY-1).
 library;
 
+export 'src/money.dart';
+
 /// Version marker so the skeleton has something to test. Real rules start in P1-1.
 const String coreDomainSkeletonVersion = '0.0.1';

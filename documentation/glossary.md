@@ -15,6 +15,7 @@ Purpose: one definition per term.
 | Manager Mode | Counter app mode for the owner, with cost and reports | admin |
 | MRP | Maximum retail price printed on the hangtag | |
 | Paise | Integer money unit; 100 paise = 1 rupee | decimals |
+| Basis points | Percentage as an integer; 100 basis points = 1% (5% is 500). Used so percentages never need a float | percent as decimal |
 | Sales Mode | Counter app mode for the cashier, with no cost data | |
 | Serial range | Block of barcode serials reserved for one counter | |
 | Shift | Period a cashier works between opening and blind close | |
