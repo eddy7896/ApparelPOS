@@ -1,0 +1,19 @@
+{
+  "items": [
+    { "term": "ADR", "definition": "Architecture Decision Record: one decision, why, and what follows. An accepted ADR outranks code and chat.", "group": "Process" },
+    { "term": "Article", "definition": "One physical garment with its own barcode.", "group": "Apparel PoS" },
+    { "term": "Batch", "definition": "One purchase receipt (GRN) with a code of YYMM plus a 3-digit lot.", "group": "Apparel PoS" },
+    { "term": "Blind close", "definition": "Cash close where the cashier enters denominations and does not see the expected amount.", "group": "Apparel PoS" },
+    { "term": "Counter", "definition": "One billing station with its own local database and counter ID.", "group": "Apparel PoS" },
+    { "term": "Credit note", "definition": "Barcode voucher issued on a return, with an expiry date.", "group": "Apparel PoS" },
+    { "term": "Daybook", "definition": "Ledger of all money movements.", "group": "Apparel PoS" },
+    { "term": "GRN", "definition": "Goods received note: entry of new stock.", "group": "Apparel PoS" },
+    { "term": "Manager Mode", "definition": "Counter app mode for the owner, with cost data and reports.", "group": "Apparel PoS" },
+    { "term": "MRP", "definition": "Maximum retail price printed on the hangtag.", "group": "Apparel PoS" },
+    { "term": "Paise", "definition": "Integer money unit; 100 paise is 1 rupee.", "group": "Apparel PoS" },
+    { "term": "Sales Mode", "definition": "Counter app mode for the cashier, with no cost data.", "group": "Apparel PoS" },
+    { "term": "Serial range", "definition": "Block of barcode serials reserved for one counter.", "group": "Apparel PoS" },
+    { "term": "Shift", "definition": "Period a cashier works between opening and blind close.", "group": "Apparel PoS" },
+    { "term": "Variant", "definition": "A product in one size and color with its price.", "group": "Apparel PoS" }
+  ]
+}

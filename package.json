@@ -1,0 +1,12 @@
+{
+  "name": "apparel-pos-checks",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check:drift": "node tools/checks/drift-check.mjs --config tools/checks/drift-config.json",
+    "check:project-rules": "node tools/checks/project-rules.mjs",
+    "eval:hallucination": "node evals/grade-answers.mjs evals/hallucination-golden.json evals/ideal-answers.json",
+    "check:branch": "node tools/checks/branch-policy.mjs --config tools/checks/branch-policy.json",
+    "test:checks": "node --test tools/checks/scripts.test.mjs tools/checks/project-rules.test.mjs tools/checks/branch-policy-simple.test.mjs"
+  }
+}

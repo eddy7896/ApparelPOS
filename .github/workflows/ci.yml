@@ -1,0 +1,31 @@
+name: ci
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [develop]
+permissions:
+  contents: read
+jobs:
+  branch-policy:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm run check:branch
+  build-lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm run check:drift
+      - run: npm run check:project-rules
+      - run: npm run eval:hallucination
+      - run: npm run test:checks

@@ -1,0 +1,8 @@
+{
+  "plannedPaths": ["apps", "packages", "firebase", "evals/hallucination-golden.json", ".github"],
+  "pathRoots": ["apps", "packages", "tools", "evals", "firebase"],
+  "ignorePathPatterns": ["^(feat|fix|chore|cross|hotfix)/", "^stores/", "^claude\\.ai/", "^github\\.com/"],
+  "pathCheckExemptDocs": ["documentation/templates", "documentation/task_runs"],
+  "bannedDependencies": ["sqflite_common_ffi_unencrypted", "express", "mongoose"],
+  "knownDebt": {}
+}

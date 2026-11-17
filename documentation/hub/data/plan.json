@@ -1,0 +1,26 @@
+{
+  "updatedAt": "2026-11-17T18:55:00Z",
+  "items": [
+    { "id": "P0-1", "name": "Repo and workspace tooling", "phase": 0, "phaseName": "Foundation", "milestone": "", "order": 1, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P0-2", "name": "Documents and ADRs", "phase": 0, "phaseName": "Foundation", "milestone": "", "order": 2, "status": "done", "pct": 100, "pr": "" },
+    { "id": "P0-3", "name": "Drift check, evals, golden set", "phase": 0, "phaseName": "Foundation", "milestone": "", "order": 3, "status": "done", "pct": 100, "pr": "" },
+    { "id": "P0-4", "name": "Branching, CI, PR template", "phase": 0, "phaseName": "Foundation", "milestone": "", "order": 4, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P0-5", "name": "Skeletons for pos_windows and core_domain", "phase": 0, "phaseName": "Foundation", "milestone": "", "order": 5, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P1-1", "name": "Money type and rounding in paise", "phase": 1, "phaseName": "Core domain", "milestone": "", "order": 10, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P1-2", "name": "Barcode encoder and serial ranges", "phase": 1, "phaseName": "Core domain", "milestone": "", "order": 11, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P1-3", "name": "Pricing engine (MRP, markdown)", "phase": 1, "phaseName": "Core domain", "milestone": "", "order": 12, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P1-4", "name": "Permission matrix", "phase": 1, "phaseName": "Core domain", "milestone": "", "order": 13, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P1-5", "name": "PDF hangtag builder", "phase": 1, "phaseName": "Core domain", "milestone": "", "order": 14, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P2-1", "name": "Drift tables, WAL, migrations", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 20, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P2-2", "name": "Lock screen, auth, idle lock", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 21, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P2-3", "name": "Stock entry (GRN matrix) and labels", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 22, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P2-4", "name": "Billing register", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 23, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P2-5", "name": "Returns and credit notes", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 24, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P2-6", "name": "Blind shift close and daybook", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 25, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P2-7", "name": "Owner reports (daily)", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 26, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P3-1", "name": "SQLCipher encryption spike and rollout", "phase": 3, "phaseName": "Go-live hardening", "milestone": "", "order": 30, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P3-2", "name": "Daily backup and restore test", "phase": 3, "phaseName": "Go-live hardening", "milestone": "", "order": 31, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P3-3", "name": "Installer and runbook", "phase": 3, "phaseName": "Go-live hardening", "milestone": "", "order": 32, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P3-4", "name": "GST toggle scaffold (settings, tax fields)", "phase": 3, "phaseName": "Go-live hardening", "milestone": "", "order": 33, "status": "todo", "pct": 0, "pr": "" }
+  ]
+}

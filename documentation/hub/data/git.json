@@ -1,0 +1,8 @@
+{
+  "readAt": "not read: the repository has not been cloned in this workspace (2026-11-17)",
+  "status": [{ "tone": "bad", "text": "Unverified: git facts not read. https://github.com/eddy7896/ApparelPOS.git has not been cloned yet." }],
+  "branches": [],
+  "ledger": [],
+  "rules": ["Never push to main or develop directly.", "The owner merges and releases; the agent only opens pull requests."],
+  "ownerActions": ["Switch on branch protection for main and develop in GitHub.", "Review ADR-0006, ADR-0013 and ADR-0014 (Proposed)."]
+}
