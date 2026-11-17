@@ -1,16 +1,17 @@
 {
   "kitVersion": "0.9",
-  "phase": "4",
-  "gate": "5",
+  "phase": "complete",
+  "gate": "none",
   "gateStatus": "working",
   "passedGates": [
     { "gate": "1", "by": "owner", "on": "2026-11-17" },
     { "gate": "2", "by": "owner", "on": "2026-11-17" },
     { "gate": "3", "by": "owner", "on": "2026-11-17" },
     { "gate": "3b", "by": "owner", "on": "2026-11-17" },
-    { "gate": "4", "by": "owner", "on": "2026-11-17" }
+    { "gate": "4", "by": "owner", "on": "2026-11-17" },
+    { "gate": "5", "by": "owner", "on": "2026-11-18" }
   ],
-  "nextStep": "Write branch policy config, CI workflow, PR template, CODEOWNERS; clone the repo, push a branch, open the first pull request",
+  "nextStep": "Phase 5: start P0-5 (skeletons for pos_windows and core_domain) on a feat branch from develop; owner still to switch on branch protection",
   "interviewNotes": [],
   "openQuestions": ["Review ADR-0006, 0013, 0014 (still Proposed)", "Printer and scanner models (owner will tell us later)"],
   "updatedAt": "2026-11-17T19:35:00Z"

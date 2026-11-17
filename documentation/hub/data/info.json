@@ -1,1 +1,1 @@
-{ "title": "Apparel PoS Hub", "subtitle": "Progress, screens, architecture and decisions for the shop billing system.", "repo": "https://github.com/eddy7896/ApparelPOS.git", "demoNote": "No demo yet: nothing is built." }
+{ "title": "Apparel PoS Hub", "subtitle": "Progress, screens, architecture and decisions for the shop billing system.", "repo": "https://github.com/eddy7896/ApparelPOS.git", "demoNote": "No demo yet: only empty skeletons exist (not run on Windows)." }

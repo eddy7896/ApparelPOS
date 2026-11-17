@@ -15,9 +15,10 @@ Also: `documentation/system_context.md`, `eval_plan.md`, `agent_contexts.md`, `g
 ## Current reality
 | Exists | Planned (do not assume it exists) |
 |---|---|
-| Documents and ADRs in `documentation/` | All code, `packages/`, `apps/`, `firebase/` |
+| Documents and ADRs in `documentation/` | `firebase/`, `packages/sync_engine`, `apps/manager_mobile`, all business rules |
+| `packages/core_domain` skeleton (pure Dart, 1 test) and `apps/pos_windows` skeleton (1 widget test) | |
 | Check scripts in `tools/checks/`, `evals/`, `tools/hub/`; Project Hub in `documentation/hub/` | CI workflows, PR template (Gate 5) |
-| | Flutter and Dart in the workspace (not installed; unverified) |
+| Dart 3.13.4 and Flutter 3.47.5 on the macOS dev machine | A Windows build or run of `pos_windows` (unverified: no Windows machine used yet) |
 
 ## Commands
 - `npm run check:drift` runs `node tools/checks/drift-check.mjs` (documents vs files).
@@ -25,7 +26,8 @@ Also: `documentation/system_context.md`, `eval_plan.md`, `agent_contexts.md`, `g
 - `npm run eval:hallucination` grades the golden set against `evals/ideal-answers.json`.
 - `npm run test:checks` runs the tests of the check scripts.
 - `npm run check:branch` checks a pull request's branch edge (CI sets the branch names).
-- Planned (do not assume they exist): `dart test`, `flutter analyze`, `flutter run -d windows`.
+- `dart pub get`, `dart analyze`, `dart test` in `packages/core_domain`; `flutter pub get`, `flutter analyze`, `flutter test` in `apps/pos_windows`. Each folder is set up on its own (no workspace).
+- Planned (do not assume they exist): `flutter run -d windows`, `flutter build windows`.
 
 ## Non-negotiable rules
 1. Billing never needs the internet. Review only until E-OFFLINE-1 exists.
