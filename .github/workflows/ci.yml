@@ -29,3 +29,28 @@ jobs:
       - run: npm run check:project-rules
       - run: npm run eval:hallucination
       - run: npm run test:checks
+  dart-flutter-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.5
+          cache: true
+      - run: flutter --version
+      - name: core_domain analyze and test
+        working-directory: packages/core_domain
+        run: |
+          dart pub get
+          dart analyze
+          dart test
+      - name: pos_windows analyze and test
+        working-directory: apps/pos_windows
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+      - name: pos_windows build (Windows release)
+        working-directory: apps/pos_windows
+        run: flutter build windows --release

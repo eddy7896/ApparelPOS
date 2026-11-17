@@ -17,8 +17,8 @@ Also: `documentation/system_context.md`, `eval_plan.md`, `agent_contexts.md`, `g
 |---|---|
 | Documents and ADRs in `documentation/` | `firebase/`, `packages/sync_engine`, `apps/manager_mobile`, all business rules |
 | `packages/core_domain`: `Money` (integer paise, half-up percent rounding) with 15 tests and `apps/pos_windows` skeleton (1 widget test) | |
-| Check scripts in `tools/checks/`, `evals/`, `tools/hub/`; Project Hub in `documentation/hub/` | CI workflows, PR template (Gate 5) |
-| Dart 3.13.4 and Flutter 3.47.5 on the macOS dev machine | A Windows build or run of `pos_windows` (unverified: no Windows machine used yet) |
+| Check scripts in `tools/checks/`, `evals/`, `tools/hub/`; Project Hub in `documentation/hub/`; CI workflow (`.github/workflows/ci.yml`), PR template, CODEOWNERS | |
+| Dart 3.13.4 and Flutter 3.47.5 on the macOS dev machine | A Windows build or run of `pos_windows` (unverified: the `dart-flutter-windows` CI job builds it but has not run yet; no Windows machine used) |
 
 ## Commands
 - `npm run check:drift` runs `node tools/checks/drift-check.mjs` (documents vs files).
