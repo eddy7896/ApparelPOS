@@ -10,4 +10,5 @@ Purpose: entering stock and printing hangtags.
 - **Tasks:** P1-2, P1-5, P2-3.
 - **Evals first:** E-SERIAL-1; label cell geometry; 50-article save is fast (spec target under 50 ms, unverified).
 - **Not in scope:** CSV import (later), supplier ledger.
-- **Open decisions:** none.
+- **Barcode:** 12 digits (YYMM, lot, serial, Luhn check digit). Built in `core_domain` (`Barcode`, `LotRange`, `LotCursor`); label drawing is P1-5.
+- **Open decisions:** who assigns each counter's lot range and where it is stored (P2-1); Luhn as the check digit algorithm (owner to confirm).
