@@ -7,7 +7,7 @@
     },
     {
       "tone": "warn",
-      "text": "PR #3 (feat/p0-5-skeletons into develop) is open for the owner to review."
+      "text": "PR #4 (feat/p1-1-money into develop) is open for the owner to review."
     }
   ],
   "branches": [
@@ -20,8 +20,8 @@
       "note": "integration"
     },
     {
-      "name": "feat/p0-5-skeletons",
-      "note": "PR #3"
+      "name": "feat/p1-1-money",
+      "note": "PR #4"
     }
   ],
   "ledger": [
@@ -38,6 +38,11 @@
     {
       "pr": "#3",
       "title": "P0-5: Skeletons for core_domain and pos_windows",
+      "state": "merged"
+    },
+    {
+      "pr": "#4",
+      "title": "P1-1: Money type in integer paise",
       "state": "open"
     }
   ],
@@ -48,7 +53,7 @@
   "ownerActions": [
     "Switch on branch protection for main and develop in GitHub.",
     "Review ADR-0006, ADR-0013 and ADR-0014 (Proposed).",
-    "Review and merge PR #3.",
+    "Review and merge PR #4; confirm negative-amount rounding in ADR-0007 point 9.",
     "Tell us the printer and scanner models when known."
   ]
 }
