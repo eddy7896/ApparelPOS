@@ -7,7 +7,7 @@
     },
     {
       "tone": "warn",
-      "text": "PR #7 (feat/p1-3-pricing into develop) is open for the owner to review."
+      "text": "PR #8 (feat/p1-4-permissions into develop) is open for the owner to review."
     }
   ],
   "branches": [
@@ -20,8 +20,8 @@
       "note": "integration"
     },
     {
-      "name": "feat/p1-3-pricing",
-      "note": "PR #7"
+      "name": "feat/p1-4-permissions",
+      "note": "PR #8"
     }
   ],
   "ledger": [
@@ -58,6 +58,11 @@
     {
       "pr": "#7",
       "title": "P1-3: Pricing engine (MRP, markdown)",
+      "state": "merged"
+    },
+    {
+      "pr": "#8",
+      "title": "P1-4: Permission matrix",
       "state": "open"
     }
   ],
@@ -68,7 +73,7 @@
   "ownerActions": [
     "Switch on branch protection for main and develop; add dart-flutter-windows as a required check.",
     "Review ADR-0006, ADR-0013 and ADR-0014 (Proposed).",
-    "Review and merge PR #7; confirm Luhn check digit, negative-amount rounding and percent-cut rounding.",
+    "Review and merge PR #8; confirm Luhn check digit, negative-amount rounding, percent-cut rounding and the cashier discount rule for fixed amounts.",
     "Tell us the printer and scanner models when known."
   ]
 }

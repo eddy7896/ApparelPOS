@@ -47,6 +47,12 @@ final class PriceCut {
   final int? _basisPoints;
   final Money? _amount;
 
+  /// The percentage in basis points, or null if this is a fixed amount.
+  int? get basisPoints => _basisPoints;
+
+  /// The fixed amount, or null if this is a percentage.
+  Money? get amountOff => _amount;
+
   /// True when this cut takes nothing off.
   bool get isZero =>
       (_basisPoints ?? 0) == 0 && (_amount ?? Money.zero) == Money.zero;
