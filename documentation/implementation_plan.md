@@ -25,8 +25,8 @@ Purpose: phases and task IDs. Size S <= 1 day, M <= 3 days, L <= 1 week. Phases 
 | ID | Task | Size | Acceptance | Depends on | Status |
 |---|---|---|---|---|---|
 | P1-1 | Money type and rounding in paise | S | E-MONEY-1 | P0-5 | done |
-| P1-2 | Barcode encoder and serial ranges | M | E-SERIAL-1 | P1-1 | doing |
-| P1-3 | Pricing engine (MRP, markdown) | M | unit tests | P1-1 | todo |
+| P1-2 | Barcode encoder and serial ranges | M | E-SERIAL-1 | P1-1 | done |
+| P1-3 | Pricing engine (MRP, markdown) | M | unit tests | P1-1 | doing |
 | P1-4 | Permission matrix | S | E-AUTHZ-2 | P0-5 | todo |
 | P1-5 | PDF hangtag builder | M | cell geometry tests | P1-2 | todo |
 
