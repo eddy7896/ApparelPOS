@@ -3,6 +3,7 @@ Status: 2026-11-17
 
 Purpose: decisions in brief and lessons learned, newest first.
 
+- 2026-11-18: Barcode is 12 digits (check digit added, owner-approved; Luhn is the assistant's pick). Counters are separated by lot-number ranges. Golden question G-09 updated to match.
 - 2026-11-18: Rounding is half up (owner). Negative amounts round symmetrically (assistant's reading; unconfirmed) so returns reverse sales exactly. Percentages are basis points. Money type lives in `core_domain` (P1-1).
 - 2026-11-18: CI gained a `dart-flutter-windows` job (windows-latest, Flutter 3.47.5 pinned, `subosito/flutter-action@v2`) that analyzes, tests and builds the app. It is a new check to add as a required status check once it has passed.
 - 2026-11-18: Gate 5 passed; bootstrap complete. Owner chose separate Dart/Flutter folders (no pub workspace); ADR-0004 allows Melos or workspace, so this is a small deviation to confirm in the ADR. Flutter and Dart are installed on the Mac; Windows build unverified.

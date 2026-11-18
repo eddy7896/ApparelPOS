@@ -23,7 +23,7 @@ Before implementing, verify: does it work offline; does the cashier path avoid c
 
 ## 4. Domain truths
 - Roles: CASHIER, MANAGER, OWNER.
-- Barcode: 11 digits, YYMM + 3-digit lot + 4-digit serial.
+- Barcode: 12 digits, YYMM + 3-digit lot + 4-digit serial + 1 check digit (originally 11; check digit approved 2026-11-18).
 - Money: paise. Time: UTC stored, Asia/Kolkata for "today".
 - Language: English only.
 
