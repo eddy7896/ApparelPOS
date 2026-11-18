@@ -7,7 +7,7 @@
     },
     {
       "tone": "warn",
-      "text": "PR #5 (feat/p1-2-barcodes into develop) is open for the owner to review."
+      "text": "PR #7 (feat/p1-3-pricing into develop) is open for the owner to review."
     }
   ],
   "branches": [
@@ -20,8 +20,8 @@
       "note": "integration"
     },
     {
-      "name": "feat/p1-2-barcodes",
-      "note": "PR #5"
+      "name": "feat/p1-3-pricing",
+      "note": "PR #7"
     }
   ],
   "ledger": [
@@ -48,6 +48,16 @@
     {
       "pr": "#5",
       "title": "P1-2: Barcode encoder and lot ranges",
+      "state": "merged"
+    },
+    {
+      "pr": "#6",
+      "title": "chore: Windows CI job for Dart and Flutter",
+      "state": "merged"
+    },
+    {
+      "pr": "#7",
+      "title": "P1-3: Pricing engine (MRP, markdown)",
       "state": "open"
     }
   ],
@@ -56,9 +66,9 @@
     "The owner merges and releases; the agent only opens pull requests."
   ],
   "ownerActions": [
-    "Switch on branch protection for main and develop in GitHub.",
+    "Switch on branch protection for main and develop; add dart-flutter-windows as a required check.",
     "Review ADR-0006, ADR-0013 and ADR-0014 (Proposed).",
-    "Review and merge PR #5; confirm Luhn as the check digit and negative-amount rounding (ADR-0006 point 7, ADR-0007 point 9).",
+    "Review and merge PR #7; confirm Luhn check digit, negative-amount rounding and percent-cut rounding.",
     "Tell us the printer and scanner models when known."
   ]
 }
