@@ -54,3 +54,6 @@ jobs:
       - name: pos_windows build (Windows release)
         working-directory: apps/pos_windows
         run: flutter build windows --release
+      - name: pos_windows build (web, development preview)
+        working-directory: apps/pos_windows
+        run: flutter build web

@@ -1,1 +1,6 @@
-{ "title": "Apparel PoS Hub", "subtitle": "Progress, screens, architecture and decisions for the shop billing system.", "repo": "https://github.com/eddy7896/ApparelPOS.git", "demoNote": "No demo yet: only empty skeletons exist (not run on Windows)." }
+{
+  "title": "Apparel PoS Hub",
+  "subtitle": "Progress, screens, architecture and decisions for the shop billing system.",
+  "repo": "https://github.com/eddy7896/ApparelPOS.git",
+  "demoNote": "No demo yet: only empty skeletons exist. A browser preview (development only, not for the shop) is in PR #10 and runs with flutter run -d chrome; it shows one line of text. Not run on a real Windows machine."
+}

@@ -16,7 +16,7 @@ Also: `documentation/system_context.md`, `eval_plan.md`, `agent_contexts.md`, `g
 | Exists | Planned (do not assume it exists) |
 |---|---|
 | Documents and ADRs in `documentation/` | `firebase/`, `packages/sync_engine`, `apps/manager_mobile`, all business rules |
-| `packages/core_domain`: `Money` (integer paise, half-up percent rounding) with 15 tests; `Barcode`, `LotRange`, `LotCursor` (12-digit barcodes), `priceLine` and `PriceCut` (MRP, markdown, cashier discount; `Role`/`Permission` matrix with discount limit; hangtag sheet geometry, `formatRupees`, Code 128C encoder; 197 tests in total) and `apps/pos_windows` skeleton (1 widget test) | |
+| `packages/core_domain`: `Money` (integer paise, half-up percent rounding) with 15 tests; `Barcode`, `LotRange`, `LotCursor` (12-digit barcodes), `priceLine` and `PriceCut` (MRP, markdown, cashier discount; `Role`/`Permission` matrix with discount limit; hangtag sheet geometry, `formatRupees`, Code 128C encoder; 197 tests in total) and `apps/pos_windows` skeleton (1 widget test; Windows and web targets, web is a development preview only, ADR-0016) | |
 | Check scripts in `tools/checks/`, `evals/`, `tools/hub/`; Project Hub in `documentation/hub/`; CI workflow (`.github/workflows/ci.yml`), PR template, CODEOWNERS | |
 | Dart 3.13.4 and Flutter 3.47.5 on the macOS dev machine; CI job `dart-flutter-windows` analyzes, tests and builds `pos_windows` on Windows (passed on PR #6) | Running `pos_windows` on a real Windows machine (unverified: only a CI build so far) |
 
@@ -27,7 +27,8 @@ Also: `documentation/system_context.md`, `eval_plan.md`, `agent_contexts.md`, `g
 - `npm run test:checks` runs the tests of the check scripts.
 - `npm run check:branch` checks a pull request's branch edge (CI sets the branch names).
 - `dart pub get`, `dart analyze`, `dart test` in `packages/core_domain`; `flutter pub get`, `flutter analyze`, `flutter test` in `apps/pos_windows`. Each folder is set up on its own (no workspace).
-- Planned (do not assume they exist): `flutter run -d windows`, `flutter build windows`.
+- Browser preview for development (ADR-0016): `flutter run -d chrome` in `apps/pos_windows`; `flutter build web` is also in CI. It does not verify encryption, printing, scanning or backups.
+- Planned (do not assume they exist): `flutter run -d windows`.
 
 ## Non-negotiable rules
 1. Billing never needs the internet. Review only until E-OFFLINE-1 exists.
