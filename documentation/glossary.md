@@ -15,6 +15,7 @@ Purpose: one definition per term.
 | Hangtag | The sticker or tag on a garment showing shop name, style, size, color, MRP and the barcode | label (acceptable), price tag |
 | Lockout | A temporary block on one account after too many wrong PINs or passwords; each later lockout is longer | ban |
 | Purchase | One purchase from a supplier entered in the Size x Color grid; saved as one batch | order |
+| Bill number | `2026-27/C1/000123`: financial year, counter, that counter's running number | invoice number |
 | Credit note | Barcode voucher issued on a return, with an expiry | store credit |
 | Daybook | Ledger of all money movements | |
 | GRN | Goods received note: entry of new stock | |
