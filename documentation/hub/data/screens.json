@@ -1,11 +1,82 @@
 {
-  "updatedAt": "2026-11-17",
+  "updatedAt": "2026-11-20",
   "items": [
-    { "id": "pos-lock", "app": "pos_windows", "title": "Lock screen", "note": "PIN or password to enter Sales or Manager Mode.", "status": "planned", "pr": "", "task": "P2-2", "images": {}, "device": "desktop" },
-    { "id": "pos-billing", "app": "pos_windows", "title": "Billing register", "note": "Scan items, take payment, finish the bill.", "status": "planned", "pr": "", "task": "P2-4", "images": {}, "device": "desktop" },
-    { "id": "pos-stock", "app": "pos_windows", "title": "Stock entry (Size x Color grid)", "note": "Owner enters a purchase and prints hangtags.", "status": "planned", "pr": "", "task": "P2-3", "images": {}, "device": "desktop" },
-    { "id": "pos-returns", "app": "pos_windows", "title": "Returns", "note": "Scan a sold garment, refund or issue a credit note.", "status": "planned", "pr": "", "task": "P2-5", "images": {}, "device": "desktop" },
-    { "id": "pos-shift", "app": "pos_windows", "title": "Blind shift close", "note": "Cashier counts cash without seeing the expected amount.", "status": "planned", "pr": "", "task": "P2-6", "images": {}, "device": "desktop" },
-    { "id": "pos-report", "app": "pos_windows", "title": "Daily report", "note": "Owner reads the day's sales and cash variance.", "status": "planned", "pr": "", "task": "P2-7", "images": {}, "device": "desktop" }
+    {
+      "id": "pos-setup",
+      "app": "pos_windows",
+      "title": "First-time setup",
+      "note": "Create the owner account on first launch. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#14",
+      "task": "P2-2",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-lock",
+      "app": "pos_windows",
+      "title": "Lock screen",
+      "note": "Pick a name, then type a PIN (cashier) or password. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#14",
+      "task": "P2-2",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-billing",
+      "app": "pos_windows",
+      "title": "Billing register",
+      "note": "Scan items, take payment, finish the bill.",
+      "status": "planned",
+      "pr": "",
+      "task": "P2-4",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-stock",
+      "app": "pos_windows",
+      "title": "Stock entry (Size x Color grid)",
+      "note": "Owner enters a purchase and prints hangtags.",
+      "status": "planned",
+      "pr": "",
+      "task": "P2-3",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-returns",
+      "app": "pos_windows",
+      "title": "Returns",
+      "note": "Scan a sold garment, refund or issue a credit note.",
+      "status": "planned",
+      "pr": "",
+      "task": "P2-5",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-shift",
+      "app": "pos_windows",
+      "title": "Blind shift close",
+      "note": "Cashier counts cash without seeing the expected amount.",
+      "status": "planned",
+      "pr": "",
+      "task": "P2-6",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-report",
+      "app": "pos_windows",
+      "title": "Daily report",
+      "note": "Owner reads the day's sales and cash variance.",
+      "status": "planned",
+      "pr": "",
+      "task": "P2-7",
+      "images": {},
+      "device": "desktop"
+    }
   ]
 }

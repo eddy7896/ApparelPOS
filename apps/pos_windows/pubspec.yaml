@@ -38,6 +38,9 @@ dependencies:
   cupertino_icons: ^1.0.8
   drift: ^2.35.4
   sqlite3: ^3.9.1
+  uuid: ^4.6.0
+  path: ^1.9.1
+  path_provider: ^2.1.6
 dev_dependencies:
   flutter_test:
     sdk: flutter
