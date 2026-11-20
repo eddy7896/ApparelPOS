@@ -1,5 +1,5 @@
 {
-  "readAt": "2026-11-18 from git and gh",
+  "readAt": "2026-11-20 from git and gh",
   "status": [
     {
       "tone": "ok",
@@ -7,7 +7,7 @@
     },
     {
       "tone": "warn",
-      "text": "PR #8 (feat/p1-4-permissions into develop) is open for the owner to review."
+      "text": "PR #9 (feat/p1-5-hangtag-geometry into develop) is open for the owner to review."
     }
   ],
   "branches": [
@@ -20,8 +20,8 @@
       "note": "integration"
     },
     {
-      "name": "feat/p1-4-permissions",
-      "note": "PR #8"
+      "name": "feat/p1-5-hangtag-geometry",
+      "note": "PR #9"
     }
   ],
   "ledger": [
@@ -63,6 +63,11 @@
     {
       "pr": "#8",
       "title": "P1-4: Permission matrix",
+      "state": "merged"
+    },
+    {
+      "pr": "#9",
+      "title": "P1-5: Hangtag geometry and Code 128C encoder",
       "state": "open"
     }
   ],
@@ -73,7 +78,7 @@
   "ownerActions": [
     "Switch on branch protection for main and develop; add dart-flutter-windows as a required check.",
     "Review ADR-0006, ADR-0013 and ADR-0014 (Proposed).",
-    "Review and merge PR #8; confirm Luhn check digit, negative-amount rounding, percent-cut rounding and the cashier discount rule for fixed amounts.",
+    "Review and merge PR #9; confirm Luhn check digit, the rounding choices, the fixed-amount discount rule and Indian digit grouping on tags.",
     "Tell us the printer and scanner models when known."
   ]
 }

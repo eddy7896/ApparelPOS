@@ -16,7 +16,7 @@ Also: `documentation/system_context.md`, `eval_plan.md`, `agent_contexts.md`, `g
 | Exists | Planned (do not assume it exists) |
 |---|---|
 | Documents and ADRs in `documentation/` | `firebase/`, `packages/sync_engine`, `apps/manager_mobile`, all business rules |
-| `packages/core_domain`: `Money` (integer paise, half-up percent rounding) with 15 tests; `Barcode`, `LotRange`, `LotCursor` (12-digit barcodes), `priceLine` and `PriceCut` (MRP, markdown, cashier discount; `Role`/`Permission` matrix with discount limit; 65 tests in total) and `apps/pos_windows` skeleton (1 widget test) | |
+| `packages/core_domain`: `Money` (integer paise, half-up percent rounding) with 15 tests; `Barcode`, `LotRange`, `LotCursor` (12-digit barcodes), `priceLine` and `PriceCut` (MRP, markdown, cashier discount; `Role`/`Permission` matrix with discount limit; hangtag sheet geometry, `formatRupees`, Code 128C encoder; 197 tests in total) and `apps/pos_windows` skeleton (1 widget test) | |
 | Check scripts in `tools/checks/`, `evals/`, `tools/hub/`; Project Hub in `documentation/hub/`; CI workflow (`.github/workflows/ci.yml`), PR template, CODEOWNERS | |
 | Dart 3.13.4 and Flutter 3.47.5 on the macOS dev machine; CI job `dart-flutter-windows` analyzes, tests and builds `pos_windows` on Windows (passed on PR #6) | Running `pos_windows` on a real Windows machine (unverified: only a CI build so far) |
 
