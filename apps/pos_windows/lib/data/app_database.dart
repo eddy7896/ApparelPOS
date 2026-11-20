@@ -35,6 +35,29 @@ class Counters extends Table {
   ];
 }
 
+/// A person who can sign in at the counter. The PIN (cashier) or password
+/// (manager, owner) is stored only as an Argon2id hash. Wrong-try state is kept
+/// here so a lock survives restarting the app (E-AUTH-2).
+@DataClassName('UserRow')
+class Users extends Table {
+  TextColumn get id => text()();
+  TextColumn get name =>
+      text().customConstraint('NOT NULL UNIQUE COLLATE NOCASE')();
+  TextColumn get role => text().customConstraint(
+    "NOT NULL CHECK (role IN ('CASHIER', 'MANAGER', 'OWNER'))",
+  )();
+  TextColumn get credentialHash => text()();
+  BoolColumn get active => boolean().withDefault(const Constant(true))();
+  IntColumn get failures => integer().withDefault(const Constant(0))();
+  IntColumn get lockCount => integer().withDefault(const Constant(0))();
+  DateTimeColumn get lockedUntil => dateTime().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// A style, such as "Cotton Kurta".
 @DataClassName('ProductRow')
 class Products extends Table {
@@ -156,6 +179,7 @@ class Outbox extends Table {
 
 @DriftDatabase(
   tables: [
+    Users,
     Counters,
     Products,
     Variants,
@@ -170,15 +194,16 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
-    // Version 1 is the first version, so there is nothing to upgrade from.
-    // Each later version adds a step here and a migration test.
+    // Each version adds a step here and a migration test.
     onUpgrade: (m, from, to) async {
-      throw StateError('No migration from schema $from to $to');
+      if (from < 2) {
+        await m.createTable(users); // version 2: sign-in users (P2-2)
+      }
     },
     beforeOpen: (details) async {
       final before = details.versionBefore;
@@ -243,6 +268,35 @@ class AuditedWriter {
               entityId: entityId,
               operation: action,
               payload: json,
+            ),
+          );
+      return result;
+    });
+  }
+
+  /// Like [run] but for events that stay on this device (sign-ins, lockouts):
+  /// one audit row, no outbox row, so they are never queued for the cloud.
+  Future<T> runLocal<T>({
+    required String action,
+    required String entityType,
+    required String entityId,
+    required Future<T> Function() body,
+    String? actor,
+    Map<String, Object?> details = const {},
+  }) {
+    return _db.transaction(() async {
+      final result = await body();
+      await _db
+          .into(_db.auditLog)
+          .insert(
+            AuditLogCompanion.insert(
+              id: _newId(),
+              at: _now(),
+              actor: Value(actor),
+              action: action,
+              entityType: entityType,
+              entityId: entityId,
+              details: jsonEncode(details),
             ),
           );
       return result;

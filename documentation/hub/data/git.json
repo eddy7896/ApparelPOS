@@ -10,8 +10,8 @@
       "text": "main is 1 commit behind and 15 commits behind develop: nothing has been released since PR #2; main has a merge commit that develop lacks (back-merge needed at the next release)."
     },
     {
-      "tone": "ok",
-      "text": "PR #12 (feat/p2-1-database into develop) is open; all 3 CI jobs and GitGuardian passed (read 2026-11-20). Waiting for the owner."
+      "tone": "warn",
+      "text": "PR #13 (feat/p2-2-auth-rules into develop) is open; CI result not read yet."
     }
   ],
   "branches": [
@@ -24,8 +24,8 @@
       "note": "integration; last updated 2026-11-20"
     },
     {
-      "name": "feat/p2-1-database",
-      "note": "PR #12, open"
+      "name": "feat/p2-2-auth-rules",
+      "note": "PR #13, open"
     },
     {
       "name": "merged topic branches (still on GitHub, not deleted)",
@@ -91,6 +91,11 @@
     {
       "pr": "#12",
       "title": "P2-1: Local database tables",
+      "state": "merged"
+    },
+    {
+      "pr": "#13",
+      "title": "P2-2 (part 1): Sign-in rules, Argon2id and users",
       "state": "open"
     }
   ],
@@ -99,7 +104,7 @@
     "The owner merges and releases; the agent only opens pull requests."
   ],
   "ownerActions": [
-    "Review and merge PR #12 (database tables); review ADR-0017 (Proposed).",
+    "Review and merge PR #13 (sign-in rules and users table).",
     "Switch on branch protection for main and develop; require branch-policy, build-lint-test and dart-flutter-windows.",
     "Review ADR-0006, ADR-0013 and ADR-0014 (Proposed).",
     "Confirm earlier assistant choices: Luhn check digit, negative-amount and percent-cut rounding, fixed-amount discount rule, Indian digit grouping on tags.",
