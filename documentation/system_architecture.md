@@ -9,7 +9,7 @@ Flutter/Dart monorepo. The counter app writes to a local encrypted SQLite databa
 ## Parts
 | Name | Kind | Purpose | Called by | Status |
 |---|---|---|---|---|
-| `pos_windows` | Flutter Windows app | Billing, stock, barcodes, returns, cash close | Cashier, owner | Planned (release 1) |
+| `pos_windows` | Flutter Windows app | Billing, stock, barcodes, returns, cash close | Cashier, owner | Planned (release 1); a browser build exists for development only (ADR-0016) |
 | `core_domain` | Dart package | Pricing, money, barcodes, permission matrix | All apps | Planned (release 1) |
 | `sync_engine` | Dart package | Outbox, Firestore push/pull | Counter apps | Planned (release 2) |
 | `manager_mobile` | Flutter Android/iOS | Owner analytics and commands | Owner | Planned (release 2) |

@@ -7,7 +7,7 @@
     },
     {
       "tone": "warn",
-      "text": "PR #9 (feat/p1-5-hangtag-geometry into develop) is open for the owner to review."
+      "text": "PR #10 (feat/web-dev-preview into develop) is open for the owner to review."
     }
   ],
   "branches": [
@@ -20,8 +20,8 @@
       "note": "integration"
     },
     {
-      "name": "feat/p1-5-hangtag-geometry",
-      "note": "PR #9"
+      "name": "feat/web-dev-preview",
+      "note": "PR #10"
     }
   ],
   "ledger": [
@@ -68,6 +68,11 @@
     {
       "pr": "#9",
       "title": "P1-5: Hangtag geometry and Code 128C encoder",
+      "state": "merged"
+    },
+    {
+      "pr": "#10",
+      "title": "feat: Browser build for development (ADR-0016)",
       "state": "open"
     }
   ],
@@ -78,7 +83,7 @@
   "ownerActions": [
     "Switch on branch protection for main and develop; add dart-flutter-windows as a required check.",
     "Review ADR-0006, ADR-0013 and ADR-0014 (Proposed).",
-    "Review and merge PR #9; confirm Luhn check digit, the rounding choices, the fixed-amount discount rule and Indian digit grouping on tags.",
+    "Review and merge PR #10; confirm Indian digit grouping on tags and the earlier rounding and check-digit choices.",
     "Tell us the printer and scanner models when known."
   ]
 }

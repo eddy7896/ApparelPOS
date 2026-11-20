@@ -10,7 +10,7 @@
     { "id": "P1-2", "name": "Barcode encoder and serial ranges", "phase": 1, "phaseName": "Core domain", "milestone": "", "order": 11, "status": "done", "pct": 100, "pr": "#5" },
     { "id": "P1-3", "name": "Pricing engine (MRP, markdown)", "phase": 1, "phaseName": "Core domain", "milestone": "", "order": 12, "status": "done", "pct": 100, "pr": "#7" },
     { "id": "P1-4", "name": "Permission matrix", "phase": 1, "phaseName": "Core domain", "milestone": "", "order": 13, "status": "done", "pct": 100, "pr": "#8" },
-    { "id": "P1-5", "name": "Hangtag geometry, rupee text and Code 128C encoder", "phase": 1, "phaseName": "Core domain", "milestone": "", "order": 14, "status": "doing", "pct": 90, "pr": "#9" },
+    { "id": "P1-5", "name": "Hangtag geometry, rupee text and Code 128C encoder", "phase": 1, "phaseName": "Core domain", "milestone": "", "order": 14, "status": "done", "pct": 100, "pr": "#9" },
     { "id": "P1-5b", "name": "PDF drawing: embedded font with the rupee sign, bars and text", "phase": 1, "phaseName": "Core domain", "milestone": "", "order": 15, "status": "todo", "pct": 0, "pr": "" },
     { "id": "P2-1", "name": "Drift tables, WAL, migrations", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 20, "status": "todo", "pct": 0, "pr": "" },
     { "id": "P2-2", "name": "Lock screen, auth, idle lock", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 21, "status": "todo", "pct": 0, "pr": "" },
