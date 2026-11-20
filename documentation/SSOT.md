@@ -7,7 +7,7 @@ Purpose: the single home of product behaviour. Tags: [ASSUMED] owner has not con
 1. Roles are CASHIER, MANAGER, OWNER. [ADR-0003]
 2. Cashiers sign in with a PIN of at least 6 digits; manager and owner use a password. Hashes use Argon2id. [ADR-0002]
 3. The owner and manager are the same person today. [owner]
-4. A cashier discount above their limit needs the manager's password. [DESIGN]
+4. A cashier discount above their limit (10% of the item price by default) needs the manager's password. [ADR-0003]
 
 ## Stock and barcodes
 5. Every garment gets a unique serialized barcode: YYMM + 3-digit lot + 4-digit serial + 1 check digit (12 digits, Code 128 Subset C needs an even count; check digit approved by the owner 2026-11-18). [DESIGN, from owner spec]

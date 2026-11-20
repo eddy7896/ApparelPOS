@@ -4,6 +4,7 @@ library;
 
 export 'src/barcode.dart';
 export 'src/money.dart';
+export 'src/permissions.dart';
 export 'src/pricing.dart';
 
 /// Version marker so the skeleton has something to test. Real rules start in P1-1.
