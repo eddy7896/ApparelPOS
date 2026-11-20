@@ -1,6 +1,6 @@
 # ADR-0017: Hangtag PDF, the `pdf` package and the Noto Sans font
 
-- **Status:** Proposed (2026-11-20)
+- **Status:** Accepted (2026-11-20, owner)
 - **Origin:** Owner chose "₹499.00" on the tag (2026-11-20); package and font chosen by the assistant
 - **Builds on:** ADR-0004, ADR-0016
 

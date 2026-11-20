@@ -6,7 +6,28 @@
 import 'money.dart';
 import 'pricing.dart';
 
-enum Role { cashier, manager, owner }
+enum Role {
+  cashier('CASHIER'),
+  manager('MANAGER'),
+  owner('OWNER');
+
+  const Role(this.dbValue);
+
+  /// The text stored in the database.
+  final String dbValue;
+
+  /// Cashiers sign in with a PIN; manager and owner with a password (ADR-0002).
+  bool get usesPin => this == Role.cashier;
+
+  static Role fromDb(String value) {
+    for (final role in values) {
+      if (role.dbValue == value) {
+        return role;
+      }
+    }
+    throw ArgumentError.value(value, 'value', 'not a role');
+  }
+}
 
 enum Permission {
   // Counter work.

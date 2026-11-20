@@ -3,6 +3,7 @@
 library;
 
 export 'src/article_status.dart';
+export 'src/auth_rules.dart';
 export 'src/barcode.dart';
 export 'src/code128.dart';
 export 'src/hangtag_artwork.dart';

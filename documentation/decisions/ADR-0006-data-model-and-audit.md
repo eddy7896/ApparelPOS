@@ -19,7 +19,7 @@ Audit is required for every write. Several counters will later write independent
 9. Each garment (article) keeps its own MRP, saved when its tag is printed; changing a style's MRP later does not change garments already in stock (owner, 2026-11-20).
 10. Cost columns live only in `batch_lines` so cashier code can be kept away from one table (E-AUTHZ-1 is enforced when the cashier data layer is built, not by the schema alone).
 11. The local database uses write-ahead logging (WAL) and foreign keys, stores times as UTC, and refuses to open a database made by a newer app version.
-12. Release-1 stock tables (schema version 1): `counters`, `products`, `variants`, `batches`, `batch_lines`, `articles`, `audit_log`, `outbox`. Sales, returns, shifts and daybook tables come with their tasks, each with a migration. The database is **not encrypted yet** (SQLCipher is P3-1, E-ENC-1 pending).
+12. Release-1 tables: schema version 1 has `counters`, `products`, `variants`, `batches`, `batch_lines`, `articles`, `audit_log`, `outbox`; version 2 adds `users` (P2-2). Each version has a migration test (`apps/pos_windows/test/data/migration_test.dart`). Sales, returns, shifts and daybook tables come with their tasks, each with a migration. The database is **not encrypted yet** (SQLCipher is P3-1, E-ENC-1 pending).
 
 ## Alternatives considered
 - **Auto-increment integer ids:** collide across counters.
