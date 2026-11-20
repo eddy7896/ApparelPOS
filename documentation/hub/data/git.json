@@ -10,8 +10,8 @@
       "text": "main is 1 commit behind and 15 commits behind develop: nothing has been released since PR #2; main has a merge commit that develop lacks (back-merge needed at the next release)."
     },
     {
-      "tone": "warn",
-      "text": "PR #12 (feat/p2-1-database into develop) is open; CI result not read yet."
+      "tone": "ok",
+      "text": "PR #12 (feat/p2-1-database into develop) is open; all 3 CI jobs and GitGuardian passed (read 2026-11-20). Waiting for the owner."
     }
   ],
   "branches": [
