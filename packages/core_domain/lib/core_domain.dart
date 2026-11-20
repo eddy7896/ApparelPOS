@@ -3,6 +3,8 @@
 library;
 
 export 'src/barcode.dart';
+export 'src/code128.dart';
+export 'src/label_layout.dart';
 export 'src/money.dart';
 export 'src/permissions.dart';
 export 'src/pricing.dart';

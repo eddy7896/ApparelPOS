@@ -12,6 +12,7 @@ Purpose: one definition per term.
 | Lot | A 3-digit number in the barcode; each counter owns a range of lots so counters never issue the same barcode | batch (a purchase entry; one lot is used at a time) |
 | Markdown | A price reduction below MRP set by the owner, as a percentage or a fixed amount. A marked-down garment takes no cashier discount | discount (that is the cashier's counter reduction) |
 | Permission matrix | The single table in `core_domain` of which role may do which action; anything not listed is denied | hiding buttons as security |
+| Hangtag | The sticker or tag on a garment showing shop name, style, size, color, MRP and the barcode | label (acceptable), price tag |
 | Credit note | Barcode voucher issued on a return, with an expiry | store credit |
 | Daybook | Ledger of all money movements | |
 | GRN | Goods received note: entry of new stock | |
