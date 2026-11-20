@@ -1,27 +1,35 @@
 {
-  "readAt": "2026-11-20 from git and gh",
+  "readAt": "2026-11-20 from git and gh (gh pr list, gh api branch protection, git rev-list)",
   "status": [
     {
-      "tone": "ok",
-      "text": "main, develop and the bootstrap branch exist on GitHub. PRs #1 and #2 merged. Branch protection is not on (GitHub API 404 for main)."
+      "tone": "bad",
+      "text": "Branch protection is OFF on main and develop (GitHub API: not protected). Rules are enforced by CI and habit only."
     },
     {
       "tone": "warn",
-      "text": "PR #10 (feat/web-dev-preview into develop) is open for the owner to review."
+      "text": "main is 1 commit behind and 15 commits behind develop: nothing has been released since PR #2; main has a merge commit that develop lacks (back-merge needed at the next release)."
+    },
+    {
+      "tone": "ok",
+      "text": "PR #10 (feat/web-dev-preview into develop) is open; all 3 CI jobs and GitGuardian passed. Waiting for the owner to review and merge."
     }
   ],
   "branches": [
     {
       "name": "main",
-      "note": "releases"
+      "note": "releases; last updated 2026-11-17"
     },
     {
       "name": "develop",
-      "note": "integration"
+      "note": "integration; last updated 2026-11-20"
     },
     {
       "name": "feat/web-dev-preview",
-      "note": "PR #10"
+      "note": "PR #10, open"
+    },
+    {
+      "name": "merged topic branches (still on GitHub, not deleted)",
+      "note": "chore/bootstrap-project, chore/ci-windows-flutter, feat/p0-5-skeletons, feat/p1-1-money, feat/p1-2-barcodes, feat/p1-3-pricing, feat/p1-4-permissions, feat/p1-5-hangtag-geometry"
     }
   ],
   "ledger": [
@@ -81,9 +89,10 @@
     "The owner merges and releases; the agent only opens pull requests."
   ],
   "ownerActions": [
-    "Switch on branch protection for main and develop; add dart-flutter-windows as a required check.",
+    "Review and merge PR #10 (web preview, ADR-0016).",
+    "Switch on branch protection for main and develop; require branch-policy, build-lint-test and dart-flutter-windows.",
     "Review ADR-0006, ADR-0013 and ADR-0014 (Proposed).",
-    "Review and merge PR #10; confirm Indian digit grouping on tags and the earlier rounding and check-digit choices.",
+    "Confirm earlier assistant choices: Luhn check digit, negative-amount and percent-cut rounding, fixed-amount discount rule, Indian digit grouping on tags.",
     "Tell us the printer and scanner models when known."
   ]
 }
