@@ -11,7 +11,7 @@
     },
     {
       "tone": "warn",
-      "text": "PR #13 (sign-in rules) is still open on GitHub. PR #14 (lock screen) is stacked on it: it contains #13's commits until #13 merges."
+      "text": "PR #15 (feat/p2-3a-purchase-entry into develop) is open; CI result not read yet."
     }
   ],
   "branches": [
@@ -24,12 +24,8 @@
       "note": "integration; last updated 2026-11-20"
     },
     {
-      "name": "feat/p2-2-lock-screen",
-      "note": "PR #14, open, stacked on feat/p2-2-auth-rules"
-    },
-    {
-      "name": "feat/p2-2-auth-rules",
-      "note": "PR #13, open"
+      "name": "feat/p2-3a-purchase-entry",
+      "note": "PR #15, open"
     },
     {
       "name": "merged topic branches (still on GitHub, not deleted)",
@@ -100,11 +96,16 @@
     {
       "pr": "#13",
       "title": "P2-2 (part 1): Sign-in rules, Argon2id and users",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#14",
       "title": "P2-2 (part 2): Lock screen, setup, idle lock",
+      "state": "merged"
+    },
+    {
+      "pr": "#15",
+      "title": "P2-3a: Purchase entry rules and saving",
       "state": "open"
     }
   ],
@@ -113,10 +114,11 @@
     "The owner merges and releases; the agent only opens pull requests."
   ],
   "ownerActions": [
-    "Merge PR #13 first, then review and merge PR #14 (lock screen).",
+    "Review and merge PR #15 (purchase entry rules and saving).",
     "Switch on branch protection for main and develop; require branch-policy, build-lint-test and dart-flutter-windows.",
+    "Look at the lock and setup screens (flutter run -d chrome, then Add practice users) and tell me how they look.",
     "Review ADR-0006, ADR-0013 and ADR-0014 (Proposed).",
-    "Confirm earlier assistant choices: Luhn check digit, negative-amount and percent-cut rounding, fixed-amount discount rule, Indian digit grouping on tags.",
+    "Confirm earlier assistant choices: Luhn check digit, rounding choices, fixed-amount discount rule, Indian digit grouping on tags, whole-purchase-per-lot rule.",
     "Tell us the printer and scanner models when known."
   ]
 }

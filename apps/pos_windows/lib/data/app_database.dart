@@ -58,6 +58,40 @@ class Users extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Shop settings as name and value pairs (for example `shop_name`).
+@DataClassName('SettingRow')
+class AppSettings extends Table {
+  TextColumn get name => text()();
+  TextColumn get value => text()();
+
+  @override
+  Set<Column> get primaryKey => {name};
+}
+
+/// The sizes offered in the purchase grid, in the order shown.
+@DataClassName('SizeOptionRow')
+class SizeOptions extends Table {
+  TextColumn get id => text()();
+  TextColumn get name =>
+      text().customConstraint('NOT NULL UNIQUE COLLATE NOCASE')();
+  IntColumn get sortOrder => integer()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// The colors offered in the purchase grid, in the order shown.
+@DataClassName('ColorOptionRow')
+class ColorOptions extends Table {
+  TextColumn get id => text()();
+  TextColumn get name =>
+      text().customConstraint('NOT NULL UNIQUE COLLATE NOCASE')();
+  IntColumn get sortOrder => integer()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// A style, such as "Cotton Kurta".
 @DataClassName('ProductRow')
 class Products extends Table {
@@ -179,6 +213,9 @@ class Outbox extends Table {
 
 @DriftDatabase(
   tables: [
+    AppSettings,
+    SizeOptions,
+    ColorOptions,
     Users,
     Counters,
     Products,
@@ -194,7 +231,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -203,6 +240,12 @@ class AppDatabase extends _$AppDatabase {
     onUpgrade: (m, from, to) async {
       if (from < 2) {
         await m.createTable(users); // version 2: sign-in users (P2-2)
+      }
+      if (from < 3) {
+        // version 3: shop settings and the size and color lists (P2-3)
+        await m.createTable(appSettings);
+        await m.createTable(sizeOptions);
+        await m.createTable(colorOptions);
       }
     },
     beforeOpen: (details) async {

@@ -14,6 +14,7 @@ Purpose: one definition per term.
 | Permission matrix | The single table in `core_domain` of which role may do which action; anything not listed is denied | hiding buttons as security |
 | Hangtag | The sticker or tag on a garment showing shop name, style, size, color, MRP and the barcode | label (acceptable), price tag |
 | Lockout | A temporary block on one account after too many wrong PINs or passwords; each later lockout is longer | ban |
+| Purchase | One purchase from a supplier entered in the Size x Color grid; saved as one batch | order |
 | Credit note | Barcode voucher issued on a return, with an expiry | store credit |
 | Daybook | Ledger of all money movements | |
 | GRN | Goods received note: entry of new stock | |

@@ -21,6 +21,10 @@ Audit is required for every write. Several counters will later write independent
 11. The local database uses write-ahead logging (WAL) and foreign keys, stores times as UTC, and refuses to open a database made by a newer app version.
 12. Release-1 tables: schema version 1 has `counters`, `products`, `variants`, `batches`, `batch_lines`, `articles`, `audit_log`, `outbox`; version 2 adds `users` (P2-2). Each version has a migration test (`apps/pos_windows/test/data/migration_test.dart`). Sales, returns, shifts and daybook tables come with their tasks, each with a migration. The database is **not encrypted yet** (SQLCipher is P3-1, E-ENC-1 pending).
 
+13. Schema version 3 adds `app_settings` (shop name), `size_options` and `color_options` (the lists offered in the purchase grid; names are unique ignoring case). Sizes and colors on variants stay plain text.
+14. Counter 1 is created once with lots 000-499 at lot 0, serial 0; lots 500-999 stay free for a second counter (owner, 2026-11-20). Who assigns a second counter's range is still undecided.
+15. Saving a purchase writes the style, variants, batch, costs, every article, the counter's new position, one audit row and one outbox row in one transaction. Costs are not written to the audit or outbox details.
+
 ## Alternatives considered
 - **Auto-increment integer ids:** collide across counters.
 

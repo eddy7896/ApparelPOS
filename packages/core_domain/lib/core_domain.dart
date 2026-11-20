@@ -11,6 +11,8 @@ export 'src/label_layout.dart';
 export 'src/money.dart';
 export 'src/permissions.dart';
 export 'src/pricing.dart';
+export 'src/purchase.dart';
+export 'src/shop_time.dart';
 
 /// Version marker so the skeleton has something to test. Real rules start in P1-1.
 const String coreDomainSkeletonVersion = '0.0.1';
