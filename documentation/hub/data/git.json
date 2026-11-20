@@ -11,7 +11,7 @@
     },
     {
       "tone": "warn",
-      "text": "PR #11 (feat/p1-5b-hangtag-pdf into develop) is open; CI result not read yet."
+      "text": "PR #12 (feat/p2-1-database into develop) is open; CI result not read yet."
     }
   ],
   "branches": [
@@ -24,8 +24,8 @@
       "note": "integration; last updated 2026-11-20"
     },
     {
-      "name": "feat/p1-5b-hangtag-pdf",
-      "note": "PR #11, open"
+      "name": "feat/p2-1-database",
+      "note": "PR #12, open"
     },
     {
       "name": "merged topic branches (still on GitHub, not deleted)",
@@ -86,6 +86,11 @@
     {
       "pr": "#11",
       "title": "P1-5b: Hangtag PDF drawing",
+      "state": "merged"
+    },
+    {
+      "pr": "#12",
+      "title": "P2-1: Local database tables",
       "state": "open"
     }
   ],
@@ -94,7 +99,7 @@
     "The owner merges and releases; the agent only opens pull requests."
   ],
   "ownerActions": [
-    "Review and merge PR #11 (hangtag PDF); review ADR-0017 (Proposed).",
+    "Review and merge PR #12 (database tables); review ADR-0017 (Proposed).",
     "Switch on branch protection for main and develop; require branch-policy, build-lint-test and dart-flutter-windows.",
     "Review ADR-0006, ADR-0013 and ADR-0014 (Proposed).",
     "Confirm earlier assistant choices: Luhn check digit, negative-amount and percent-cut rounding, fixed-amount discount rule, Indian digit grouping on tags.",

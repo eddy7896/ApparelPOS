@@ -45,6 +45,12 @@ jobs:
           dart pub get
           dart analyze
           dart test
+      - name: pos_windows generated files are up to date
+        working-directory: apps/pos_windows
+        run: |
+          flutter pub get
+          dart run build_runner build
+          git diff --exit-code --ignore-cr-at-eol -- lib
       - name: pos_windows analyze and test
         working-directory: apps/pos_windows
         run: |

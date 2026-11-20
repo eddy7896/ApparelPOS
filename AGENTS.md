@@ -16,7 +16,7 @@ Also: `documentation/system_context.md`, `eval_plan.md`, `agent_contexts.md`, `g
 | Exists | Planned (do not assume it exists) |
 |---|---|
 | Documents and ADRs in `documentation/` | `firebase/`, `packages/sync_engine`, `apps/manager_mobile`, all business rules |
-| `packages/core_domain`: `Money` (integer paise, half-up percent rounding) with 15 tests; `Barcode`, `LotRange`, `LotCursor` (12-digit barcodes), `priceLine` and `PriceCut` (MRP, markdown, cashier discount; `Role`/`Permission` matrix with discount limit; hangtag sheet geometry, `formatRupees`, Code 128C encoder, hangtag artwork and PDF writer (`package:core_domain/hangtag_pdf.dart`, Noto Sans font in `assets/fonts/`, ADR-0017); 220 tests in total) and `apps/pos_windows` skeleton (1 widget test; Windows and web targets, web is a development preview only, ADR-0016) | |
+| `packages/core_domain`: `Money` (integer paise, half-up percent rounding) with 15 tests; `Barcode`, `LotRange`, `LotCursor` (12-digit barcodes), `priceLine` and `PriceCut` (MRP, markdown, cashier discount; `Role`/`Permission` matrix with discount limit; hangtag sheet geometry, `formatRupees`, Code 128C encoder, hangtag artwork and PDF writer (`package:core_domain/hangtag_pdf.dart`, Noto Sans font in `assets/fonts/`, ADR-0017); 223 tests in total); `apps/pos_windows/lib/data/app_database.dart`: Drift stock tables, WAL, `AuditedWriter`, 17 database tests (schema v1, not encrypted yet) and `apps/pos_windows` skeleton (1 widget test; Windows and web targets, web is a development preview only, ADR-0016) | |
 | Check scripts in `tools/checks/`, `evals/`, `tools/hub/`; Project Hub in `documentation/hub/`; CI workflow (`.github/workflows/ci.yml`), PR template, CODEOWNERS | |
 | Dart 3.13.4 and Flutter 3.47.5 on the macOS dev machine; CI job `dart-flutter-windows` analyzes, tests and builds `pos_windows` on Windows (passed on PR #6) | Running `pos_windows` on a real Windows machine (unverified: only a CI build so far) |
 
@@ -26,6 +26,7 @@ Also: `documentation/system_context.md`, `eval_plan.md`, `agent_contexts.md`, `g
 - `npm run eval:hallucination` grades the golden set against `evals/ideal-answers.json`.
 - `npm run test:checks` runs the tests of the check scripts.
 - `npm run check:branch` checks a pull request's branch edge (CI sets the branch names).
+- `dart run build_runner build` in `apps/pos_windows` regenerates `apps/pos_windows/lib/data/app_database.g.dart` (CI fails if it is stale); `dart run drift_dev schema dump lib/data/app_database.dart drift_schemas/` records a schema version.
 - `dart pub get`, `dart analyze`, `dart test` in `packages/core_domain`; `flutter pub get`, `flutter analyze`, `flutter test` in `apps/pos_windows`. Each folder is set up on its own (no workspace).
 - Browser preview for development (ADR-0016): `flutter run -d chrome` in `apps/pos_windows`; `flutter build web` is also in CI. It does not verify encryption, printing, scanning or backups.
 - Planned (do not assume they exist): `flutter run -d windows`.

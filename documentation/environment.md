@@ -13,7 +13,7 @@ Purpose: tool versions, how to run locally, and secrets handling. Only checked f
 | dart | not installed (command not found) |
 
 ## Unverified (verify at setup, Phase 0)
-Flutter and Dart versions; Chrome for the development web preview (ADR-0016); Windows build toolchain (Visual Studio C++ workload); Drift and SQLCipher compatibility on Windows; Argon2id package; Code 128 and PDF packages; Firebase CLI.
+Flutter and Dart versions (on 2026-11-20 the Dart cache of the Homebrew Flutter 3.47.5 was missing `gen_kernel_aot.dart.snapshot`, so `dart compile kernel`, build_runner and sqlite3's build hook failed; the owner approved moving `bin/cache/dart-sdk` aside to `dart-sdk.bak` and re-downloading, which fixed it); Chrome for the development web preview (ADR-0016); Windows build toolchain (Visual Studio C++ workload); Drift and SQLCipher compatibility on Windows; Argon2id package; Code 128 and PDF packages; Firebase CLI.
 
 ## Planned (does not exist yet)
 - Run locally: `flutter run -d windows` in `apps/pos_windows` (planned).
