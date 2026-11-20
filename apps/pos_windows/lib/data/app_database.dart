@@ -211,6 +211,77 @@ class Outbox extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// One finished bill. Never edited or deleted; a mistake is reversed by a
+/// return (E-AUDIT-1). Customer details are optional and typed on the bill.
+@DataClassName('BillRow')
+class Bills extends Table {
+  TextColumn get id => text()();
+  TextColumn get billNo => text().customConstraint('NOT NULL UNIQUE')();
+  TextColumn get counterId => text().references(Counters, #id)();
+  TextColumn get cashierId => text().references(Users, #id)();
+  TextColumn get customerName => text().nullable()();
+  TextColumn get customerPhone => text().nullable()();
+  IntColumn get totalPaise =>
+      integer().check(totalPaise.isBiggerOrEqualValue(0))();
+  IntColumn get changePaise =>
+      integer().check(changePaise.isBiggerOrEqualValue(0))();
+  DateTimeColumn get billedAt => dateTime()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// One garment on a bill, with the price it was sold at. Name, size and color
+/// are copied so the bill reads the same forever. No cost here.
+@DataClassName('BillLineRow')
+class BillLines extends Table {
+  TextColumn get id => text()();
+  TextColumn get billId => text().references(Bills, #id)();
+  TextColumn get articleId => text().references(Articles, #id)();
+  TextColumn get barcodeValue => text()();
+  TextColumn get productName => text()();
+  TextColumn get size => text()();
+  TextColumn get color => text()();
+  IntColumn get mrpPaise => integer().check(mrpPaise.isBiggerOrEqualValue(0))();
+  IntColumn get markdownPaise =>
+      integer().check(markdownPaise.isBiggerOrEqualValue(0))();
+  IntColumn get discountPaise =>
+      integer().check(discountPaise.isBiggerOrEqualValue(0))();
+  IntColumn get finalPaise =>
+      integer().check(finalPaise.isBiggerOrEqualValue(0))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// What each payment mode paid toward a bill (cash is net of change).
+@DataClassName('BillPaymentRow')
+class BillPayments extends Table {
+  TextColumn get id => text()();
+  TextColumn get billId => text().references(Bills, #id)();
+  TextColumn get mode => text().customConstraint(
+    "NOT NULL CHECK (mode IN ('cash', 'upi', 'card'))",
+  )();
+  IntColumn get amountPaise =>
+      integer().check(amountPaise.isBiggerOrEqualValue(1))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// The last bill serial used by a counter in a financial year.
+@DataClassName('BillSequenceRow')
+class BillSequences extends Table {
+  TextColumn get counterId => text().references(Counters, #id)();
+  TextColumn get yearLabel => text()();
+  IntColumn get lastSerial =>
+      integer().check(lastSerial.isBetweenValues(0, 999999))();
+
+  @override
+  Set<Column> get primaryKey => {counterId, yearLabel};
+}
+
 @DriftDatabase(
   tables: [
     AppSettings,
@@ -225,13 +296,17 @@ class Outbox extends Table {
     Articles,
     AuditLog,
     Outbox,
+    Bills,
+    BillLines,
+    BillPayments,
+    BillSequences,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -247,6 +322,13 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(sizeOptions);
         await m.createTable(colorOptions);
       }
+      if (from < 4) {
+        // version 4: bills, their lines, payments and the bill serials (P2-4b)
+        await m.createTable(bills);
+        await m.createTable(billLines);
+        await m.createTable(billPayments);
+        await m.createTable(billSequences);
+      }
     },
     beforeOpen: (details) async {
       final before = details.versionBefore;
@@ -258,6 +340,17 @@ class AppDatabase extends _$AppDatabase {
       // Write-ahead logging, and foreign keys (SQLite leaves them off by default).
       await customStatement('PRAGMA journal_mode = WAL');
       await customStatement('PRAGMA foreign_keys = ON');
+      // Sales are never edited or deleted, only reversed (E-AUDIT-1). The
+      // database itself refuses, whatever code asks.
+      for (final table in ['bills', 'bill_lines', 'bill_payments']) {
+        for (final verb in ['UPDATE', 'DELETE']) {
+          await customStatement(
+            'CREATE TRIGGER IF NOT EXISTS ${table}_no_${verb.toLowerCase()} '
+            'BEFORE $verb ON $table BEGIN '
+            "SELECT RAISE(ABORT, '$table rows are never ${verb.toLowerCase()}d'); END",
+          );
+        }
+      }
     },
   );
 }
