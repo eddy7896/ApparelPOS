@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'services.dart';
 import 'session_controller.dart';
 import 'ui/home_shell.dart';
 import 'ui/lock_screen.dart';
@@ -10,19 +11,50 @@ import 'ui/setup_screen.dart';
 
 /// The whole app: sign-in, first-time setup and (for now) an empty shell.
 /// Watches for idle time and Ctrl+L (ADR-0002).
-class PosApp extends StatelessWidget {
+class PosApp extends StatefulWidget {
   const PosApp({
     super.key,
     required this.session,
+    required this.services,
     this.idleCheckEvery = const Duration(seconds: 5),
   });
 
   final SessionController session;
+  final AppServices services;
   final Duration idleCheckEvery;
 
   @override
+  State<PosApp> createState() => _PosAppState();
+}
+
+class _PosAppState extends State<PosApp> {
+  final _navigator = GlobalKey<NavigatorState>();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.session.addListener(_onSession);
+  }
+
+  @override
+  void dispose() {
+    widget.session.removeListener(_onSession);
+    super.dispose();
+  }
+
+  /// When the counter locks, close any screen opened on top (a half-filled
+  /// form must not stay visible behind the lock screen).
+  void _onSession() {
+    if (widget.session.stage != SessionStage.signedIn) {
+      _navigator.currentState?.popUntil((route) => route.isFirst);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final session = widget.session;
     return MaterialApp(
+      navigatorKey: _navigator,
       title: 'Apparel PoS',
       theme: ThemeData(
         colorSchemeSeed: const Color(0xFF3949AB),
@@ -31,7 +63,7 @@ class PosApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: _IdleGuard(
         session: session,
-        checkEvery: idleCheckEvery,
+        checkEvery: widget.idleCheckEvery,
         child: ListenableBuilder(
           listenable: session,
           builder: (context, _) {
@@ -45,7 +77,7 @@ class PosApp extends StatelessWidget {
               case SessionStage.locked:
                 return LockScreen(session: session);
               case SessionStage.signedIn:
-                return HomeShell(session: session);
+                return HomeShell(session: session, services: widget.services);
             }
           },
         ),

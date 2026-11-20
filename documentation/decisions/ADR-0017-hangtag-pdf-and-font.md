@@ -14,6 +14,8 @@ Standard PDF fonts have no rupee sign, so a font file must be bundled. The hangt
 4. A character the font cannot draw stops the print (`MissingGlyph`) instead of printing a box. Noto Sans here covers Latin, Greek and Cyrillic, not Devanagari; this matches "Language: English only" (SSOT).
 5. Sizes and spacing on the tag are the assistant's defaults and can be changed.
 
+6. (2026-11-20, P2-3b) The app prints through the `printing` package (5.15.1): a print preview with the system printer dialog. On Windows its build downloads PDFium binaries from github.com/bblanchon/pdfium-binaries (chromium/5200) at build time; this is a third-party download in the build, **unverified** beyond CI building. The font files are also copied into `apps/pos_windows/assets/fonts/`; a test fails if the two copies differ.
+
 ## Alternatives considered
 - **A separate `label_pdf` package:** cleaner boundary, but a new package for one file; revisit if more printing arrives.
 - **Roboto or another font:** not checked for the rupee sign; Noto Sans was checked.
