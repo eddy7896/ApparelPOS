@@ -32,7 +32,10 @@ The owner has no Windows computer to develop on. Flutter can run the same app in
 | Web is not used for the shop | this ADR; on-screen notice |
 | Windows build still compiles | CI Windows build step |
 
+## Update 2026-11-20 (P2-2)
+The browser build now opens a real SQLite database in memory using `apps/pos_windows/web/sqlite3.wasm`, the WebAssembly build from the sqlite3.dart release `sqlite3-3.9.1` (the version locked in `pubspec.lock`), downloaded from github.com/simolus3/sqlite3.dart/releases and checked against the sha256 GitHub lists for it (e7451780e78c56ff864fe9317a0fbcd6aeb2e8de3beba7f5efd963202f7ec3d9). It is a third-party binary kept in the repository; replace it when the sqlite3 package is upgraded. The data starts fresh on every reload. Debug builds offer practice users with fixed, published practice credentials; they are not available in release builds.
+
 ## Open decisions
 | ID | Question | Options | Recommended |
 |---|---|---|---|
-| D16 | Which browser database stand-in for development | in-memory / Drift on web | **Resolved 2026-11-20 (owner): no data kept between reloads; the browser build starts fresh. Nothing in the browser build opens a database yet.** |
+| D16 (built in P2-2) | Which browser database stand-in for development | in-memory / Drift on web | **Resolved 2026-11-20 (owner): no data kept between reloads; the browser build starts fresh. Nothing in the browser build opens a database yet.** |

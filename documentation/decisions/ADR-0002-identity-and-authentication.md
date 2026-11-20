@@ -15,6 +15,8 @@ Counters must sign in with no internet. The owner's phone needs a cloud identity
 5. The manager and owner password has at least 10 characters (length only, counted in characters; no other rule; owner, 2026-11-20). PINs are 6 to 12 digits; no rule against easy PINs such as 123456 (not asked; the owner may want one).
 6. The counter locks itself after 5 idle minutes and on Ctrl+L (owner, 2026-11-20). The rule is built in `core_domain`; the screen that uses it is the next task.
 7. New hashes use Argon2id with 19 MiB memory, 2 passes, 1 lane (the OWASP minimum, the assistant's choice; about 65 ms on a Mac, unverified on the shop laptop). The settings are stored inside each hash, so they can be raised later and old hashes still verify and are re-hashed at the next correct sign-in. The hashing library is `hashlib` 2.4.3 (pure Dart), checked against the RFC 9106 Argon2id test vector.
+8a. First launch (no users): an install wizard asks for the owner's name and a password (twice) and signs them in; it cannot run again once any user exists (ADR-0002 D1). Cashiers are added later by the owner in Manager Mode (not built).
+8b. After sign-in a cashier sees Sales Mode and a manager or owner sees Manager Mode; both are empty shells until billing, stock and reports are built.
 8. Sign-in events (success, lockout) go to the audit log on this device only; they are not queued for the cloud. Secrets, hashes and wrong guesses are never logged.
 
 ## Alternatives considered
@@ -32,4 +34,4 @@ Counters must sign in with no internet. The owner's phone needs a cloud identity
 ## Open decisions
 | ID | Question | Options | Recommended |
 |---|---|---|---|
-| D1 | Who sets the first owner password | Install wizard | Install wizard (recommended taken) |
+| D1 | Who sets the first owner password | Install wizard | **Built in P2-2** |

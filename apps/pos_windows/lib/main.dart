@@ -1,29 +1,16 @@
-import 'package:core_domain/core_domain.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
-void main() => runApp(const PosApp());
+import 'app/app.dart';
+import 'app/session_controller.dart';
+import 'data/auth_service.dart';
+import 'data/connection/connection.dart';
 
-class PosApp extends StatelessWidget {
-  const PosApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Apparel PoS (core $coreDomainSkeletonVersion)'),
-              // The browser build is for development only (ADR-0016): no
-              // encrypted database and no hardware, so never use it in the shop.
-              if (kIsWeb)
-                const Text('Web preview: development only, not for the shop'),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final db = await openAppDatabase();
+  final auth = AuthService(db, newId: () => const Uuid().v4());
+  final session = SessionController(auth: auth);
+  runApp(PosApp(session: session));
+  await session.start();
 }

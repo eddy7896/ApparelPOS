@@ -18,8 +18,9 @@ Purpose: lock screen, PINs, passwords, roles and idle lock.
 | manageSettings, configureGst, manageUsers, backupAndRestore | no | yes | yes |
 
   Manager equals owner today by the owner's choice (2026-11-18). The cashier's discount limit as an owner-editable setting, the manager-password prompt and the lock screen are P2-2.
-- **Built (P2-2, part 1, no screen yet):** PIN and password rules, lockout and idle-lock rules and Argon2id hashing in `core_domain`; the `users` table (schema v2), `AuthService` (create user, sign in with lockout saved per user, change PIN or password, deactivate, list names) in `apps/pos_windows/lib/data/`.
-- **Not built:** the lock screen, idle timer and Ctrl+L (P2-2 part 2); the manager-password prompt for large cashier discounts (which account is checked and how its lockout works is undecided); first-owner setup at install (ADR-0002 D1); owner-editable lockout and idle settings.
+- **Built (P2-2 part 2):** the screens in `apps/pos_windows/lib/app/`: first-time owner setup, the lock screen (pick a name, PIN keypad for cashiers, hidden password for manager and owner, tries-left and lock messages), idle lock after 5 minutes, Ctrl+L and a Lock button, and an empty Sales Mode / Manager Mode shell. Every sign-in screen says the database is not encrypted yet. The app opens `apparel_pos.db` in its data folder on Windows (unverified on a real Windows machine) and an in-memory database in the browser preview. **No one has looked at these screens yet** (no screenshot could be taken here).
+- **Built (P2-2, part 1):** PIN and password rules, lockout and idle-lock rules and Argon2id hashing in `core_domain`; the `users` table (schema v2), `AuthService` (create user, sign in with lockout saved per user, change PIN or password, deactivate, list names) in `apps/pos_windows/lib/data/`.
+- **Not built:** the manager-password prompt for large cashier discounts (which account is checked and how its lockout works is undecided); adding cashiers (needs Manager Mode); owner-editable lockout and idle settings.
 - **Tasks:** P1-4, P2-2, P3-1.
 - **Evals first:** E-AUTH-1, E-AUTH-2, E-AUTHZ-1, E-AUTHZ-2, E-ENC-1.
 - **Not in scope:** cloud sign-in (release 2).
