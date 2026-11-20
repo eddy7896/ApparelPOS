@@ -37,8 +37,11 @@ Purpose: phases and task IDs. Size S <= 1 day, M <= 3 days, L <= 1 week. Phases 
 | P2-1 | Drift tables, WAL, migrations | M | E-SERIAL-1 | P1 | done |
 | P2-2 | Lock screen, auth, idle lock | M | E-AUTH-1, 2 | P2-1 | done |
 | P2-3a | Purchase rules, save in one transaction, size and color lists, label data | M | stock tests | P2-1, P1-5 | done |
-| P2-3b | Stock entry screen (Size x Color grid) and label printing | L | screen tests; a printed sheet scans | P2-3a, P2-2 | doing |
-| P2-4 | Billing register | L | E-SALE-1, E-OFFLINE-1 | P2-1 | todo |
+| P2-3b | Stock entry screen (Size x Color grid) and label printing | L | screen tests; a printed sheet scans | P2-3a, P2-2 | done |
+| P2-4a | Bill rules: bill number (year/counter/serial), payments (cash, UPI, card, split), change | S | unit tests; mutation-checked | P1 | doing |
+| P2-4b | Sales tables, safe stock lookup for cashiers (no cost columns), save a bill in one transaction (E-SALE-1) | L | E-SALE-1, E-AUTHZ-1 | P2-4a | todo |
+| P2-4c | Register screen: scan, bill lines, discount, pay, on-screen bill and PDF print | L | E-OFFLINE-1; screen tests | P2-4b | todo |
+| P2-4d | Pay later (udhaar): customer records, balance owed, later payments | L | owner chose 2026-11-20; questions needed first | P2-4c | todo |
 | P2-5 | Returns and credit notes | M | E-RETURN-1 | P2-4 | todo |
 | P2-6 | Blind shift close and daybook | M | E-SHIFT-1 | P2-4 | todo |
 | P2-7 | Owner reports (daily) | M | totals match daybook | P2-6 | todo |

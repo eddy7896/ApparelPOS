@@ -106,12 +106,12 @@
     {
       "pr": "#15",
       "title": "P2-3a: Purchase entry rules and saving",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#16",
       "title": "P2-3b: Stock entry screen and label printing",
-      "state": "open"
+      "state": "merged"
     }
   ],
   "rules": [
@@ -119,7 +119,7 @@
     "The owner merges and releases; the agent only opens pull requests."
   ],
   "ownerActions": [
-    "Merge PR #15 first, then review and merge PR #16 (stock entry screen).",
+    "Look at the stock entry screen (flutter run -d chrome) and try a real print on Windows when you can.",
     "Switch on branch protection for main and develop; require branch-policy, build-lint-test and dart-flutter-windows.",
     "Look at the lock and setup screens (flutter run -d chrome, then Add practice users) and tell me how they look.",
     "Review ADR-0006, ADR-0013 and ADR-0014 (Proposed).",
