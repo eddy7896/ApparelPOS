@@ -11,7 +11,7 @@
     },
     {
       "tone": "warn",
-      "text": "PR #15 (feat/p2-3a-purchase-entry into develop) is open; CI result not read yet."
+      "text": "PR #15 (purchase rules) is still open on GitHub, clean and mergeable. PR #16 (stock entry screen) is stacked on it and contains its commits until #15 merges."
     }
   ],
   "branches": [
@@ -24,8 +24,8 @@
       "note": "integration; last updated 2026-11-20"
     },
     {
-      "name": "feat/p2-3a-purchase-entry",
-      "note": "PR #15, open"
+      "name": "feat/p2-3b-stock-screen",
+      "note": "PR #16, open, stacked on feat/p2-3a-purchase-entry"
     },
     {
       "name": "merged topic branches (still on GitHub, not deleted)",
@@ -107,6 +107,11 @@
       "pr": "#15",
       "title": "P2-3a: Purchase entry rules and saving",
       "state": "open"
+    },
+    {
+      "pr": "#16",
+      "title": "P2-3b: Stock entry screen and label printing",
+      "state": "open"
     }
   ],
   "rules": [
@@ -114,7 +119,7 @@
     "The owner merges and releases; the agent only opens pull requests."
   ],
   "ownerActions": [
-    "Review and merge PR #15 (purchase entry rules and saving).",
+    "Merge PR #15 first, then review and merge PR #16 (stock entry screen).",
     "Switch on branch protection for main and develop; require branch-policy, build-lint-test and dart-flutter-windows.",
     "Look at the lock and setup screens (flutter run -d chrome, then Add practice users) and tell me how they look.",
     "Review ADR-0006, ADR-0013 and ADR-0014 (Proposed).",

@@ -36,8 +36,8 @@ Purpose: phases and task IDs. Size S <= 1 day, M <= 3 days, L <= 1 week. Phases 
 |---|---|---|---|---|---|
 | P2-1 | Drift tables, WAL, migrations | M | E-SERIAL-1 | P1 | done |
 | P2-2 | Lock screen, auth, idle lock | M | E-AUTH-1, 2 | P2-1 | done |
-| P2-3a | Purchase rules, save in one transaction, size and color lists, label data | M | stock tests | P2-1, P1-5 | doing |
-| P2-3b | Stock entry screen (Size x Color grid) and label printing | L | screen tests; a printed sheet scans | P2-3a, P2-2 | todo |
+| P2-3a | Purchase rules, save in one transaction, size and color lists, label data | M | stock tests | P2-1, P1-5 | done |
+| P2-3b | Stock entry screen (Size x Color grid) and label printing | L | screen tests; a printed sheet scans | P2-3a, P2-2 | doing |
 | P2-4 | Billing register | L | E-SALE-1, E-OFFLINE-1 | P2-1 | todo |
 | P2-5 | Returns and credit notes | M | E-RETURN-1 | P2-4 | todo |
 | P2-6 | Blind shift close and daybook | M | E-SHIFT-1 | P2-4 | todo |

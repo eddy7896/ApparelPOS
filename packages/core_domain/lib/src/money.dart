@@ -36,7 +36,11 @@ final class Money implements Comparable<Money> {
   /// and -12.5 becomes -13, so a return reverses a sale exactly.
   Money percentBp(int basisPoints) {
     if (basisPoints < 0) {
-      throw ArgumentError.value(basisPoints, 'basisPoints', 'must not be negative');
+      throw ArgumentError.value(
+        basisPoints,
+        'basisPoints',
+        'must not be negative',
+      );
     }
     final scaled = paise.abs() * basisPoints;
     final rounded = (scaled + 5000) ~/ 10000;
@@ -54,4 +58,34 @@ final class Money implements Comparable<Money> {
 
   @override
   String toString() => 'Money($paise paise)';
+}
+
+/// The most [parseRupees] accepts: 99,999,999.99 rupees.
+const int maxParsedPaise = 9999999999;
+
+/// Reads an amount typed by a person: "499", "499.5", "1,499.50", "₹499".
+/// Returns exact paise, or null if it is empty, negative, has more than two
+/// decimals (never rounded), is not a number, or is above 99,999,999.99.
+Money? parseRupees(String text) {
+  var t = text.trim();
+  if (t.startsWith('₹')) {
+    t = t.substring(1).trim();
+  }
+  t = t.replaceAll(',', '');
+  final match = RegExp(r'^([0-9]*)(?:\.([0-9]{0,2}))?$').firstMatch(t);
+  if (match == null) {
+    return null;
+  }
+  final whole = match.group(1)!;
+  final fraction = match.group(2) ?? '';
+  if (whole.isEmpty && fraction.isEmpty) {
+    return null;
+  }
+  final rupees = whole.isEmpty ? 0 : int.tryParse(whole);
+  if (rupees == null || rupees > maxParsedPaise ~/ 100) {
+    return null;
+  }
+  final paise = fraction.isEmpty ? 0 : int.parse(fraction.padRight(2, '0'));
+  final total = rupees * 100 + paise;
+  return total > maxParsedPaise ? null : Money(total);
 }

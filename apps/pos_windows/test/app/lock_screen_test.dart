@@ -6,9 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pos_windows/app/app.dart';
+import 'package:pos_windows/app/label_printer.dart';
+import 'package:pos_windows/app/services.dart';
 import 'package:pos_windows/app/session_controller.dart';
 import 'package:pos_windows/data/app_database.dart';
 import 'package:pos_windows/data/auth_service.dart';
+import 'package:pos_windows/data/stock_repository.dart';
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -36,7 +39,15 @@ void main() {
     addTearDown(tester.view.reset);
     await tester.runAsync(() => session.start());
     await tester.pumpWidget(
-      PosApp(session: session, idleCheckEvery: const Duration(seconds: 5)),
+      PosApp(
+        session: session,
+        services: AppServices(
+          stock: StockRepository(db, newId: () => 'unused-${++n}'),
+          printer: const SystemLabelPrinter(),
+          fonts: () async => throw StateError('fonts are not used here'),
+        ),
+        idleCheckEvery: const Duration(seconds: 5),
+      ),
     );
     await tester.pump();
   }
