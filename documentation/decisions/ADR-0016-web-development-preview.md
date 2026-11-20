@@ -35,4 +35,4 @@ The owner has no Windows computer to develop on. Flutter can run the same app in
 ## Open decisions
 | ID | Question | Options | Recommended |
 |---|---|---|---|
-| D16 | Which browser database stand-in for development | in-memory / Drift on web | decide at P2-1 |
+| D16 | Which browser database stand-in for development | in-memory / Drift on web | **Resolved 2026-11-20 (owner): no data kept between reloads; the browser build starts fresh. Nothing in the browser build opens a database yet.** |
