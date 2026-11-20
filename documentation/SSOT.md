@@ -11,6 +11,7 @@ Purpose: the single home of product behaviour. Tags: [ASSUMED] owner has not con
 
 ## Stock and barcodes
 5. Every garment gets a unique serialized barcode: YYMM + 3-digit lot + 4-digit serial + 1 check digit (12 digits, Code 128 Subset C needs an even count; check digit approved by the owner 2026-11-18). [DESIGN, from owner spec]
+6a. A purchase is entered in a Size x Color grid where every cell has its own quantity, cost and MRP (owner, 2026-11-20). The whole purchase is saved in one transaction. The counter keeps filling its current lot; a purchase that does not fit goes whole into the next lot and is never split (assistant's rule, unconfirmed). Counter 1 owns lots 000-499.
 6. A barcode is unique across the shop. Each counter has its own reserved range of lot numbers (ranges never overlap), one lot at a time. [ADR-0008]
 7. Statuses: IN_STOCK, SOLD, RETURNED, DAMAGED.
 
