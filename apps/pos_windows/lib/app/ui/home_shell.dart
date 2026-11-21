@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../services.dart';
 import '../session_controller.dart';
 import 'register_screen.dart';
+import 'shift_closes_screen.dart';
 import 'shift_gate.dart';
 import 'returns_screen.dart';
 import 'stock_entry_screen.dart';
@@ -81,6 +82,20 @@ class HomeShell extends StatelessWidget {
                     ),
                     icon: const Icon(Icons.assignment_return),
                     label: const Text('Returns'),
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    key: const Key('shift-closes-button'),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => ShiftClosesScreen(
+                          session: session,
+                          services: services,
+                        ),
+                      ),
+                    ),
+                    icon: const Icon(Icons.fact_check),
+                    label: const Text('Shift closes'),
                   ),
                   const SizedBox(height: 12),
                   FilledButton.icon(
