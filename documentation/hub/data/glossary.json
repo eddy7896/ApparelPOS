@@ -86,6 +86,11 @@
       "group": "Apparel PoS"
     },
     {
+      "term": "Return window",
+      "definition": "Days after a sale a cashier may take a return alone (7); later needs a manager or owner.",
+      "group": "Apparel PoS"
+    },
+    {
       "term": "Sales Mode",
       "definition": "Counter app mode for the cashier, with no cost data.",
       "group": "Apparel PoS"
