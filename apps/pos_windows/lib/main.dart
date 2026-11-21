@@ -10,6 +10,7 @@ import 'data/auth_service.dart';
 import 'data/connection/connection.dart';
 import 'data/returns_repository.dart';
 import 'data/sales_repository.dart';
+import 'data/shift_repository.dart';
 import 'data/stock_repository.dart';
 
 Future<void> main() async {
@@ -28,6 +29,7 @@ Future<void> _start() async {
   final stock = StockRepository(db, newId: () => const Uuid().v4());
   final sales = SalesRepository(db, newId: () => const Uuid().v4());
   final returns = ReturnsRepository(db, newId: () => const Uuid().v4());
+  final shifts = ShiftRepository(db, newId: () => const Uuid().v4());
   await stock.ensureCounter();
   final session = SessionController(auth: auth);
   runApp(
@@ -37,6 +39,7 @@ Future<void> _start() async {
         stock: stock,
         sales: sales,
         returns: returns,
+        shifts: shifts,
         auth: auth,
         printer: const SystemLabelPrinter(),
         fonts: loadBundledLabelFonts,

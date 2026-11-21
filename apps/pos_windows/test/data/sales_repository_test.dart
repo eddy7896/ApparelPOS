@@ -8,6 +8,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pos_windows/data/app_database.dart';
 import 'package:pos_windows/data/sales_repository.dart';
+import 'package:pos_windows/data/shift_repository.dart';
 import 'package:pos_windows/data/stock_repository.dart';
 
 Money r(int rupees) => Money.rupees(rupees);
@@ -42,6 +43,11 @@ void main() {
             updatedAt: now,
           ),
         );
+    await ShiftRepository(
+      db,
+      newId: newId,
+      now: () => now,
+    ).openShift(role: Role.cashier, userId: 'cashier-1', counts: const {});
     final result = await stock.receivePurchase(
       role: Role.owner,
       draft: PurchaseDraft(

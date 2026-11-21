@@ -46,9 +46,9 @@ Purpose: phases and task IDs. Size S <= 1 day, M <= 3 days, L <= 1 week. Phases 
 | P2-5a | Return rules: window, refund total, refund modes, credit note code, expiry and balance | S | unit tests; mutation-checked | P2-4a | done |
 | P2-5b | Return and credit note tables, save a return in one transaction (restock or damaged), use a credit note on a bill, exchange | L | E-RETURN-1, E-SALE-1, E-AUDIT-1 | P2-5a, P2-4c | done |
 | P2-5c | Returns screen, credit note slip print, credit note at the register | L | screen tests | P2-5b | done |
-| P2-6a | Shift rules: denominations, cash count, expected cash, variance | S | unit tests; mutation-checked | P2-4a | doing |
-| P2-6b | Shifts, blind close, daybook table; sales and returns need an open shift and write daybook rows (schema v6) | L | E-SHIFT-1, E-AUDIT-1 | P2-6a, P2-5b | todo |
-| P2-6c | Screens: open shift, blind close, owner's shift list with variance | L | screen tests; E-SHIFT-1 | P2-6b | todo |
+| P2-6a | Shift rules: denominations, cash count, expected cash, variance | S | unit tests; mutation-checked | P2-4a | done |
+| P2-6b | Shifts, blind close (data layer), daybook table; sales and returns need an open shift and write daybook rows (schema v6); the open-shift screen | L | E-SHIFT-1, E-AUDIT-1 | P2-6a, P2-5b | doing |
+| P2-6c | Screens: blind close, forced close of a stale shift at sign-in, owner's shift list with variance | L | screen tests; E-SHIFT-1 | P2-6b | todo |
 | P2-7 | Owner reports (daily) | M | totals match daybook | P2-6 | todo |
 
 ## P3 go-live

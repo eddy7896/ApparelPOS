@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../services.dart';
 import '../session_controller.dart';
 import 'register_screen.dart';
+import 'shift_gate.dart';
 import 'returns_screen.dart';
 import 'stock_entry_screen.dart';
 
@@ -47,7 +48,11 @@ class HomeShell extends StatelessWidget {
         ],
       ),
       body: sales
-          ? RegisterPanel(session: session, services: services)
+          ? ShiftGate(
+              session: session,
+              services: services,
+              child: RegisterPanel(session: session, services: services),
+            )
           : Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
