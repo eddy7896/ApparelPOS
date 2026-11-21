@@ -28,7 +28,7 @@ Purpose: which checks exist, when they run, and the rules for changing them. All
 | E-RETURN-1 | Return refunds exact net price and tax |
 | E-SHIFT-1 | Blind close shows no expected amount; variance correct |
 | E-OFFLINE-1 | A sale completes with no network |
-| E-BACKUP-1 | Backup restores to a clean database |
+| E-BACKUP-1 | Backup restores to a clean database (built: `backup_service_test.dart`, restore with the recovery key; real Windows and USB unverified) |
 | E-PRIV-1 | A bill completes with no customer details |
 | E-AUDIT-1 | Every write has user and time |
 | E-GST-1 | GST off by default; enabling does not alter past bills |
