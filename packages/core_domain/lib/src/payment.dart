@@ -1,13 +1,14 @@
 // Paying a bill. Release 1 takes payment in full at the counter: cash, UPI,
-// card, or a mix. Change is only ever given out of cash. Integer paise only
-// (E-MONEY-1). Credit notes (P2-5) and pay-later (udhaar) are later tasks.
+// card, a credit note, or a mix. Change is only ever given out of cash.
+// Integer paise only (E-MONEY-1). Pay-later (udhaar) is a later task.
 
 import 'money.dart';
 
 enum PaymentMode {
   cash('cash'),
   upi('upi'),
-  card('card');
+  card('card'),
+  creditNote('credit_note');
 
   const PaymentMode(this.dbValue);
 
