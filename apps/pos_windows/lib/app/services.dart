@@ -1,4 +1,5 @@
 import '../data/auth_service.dart';
+import '../data/report_repository.dart';
 import '../data/returns_repository.dart';
 import '../data/sales_repository.dart';
 import '../data/shift_repository.dart';
@@ -12,6 +13,7 @@ class AppServices {
     required this.sales,
     required this.returns,
     required this.shifts,
+    required this.reports,
     required this.auth,
     required this.printer,
     required this.fonts,
@@ -21,6 +23,7 @@ class AppServices {
   final SalesRepository sales;
   final ReturnsRepository returns;
   final ShiftRepository shifts;
+  final ReportRepository reports;
 
   /// Used by the register to check a manager's password for a big discount.
   final AuthService auth;

@@ -15,6 +15,7 @@ import 'package:pos_windows/app/services.dart';
 import 'package:pos_windows/app/session_controller.dart';
 import 'package:pos_windows/data/app_database.dart';
 import 'package:pos_windows/data/auth_service.dart';
+import 'package:pos_windows/data/report_repository.dart';
 import 'package:pos_windows/data/returns_repository.dart';
 import 'package:pos_windows/data/sales_repository.dart';
 import 'package:pos_windows/data/shift_repository.dart';
@@ -91,6 +92,7 @@ void main() {
       sales: SalesRepository(db, newId: newId),
       returns: ReturnsRepository(db, newId: newId),
       shifts: ShiftRepository(db, newId: newId),
+      reports: ReportRepository(db),
       auth: auth,
       printer: printer,
       fonts: () async => LabelFonts(

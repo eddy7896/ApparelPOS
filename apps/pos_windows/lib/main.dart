@@ -8,6 +8,7 @@ import 'app/startup_failed.dart';
 import 'app/session_controller.dart';
 import 'data/auth_service.dart';
 import 'data/connection/connection.dart';
+import 'data/report_repository.dart';
 import 'data/returns_repository.dart';
 import 'data/sales_repository.dart';
 import 'data/shift_repository.dart';
@@ -40,6 +41,7 @@ Future<void> _start() async {
         sales: sales,
         returns: returns,
         shifts: shifts,
+        reports: ReportRepository(db),
         auth: auth,
         printer: const SystemLabelPrinter(),
         fonts: loadBundledLabelFonts,
