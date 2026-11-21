@@ -14,16 +14,16 @@
     {
       "id": "connect",
       "title": "How the pieces connect",
-      "note": "Built: the shared rules package (core_domain), the counter app with its local database (not encrypted yet), sign-in, stock entry with hangtag printing, and (PR #19, open) the billing register. Not built: encryption, backups, sync, cloud, mobile app. Dashed lines are release 2.",
+      "note": "Built: the shared rules package (core_domain) and the counter app with its local database (not encrypted yet): sign-in, stock entry with hangtag printing, billing register, returns and credit notes, shifts with the blind cash close, the daybook and the owner's daily report. Not built: encryption, backups, installer, GST setup, pay later, sync, cloud, mobile app. Dashed lines are release 2.",
       "kind": "mermaid",
-      "source": "flowchart LR\n  D[\"core_domain<br/>money, barcodes, pricing, permissions, hangtags, bills, payments\"]:::built\n  C1[\"pos_windows counter 1<br/>sign-in, stock entry, register (PR #19)\"]:::built --> D\n  C1 --> DB[(\"Local database<br/>not encrypted yet\")]:::built\n  W[\"Browser preview<br/>development only\"]:::built --> D\n  C1 -. \"sync, release 2\" .-> F[(\"Firestore + Auth\")]:::plan\n  C2[\"Future counter 2\"]:::plan -.-> F\n  M[\"manager_mobile\"]:::plan -.-> F\n  F -.->|commands| C1\n  classDef built fill:#dcf4e7,stroke:#0f7a4a\n  classDef plan fill:#eceef6,stroke:#9aa1bd,stroke-dasharray: 4 3"
+      "source": "flowchart LR\n  D[\"core_domain<br/>money, barcodes, pricing, permissions, hangtags, bills, returns, shifts, reports\"]:::built\n  C1[\"pos_windows counter 1<br/>sign-in, stock, register, returns, shifts, reports\"]:::built --> D\n  C1 --> DB[(\"Local database<br/>not encrypted yet\")]:::built\n  W[\"Browser preview<br/>development only\"]:::built --> D\n  C1 -. \"sync, release 2\" .-> F[(\"Firestore + Auth\")]:::plan\n  C2[\"Future counter 2\"]:::plan -.-> F\n  M[\"manager_mobile\"]:::plan -.-> F\n  F -.->|commands| C1\n  classDef built fill:#dcf4e7,stroke:#0f7a4a\n  classDef plan fill:#eceef6,stroke:#9aa1bd,stroke-dasharray: 4 3"
     },
     {
       "id": "sale",
       "title": "What happens in one sale",
-      "note": "Built: scanning, cashier-safe lookup, pricing, the discount limit with manager approval, payment and change, the bill number, and the one transaction that marks garments SOLD and writes the bill, audit and outbox (the register screen is PR #19, open). Not built: daybook rows, returns, receipts other than A4.",
+      "note": "Built: scanning, cashier-safe lookup, pricing, the discount limit with manager approval, payment and change, credit notes, the bill number, an open shift, and the one local transaction that marks garments SOLD and writes the bill, daybook rows, audit and outbox. The daybook feeds the shift close and the owner's daily report. Not built: pay later, receipts other than A4.",
       "kind": "mermaid",
-      "source": "flowchart LR\n  S[\"Scan barcode\"]:::built --> R[\"core_domain prices the bill\"]:::built --> T[\"One local transaction: bill, lines, payments, bill number, audit, outbox\"]:::built --> A[\"Article marked SOLD\"]:::built --> P[\"Print A4 bill\"]:::built\n  T -.-> DB[\"Daybook row\"]:::plan\n  classDef built fill:#dcf4e7,stroke:#0f7a4a\n  classDef plan fill:#eceef6,stroke:#9aa1bd,stroke-dasharray: 4 3"
+      "source": "flowchart LR\n  S[\"Scan barcode\"]:::built --> R[\"core_domain prices the bill\"]:::built --> T[\"One local transaction in an open shift: bill, lines, payments, bill number, daybook, audit, outbox\"]:::built --> A[\"Article marked SOLD\"]:::built --> P[\"Print A4 bill\"]:::built\n  T --> DB[\"Daybook rows\"]:::built --> X[\"Blind shift close and daily report\"]:::built\n  classDef built fill:#dcf4e7,stroke:#0f7a4a\n  classDef plan fill:#eceef6,stroke:#9aa1bd,stroke-dasharray: 4 3"
     }
   ]
 }

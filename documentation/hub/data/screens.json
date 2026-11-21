@@ -68,13 +68,13 @@
       "device": "desktop"
     },
     {
-      "id": "pos-report",
+      "id": "pos-daily-report",
       "app": "pos_windows",
       "title": "Daily report",
-      "note": "Owner reads the day's sales and cash variance.",
-      "status": "planned",
-      "pr": "",
-      "task": "P2-7",
+      "note": "One India day at a time: sales, money by mode, refunds, cash count per shift, top styles, profit. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#28",
+      "task": "P2-7c",
       "images": {},
       "device": "desktop"
     }
