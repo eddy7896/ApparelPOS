@@ -27,6 +27,7 @@ class ShiftGate extends StatefulWidget {
 
 class _ShiftGateState extends State<ShiftGate> {
   ShiftInfo? _shift;
+  bool _stale = false;
   bool _loaded = false;
   bool _busy = false;
   String? _message;
@@ -38,14 +39,41 @@ class _ShiftGateState extends State<ShiftGate> {
   }
 
   Future<void> _load() async {
-    final s = await widget.services.shifts.currentShift(
-      widget.session.user!.userId,
-    );
+    final id = widget.session.user!.userId;
+    final s = await widget.services.shifts.currentShift(id);
+    final stale = s != null && await widget.services.shifts.hasStaleShift(id);
     if (mounted) {
       setState(() {
         _shift = s;
+        _stale = stale;
         _loaded = true;
       });
+    }
+  }
+
+  /// An open shift from an earlier day must be closed, blind, before selling.
+  Future<void> _closeStale(Map<Denomination, int> counts) async {
+    setState(() {
+      _busy = true;
+      _message = null;
+    });
+    try {
+      await widget.services.shifts.closeShift(
+        role: widget.session.user!.role,
+        userId: widget.session.user!.userId,
+        counts: counts,
+      );
+      await _load();
+    } on NoOpenShift {
+      await _load();
+    } on PermissionDenied {
+      if (mounted) {
+        setState(() => _message = 'You may not close a shift.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
     }
   }
 
@@ -81,9 +109,10 @@ class _ShiftGateState extends State<ShiftGate> {
     if (!_loaded) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (_shift != null) {
+    if (_shift != null && !_stale) {
       return widget.child;
     }
+    final stale = _shift != null && _stale;
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420),
@@ -92,19 +121,24 @@ class _ShiftGateState extends State<ShiftGate> {
           padding: const EdgeInsets.all(24),
           children: [
             Text(
-              'Open your shift',
-              key: const Key('open-shift-title'),
+              stale ? 'Close your earlier shift' : 'Open your shift',
+              key: Key(stale ? 'stale-shift-title' : 'open-shift-title'),
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Count the cash in the drawer by notes and coins, then open the shift.',
+            Text(
+              stale
+                  ? 'Your last shift was opened on an earlier day and was never closed. '
+                        'Count all the cash in the drawer by notes and coins to close it. '
+                        'Then you can open a new shift.'
+                  : 'Count the cash in the drawer by notes and coins, then open the shift.',
             ),
             const SizedBox(height: 16),
             CashCountForm(
-              buttonLabel: 'Open shift',
+              key: Key(stale ? 'stale-count' : 'open-count'),
+              buttonLabel: stale ? 'Close earlier shift' : 'Open shift',
               busy: _busy,
-              onSubmit: _open,
+              onSubmit: stale ? _closeStale : _open,
             ),
             if (_message != null)
               Padding(

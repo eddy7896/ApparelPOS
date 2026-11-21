@@ -60,10 +60,10 @@
       "id": "pos-shift",
       "app": "pos_windows",
       "title": "Blind shift close",
-      "note": "Cashier counts cash without seeing the expected amount.",
-      "status": "planned",
+      "note": "Open a shift by counting the drawer, blind close (no expected amount shown), forced close of an earlier day, owner list of closes. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
       "pr": "",
-      "task": "P2-6",
+      "task": "P2-6c",
       "images": {},
       "device": "desktop"
     },

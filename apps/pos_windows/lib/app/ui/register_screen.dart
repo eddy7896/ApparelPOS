@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import '../../data/sales_repository.dart';
 import '../bill_pdf.dart';
 import 'approval_dialog.dart';
+import 'close_shift_screen.dart';
 import 'shift_gate.dart';
 import '../services.dart';
 import '../session_controller.dart';
@@ -493,6 +494,29 @@ class _RegisterPanelState extends State<RegisterPanel> {
                   key: const Key('bill-lines'),
                   children: [for (final l in _lines) _lineTile(l)],
                 ),
+        ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Tooltip(
+            message: _lines.isEmpty && _notes.isEmpty
+                ? ''
+                : 'Finish or clear the bill first',
+            child: TextButton.icon(
+              key: const Key('close-shift-button'),
+              onPressed: _lines.isEmpty && _notes.isEmpty
+                  ? () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => CloseShiftScreen(
+                          session: widget.session,
+                          services: _s,
+                        ),
+                      ),
+                    )
+                  : null,
+              icon: const Icon(Icons.lock_clock),
+              label: const Text('Close shift'),
+            ),
+          ),
         ),
       ],
     );
