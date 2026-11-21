@@ -1,8 +1,8 @@
 // The counter's local database (Drift on SQLite), release 1 stock tables.
 // Rules (ADR-0006, ADR-0007): ids are UUID text made on the device, times are
 // UTC, money is integer paise, every write also writes an audit row and an
-// outbox row in the same transaction. Encryption (SQLCipher) is P3-1 and is NOT
-// done here: this database is not encrypted yet (E-ENC-1 pending).
+// outbox row in the same transaction. The file is encrypted (SQLCipher) by the
+// connection that opens it, not here (data/encryption/, P3-1).
 // ignore_for_file: recursive_getters
 // (Drift's documented way to write a check on a column refers to the column itself.)
 import 'dart:convert';

@@ -8,6 +8,7 @@ import 'app/startup_failed.dart';
 import 'app/session_controller.dart';
 import 'data/auth_service.dart';
 import 'data/connection/connection.dart';
+import 'data/recovery_key_repository.dart';
 import 'data/report_repository.dart';
 import 'data/returns_repository.dart';
 import 'data/sales_repository.dart';
@@ -42,6 +43,13 @@ Future<void> _start() async {
         returns: returns,
         shifts: shifts,
         reports: ReportRepository(db),
+        recovery: appKeyStore == null
+            ? null
+            : RecoveryKeyRepository(
+                db,
+                appKeyStore!,
+                newId: () => const Uuid().v4(),
+              ),
         auth: auth,
         printer: const SystemLabelPrinter(),
         fonts: loadBundledLabelFonts,
