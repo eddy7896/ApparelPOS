@@ -7,6 +7,7 @@ import 'app/services.dart';
 import 'app/session_controller.dart';
 import 'data/auth_service.dart';
 import 'data/connection/connection.dart';
+import 'data/sales_repository.dart';
 import 'data/stock_repository.dart';
 
 Future<void> main() async {
@@ -14,6 +15,7 @@ Future<void> main() async {
   final db = await openAppDatabase();
   final auth = AuthService(db, newId: () => const Uuid().v4());
   final stock = StockRepository(db, newId: () => const Uuid().v4());
+  final sales = SalesRepository(db, newId: () => const Uuid().v4());
   await stock.ensureCounter();
   final session = SessionController(auth: auth);
   runApp(
@@ -21,6 +23,8 @@ Future<void> main() async {
       session: session,
       services: AppServices(
         stock: stock,
+        sales: sales,
+        auth: auth,
         printer: const SystemLabelPrinter(),
         fonts: loadBundledLabelFonts,
       ),

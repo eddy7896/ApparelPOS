@@ -2,5 +2,5 @@
   "title": "Apparel PoS Hub",
   "subtitle": "Progress, screens, architecture and decisions for the shop billing system.",
   "repo": "https://github.com/eddy7896/ApparelPOS.git",
-  "demoNote": "No demo yet: only empty skeletons exist. A browser preview (development only, not for the shop) is in PR #10 and runs with flutter run -d chrome; it shows one line of text. Not run on a real Windows machine."
+  "demoNote": "Demo: run flutter run -d chrome in apps/pos_windows, click Add practice users, then sign in. The browser preview is for development only (data is lost on reload, not for the shop). It shows sign-in, stock entry and the billing register (PR #19). Not run on a real Windows machine; the database is not encrypted yet."
 }

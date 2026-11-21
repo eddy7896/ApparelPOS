@@ -405,6 +405,62 @@ void main() {
       expect(await statusOf(barcodes[0]), 'SOLD');
     });
 
+    test(
+      'a manager who approved lets a cashier give a bigger discount',
+      () async {
+        await sales.saveBill(
+          role: Role.cashier,
+          cashierId: 'cashier-1',
+          lines: [
+            BillLineInput(barcodes[0], discount: PriceCut.percentBp(2000)),
+          ],
+          payments: [Payment(PaymentMode.cash, Money(39920))],
+          discountApproverRole: Role.manager,
+          discountApprovedBy: 'manager-1',
+        );
+        expect(await statusOf(barcodes[0]), 'SOLD');
+        final audit = await db
+            .customSelect(
+              "SELECT details FROM audit_log WHERE action = 'sale.bill'",
+            )
+            .getSingle();
+        expect(audit.read<String>('details'), contains('manager-1'));
+        final b = await db
+            .customSelect('SELECT cashier_id FROM bills')
+            .getSingle();
+        expect(b.read<String>('cashier_id'), 'cashier-1');
+      },
+    );
+
+    test('an approver who is only a cashier changes nothing', () async {
+      await expectLater(
+        sales.saveBill(
+          role: Role.cashier,
+          cashierId: 'cashier-1',
+          lines: [
+            BillLineInput(barcodes[0], discount: PriceCut.percentBp(2000)),
+          ],
+          payments: [Payment(PaymentMode.cash, Money(39920))],
+          discountApproverRole: Role.cashier,
+          discountApprovedBy: 'cashier-2',
+        ),
+        throwsA(isA<DiscountNeedsManager>()),
+      );
+    });
+
+    test('an approver role without an approver id is a mistake', () async {
+      await expectLater(
+        sales.saveBill(
+          role: Role.cashier,
+          cashierId: 'cashier-1',
+          lines: [BillLineInput(barcodes[0])],
+          payments: [Payment(PaymentMode.cash, Money(49900))],
+          discountApproverRole: Role.manager,
+        ),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+
     test('a manager may give a bigger discount', () async {
       await sales.saveBill(
         role: Role.manager,

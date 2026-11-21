@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-20",
+  "updatedAt": "2026-11-21",
   "items": [
     {
       "id": "pos-setup",
@@ -27,10 +27,10 @@
       "id": "pos-billing",
       "app": "pos_windows",
       "title": "Billing register",
-      "note": "Scan items, take payment, finish the bill.",
-      "status": "planned",
-      "pr": "",
-      "task": "P2-4",
+      "note": "Scan or type a barcode, lines left, total and payment right, manager approval for a big discount, saved bill with Print and New bill. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#19",
+      "task": "P2-4c",
       "images": {},
       "device": "desktop"
     },
@@ -39,7 +39,7 @@
       "app": "pos_windows",
       "title": "Stock entry (Size x Color grid)",
       "note": "Owner enters a purchase in a Size x Color grid and prints hangtags. No screenshot yet: not seen on screen.",
-      "status": "open-pr",
+      "status": "built",
       "pr": "#16",
       "task": "P2-3",
       "images": {},

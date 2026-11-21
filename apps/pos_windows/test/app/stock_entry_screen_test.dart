@@ -15,6 +15,7 @@ import 'package:pos_windows/app/services.dart';
 import 'package:pos_windows/app/session_controller.dart';
 import 'package:pos_windows/data/app_database.dart';
 import 'package:pos_windows/data/auth_service.dart';
+import 'package:pos_windows/data/sales_repository.dart';
 import 'package:pos_windows/data/stock_repository.dart';
 
 class FakePrinter implements LabelPrinter {
@@ -85,6 +86,8 @@ void main() {
     });
     final services = AppServices(
       stock: stock,
+      sales: SalesRepository(db, newId: newId),
+      auth: auth,
       printer: printer,
       fonts: () async => LabelFonts(
         regular: File('assets/fonts/NotoSans-Regular.ttf').readAsBytesSync(),

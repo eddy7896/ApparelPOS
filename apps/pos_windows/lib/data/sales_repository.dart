@@ -196,8 +196,21 @@ class SalesRepository {
     String? customerName,
     String? customerPhone,
     int discountLimitBp = defaultCashierDiscountLimitBp,
+    Role? discountApproverRole,
+    String? discountApprovedBy,
   }) async {
     require(role, Permission.sell);
+    if ((discountApproverRole == null) != (discountApprovedBy == null)) {
+      throw ArgumentError(
+        'give both discountApproverRole and discountApprovedBy, or neither',
+      );
+    }
+    // A manager or owner who typed their password may approve a discount over
+    // the cashier's limit. An approver without that right changes nothing.
+    final decisionRole =
+        can(discountApproverRole, Permission.overrideDiscountLimit)
+        ? discountApproverRole
+        : role;
     if (lines.isEmpty) {
       throw InvalidBill('a bill needs at least one garment');
     }
@@ -248,7 +261,7 @@ class SalesRepository {
           final discount = input.discount;
           if (discount != null) {
             final decision = discountDecision(
-              role,
+              decisionRole,
               discount,
               item.mrp,
               limitBp: discountLimitBp,
@@ -370,7 +383,11 @@ class SalesRepository {
         );
       },
       // No customer details and no cost in the audit or outbox details.
-      details: {'garments': lines.length, 'role': role?.dbValue},
+      details: {
+        'garments': lines.length,
+        'role': role?.dbValue,
+        'discountApprovedBy': ?discountApprovedBy,
+      },
     );
   }
 

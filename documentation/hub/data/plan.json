@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-20",
+  "updatedAt": "2026-11-21",
   "items": [
     { "id": "P0-1", "name": "Repo and workspace tooling", "phase": 0, "phaseName": "Foundation", "milestone": "", "order": 1, "status": "done", "pct": 100, "pr": "#1" },
     { "id": "P0-2", "name": "Documents and ADRs", "phase": 0, "phaseName": "Foundation", "milestone": "", "order": 2, "status": "done", "pct": 100, "pr": "#1" },
@@ -16,9 +16,10 @@
     { "id": "P2-2", "name": "Lock screen, auth, idle lock", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 21, "status": "done", "pct": 100, "pr": "#14" },
     { "id": "P2-3a", "name": "Purchase rules, save in one transaction, size and color lists, label data", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 22, "status": "done", "pct": 100, "pr": "#15" },
     { "id": "P2-3b", "name": "Stock entry screen (Size x Color grid) and label printing", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 22.5, "status": "done", "pct": 100, "pr": "#16" },
-    { "id": "P2-4a", "name": "Bill rules: bill number and payments", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 23, "status": "done", "pct": 100, "pr": "" },
-    { "id": "P2-4b", "name": "Sales tables, safe stock lookup, save a bill", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 23.1, "status": "doing", "pct": 90, "pr": "" },
-    { "id": "P2-4c", "name": "Register screen and bill print", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 23.2, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P2-4a", "name": "Bill rules: bill number and payments", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 23, "status": "done", "pct": 100, "pr": "#17" },
+    { "id": "P2-4b", "name": "Sales tables, safe stock lookup, save a bill", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 23.1, "status": "done", "pct": 100, "pr": "#18" },
+    { "id": "P2-4c", "name": "Register screen and bill print", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 23.2, "status": "doing", "pct": 90, "pr": "#19" },
+    { "id": "P2-4e", "name": "Markdown at the register", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 23.25, "status": "todo", "pct": 0, "pr": "" },
     { "id": "P2-4d", "name": "Pay later (udhaar)", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 23.3, "status": "todo", "pct": 0, "pr": "" },
     { "id": "P2-5", "name": "Returns and credit notes", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 24, "status": "todo", "pct": 0, "pr": "" },
     { "id": "P2-6", "name": "Blind shift close and daybook", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 25, "status": "todo", "pct": 0, "pr": "" },

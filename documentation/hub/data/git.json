@@ -1,17 +1,17 @@
 {
-  "readAt": "2026-11-20 from git and gh",
+  "readAt": "2026-11-21 from git and gh",
   "status": [
     {
       "tone": "bad",
-      "text": "Branch protection is OFF on main and develop (GitHub API: not protected). Rules are enforced by CI and habit only."
+      "text": "Branch protection is OFF on main and develop (GitHub API: Branch not protected, read 2026-11-21). Rules are enforced by CI and habit only."
     },
     {
       "tone": "warn",
-      "text": "main is 1 commit behind and 15 commits behind develop: nothing has been released since PR #2; main has a merge commit that develop lacks (back-merge needed at the next release)."
+      "text": "main is 1 commit behind and 35 commits behind develop: nothing has been released since PR #2; main has a merge commit that develop lacks (back-merge needed at the next release)."
     },
     {
       "tone": "warn",
-      "text": "PR #15 (purchase rules) is still open on GitHub, clean and mergeable. PR #16 (stock entry screen) is stacked on it and contains its commits until #15 merges."
+      "text": "PR #19 (billing register) is open; branch-policy, build-lint-test and GitGuardian pass; the Windows job dart-flutter-windows was still pending at the read."
     }
   ],
   "branches": [
@@ -21,15 +21,15 @@
     },
     {
       "name": "develop",
-      "note": "integration; last updated 2026-11-20"
+      "note": "integration; last updated 2026-11-21"
     },
     {
-      "name": "feat/p2-3b-stock-screen",
-      "note": "PR #16, open, stacked on feat/p2-3a-purchase-entry"
+      "name": "feat/p2-4c-register",
+      "note": "PR #19, open, based on develop"
     },
     {
       "name": "merged topic branches (still on GitHub, not deleted)",
-      "note": "chore/bootstrap-project, chore/ci-windows-flutter, feat/p0-5-skeletons, feat/p1-1-money, feat/p1-2-barcodes, feat/p1-3-pricing, feat/p1-4-permissions, feat/p1-5-hangtag-geometry, feat/web-dev-preview"
+      "note": "chore/bootstrap-project, chore/ci-windows-flutter, feat/p0-5-skeletons, feat/p1-1-money, feat/p1-2-barcodes, feat/p1-3-pricing, feat/p1-4-permissions, feat/p1-5-hangtag-geometry, feat/p1-5b-hangtag-pdf, feat/p2-1-database, feat/p2-2-auth-rules, feat/p2-2-lock-screen, feat/p2-3a-purchase-entry, feat/p2-3b-stock-screen, feat/p2-4a-bill-rules, feat/p2-4b-sales-save, feat/web-dev-preview"
     }
   ],
   "ledger": [
@@ -112,6 +112,21 @@
       "pr": "#16",
       "title": "P2-3b: Stock entry screen and label printing",
       "state": "merged"
+    },
+    {
+      "pr": "#17",
+      "title": "P2-4a: Bill number and payment rules",
+      "state": "merged"
+    },
+    {
+      "pr": "#18",
+      "title": "P2-4b: Save a bill in one transaction, cashier-safe lookup",
+      "state": "merged"
+    },
+    {
+      "pr": "#19",
+      "title": "P2-4c: Billing register screen and bill print",
+      "state": "open"
     }
   ],
   "rules": [
@@ -119,11 +134,12 @@
     "The owner merges and releases; the agent only opens pull requests."
   ],
   "ownerActions": [
-    "Look at the stock entry screen (flutter run -d chrome) and try a real print on Windows when you can.",
+    "Review and merge PR #19 (billing register). Try it: flutter run -d chrome in apps/pos_windows, Add practice users, sign in as the practice cashier.",
     "Switch on branch protection for main and develop; require branch-policy, build-lint-test and dart-flutter-windows.",
-    "Look at the lock and setup screens (flutter run -d chrome, then Add practice users) and tell me how they look.",
+    "Look at the lock, setup, stock entry and register screens and tell me how they look; try a real print on Windows when you can.",
     "Review ADR-0006, ADR-0013 and ADR-0014 (Proposed).",
-    "Confirm earlier assistant choices: Luhn check digit, rounding choices, fixed-amount discount rule, Indian digit grouping on tags, whole-purchase-per-lot rule.",
+    "Confirm earlier assistant choices: Luhn check digit, rounding choices, fixed-amount discount rule, Indian digit grouping on tags, whole-purchase-per-lot rule, bill serial 1 to 999999 and counters 1 to 99, customer phone 7 to 15 digits.",
+    "Choose the next task: P2-4d pay later (udhaar) or P2-5 returns and credit notes.",
     "Tell us the printer and scanner models when known."
   ]
 }
