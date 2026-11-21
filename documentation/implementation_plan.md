@@ -57,8 +57,8 @@ Purpose: phases and task IDs. Size S <= 1 day, M <= 3 days, L <= 1 week. Phases 
 | ID | Task | Size | Acceptance | Depends on | Status |
 |---|---|---|---|---|---|
 | P3-1 | SQLCipher encryption spike and rollout | M | E-ENC-1 | P2-1 | done |
-| P3-2a | Backup rules: file names, keep the last 60, when a backup is due | S | unit tests; mutation-checked | P3-1 | doing |
-| P3-2b | Backup service (snapshot, two places, check, prune) and restore to a clean machine | L | E-BACKUP-1 | P3-2a | todo |
+| P3-2a | Backup rules: file names, keep the last 60, when a backup is due | S | unit tests; mutation-checked | P3-1 | done |
+| P3-2b | Backup service (snapshot, two places, check, prune) and restore to a clean machine | L | E-BACKUP-1 | P3-2a | doing |
 | P3-2c | Backup screens: folder pickers, Back up now, status, restore; automatic backup at shift close and start-up | L | screen tests | P3-2b | todo |
 | P3-3 | Installer and runbook | M | owner can install | P3-2 | todo |
 | P3-4 | GST toggle scaffold (settings, tax fields) | M | E-GST-1 | P2-4 | todo |
