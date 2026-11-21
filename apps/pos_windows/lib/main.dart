@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import 'app/app.dart';
 import 'app/label_printer.dart';
 import 'app/services.dart';
+import 'app/startup_failed.dart';
 import 'app/session_controller.dart';
 import 'data/auth_service.dart';
 import 'data/connection/connection.dart';
@@ -13,6 +14,15 @@ import 'data/stock_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await _start();
+  } on Object catch (error) {
+    // Show the problem instead of a blank window.
+    runApp(StartupFailedApp(error: error));
+  }
+}
+
+Future<void> _start() async {
   final db = await openAppDatabase();
   final auth = AuthService(db, newId: () => const Uuid().v4());
   final stock = StockRepository(db, newId: () => const Uuid().v4());
