@@ -117,3 +117,26 @@ PricedLine priceLine({
     discountAmount: discountAmount,
   );
 }
+
+/// Reads what a person typed as a price cut: `10%` or `12.5%` (a percentage,
+/// at most two decimals, 0 to 100) or an amount in rupees such as `50` or
+/// `₹49.50`. Returns null when the text is not one of these.
+PriceCut? parsePriceCut(String text) {
+  final t = text.trim();
+  if (t.isEmpty) {
+    return null;
+  }
+  if (t.endsWith('%')) {
+    final body = t.substring(0, t.length - 1).trim();
+    final m = RegExp(r'^([0-9]{1,3})(?:\.([0-9]{1,2}))?$').firstMatch(body);
+    if (m == null) {
+      return null;
+    }
+    final whole = int.parse(m.group(1)!);
+    final fraction = int.parse((m.group(2) ?? '').padRight(2, '0'));
+    final bp = whole * 100 + fraction;
+    return bp > 10000 ? null : PriceCut.percentBp(bp);
+  }
+  final amount = parseRupees(t);
+  return amount == null ? null : PriceCut.amount(amount);
+}

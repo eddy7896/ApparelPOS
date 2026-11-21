@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 
 import '../services.dart';
 import '../session_controller.dart';
+import 'register_screen.dart';
 import 'stock_entry_screen.dart';
 
-/// What opens after sign-in. Billing, stock and reports are later tasks; this
-/// only shows which mode the user is in and lets them lock.
+/// What opens after sign-in: the register for a cashier; Billing and Stock
+/// entry buttons for a manager or owner. Reports are a later task.
 class HomeShell extends StatelessWidget {
   const HomeShell({super.key, required this.session, required this.services});
 
@@ -32,12 +33,26 @@ class HomeShell extends StatelessWidget {
           const SizedBox(width: 12),
         ],
       ),
-      body: Center(
-        child: sales
-            ? const Text('Billing is not built yet (task P2-4).')
-            : Column(
+      body: sales
+          ? RegisterPanel(session: session, services: services)
+          : Center(
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  FilledButton.icon(
+                    key: const Key('billing-button'),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => RegisterScreen(
+                          session: session,
+                          services: services,
+                        ),
+                      ),
+                    ),
+                    icon: const Icon(Icons.point_of_sale),
+                    label: const Text('Billing'),
+                  ),
+                  const SizedBox(height: 12),
                   FilledButton.icon(
                     key: const Key('stock-entry-button'),
                     onPressed: () => Navigator.of(context).push(
@@ -55,7 +70,7 @@ class HomeShell extends StatelessWidget {
                   const Text('Reports and settings are not built yet.'),
                 ],
               ),
-      ),
+            ),
     );
   }
 }

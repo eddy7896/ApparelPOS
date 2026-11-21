@@ -11,6 +11,7 @@ import 'package:pos_windows/app/services.dart';
 import 'package:pos_windows/app/session_controller.dart';
 import 'package:pos_windows/data/app_database.dart';
 import 'package:pos_windows/data/auth_service.dart';
+import 'package:pos_windows/data/sales_repository.dart';
 import 'package:pos_windows/data/stock_repository.dart';
 
 void main() {
@@ -43,6 +44,8 @@ void main() {
         session: session,
         services: AppServices(
           stock: StockRepository(db, newId: () => 'unused-${++n}'),
+          sales: SalesRepository(db, newId: () => 'unused-sales-${++n}'),
+          auth: auth,
           printer: const SystemLabelPrinter(),
           fonts: () async => throw StateError('fonts are not used here'),
         ),
