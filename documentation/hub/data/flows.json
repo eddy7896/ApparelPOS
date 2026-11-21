@@ -14,9 +14,9 @@
     {
       "id": "connect",
       "title": "How the pieces connect",
-      "note": "Built: the shared rules package (core_domain) and the counter app with its local database (not encrypted yet): sign-in, stock entry with hangtag printing, billing register, returns and credit notes, shifts with the blind cash close, the daybook and the owner's daily report. Not built: encryption, backups, installer, GST setup, pay later, sync, cloud, mobile app. Dashed lines are release 2.",
+      "note": "Built: the shared rules package (core_domain) and the counter app with its local database (encrypted with SQLCipher; the Windows runtime is unverified): sign-in, stock entry with hangtag printing, billing register, returns and credit notes, shifts with the blind cash close, the daybook and the owner's daily report. Not built: backups, installer, GST setup, pay later, sync, cloud, mobile app. Dashed lines are release 2.",
       "kind": "mermaid",
-      "source": "flowchart LR\n  D[\"core_domain<br/>money, barcodes, pricing, permissions, hangtags, bills, returns, shifts, reports\"]:::built\n  C1[\"pos_windows counter 1<br/>sign-in, stock, register, returns, shifts, reports\"]:::built --> D\n  C1 --> DB[(\"Local database<br/>not encrypted yet\")]:::built\n  W[\"Browser preview<br/>development only\"]:::built --> D\n  C1 -. \"sync, release 2\" .-> F[(\"Firestore + Auth\")]:::plan\n  C2[\"Future counter 2\"]:::plan -.-> F\n  M[\"manager_mobile\"]:::plan -.-> F\n  F -.->|commands| C1\n  classDef built fill:#dcf4e7,stroke:#0f7a4a\n  classDef plan fill:#eceef6,stroke:#9aa1bd,stroke-dasharray: 4 3"
+      "source": "flowchart LR\n  D[\"core_domain<br/>money, barcodes, pricing, permissions, hangtags, bills, returns, shifts, reports\"]:::built\n  C1[\"pos_windows counter 1<br/>sign-in, stock, register, returns, shifts, reports\"]:::built --> D\n  C1 --> DB[(\"Local database<br/>SQLCipher, key in Windows credential store\")]:::built\n  W[\"Browser preview<br/>development only\"]:::built --> D\n  C1 -. \"sync, release 2\" .-> F[(\"Firestore + Auth\")]:::plan\n  C2[\"Future counter 2\"]:::plan -.-> F\n  M[\"manager_mobile\"]:::plan -.-> F\n  F -.->|commands| C1\n  classDef built fill:#dcf4e7,stroke:#0f7a4a\n  classDef plan fill:#eceef6,stroke:#9aa1bd,stroke-dasharray: 4 3"
     },
     {
       "id": "sale",
