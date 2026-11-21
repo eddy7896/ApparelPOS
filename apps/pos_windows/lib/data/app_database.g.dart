@@ -6320,8 +6320,7 @@ class $BillPaymentsTable extends BillPayments
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
-    $customConstraints:
-        'NOT NULL CHECK (mode IN (\'cash\', \'upi\', \'card\'))',
+    $customConstraints: 'NOT NULL CHECK (mode IN (\'cash\', \'upi\', \'card\', \'credit_note\'))',
   );
   static const VerificationMeta _amountPaiseMeta = const VerificationMeta(
     'amountPaise',
@@ -6877,6 +6876,1773 @@ class BillSequencesCompanion extends UpdateCompanion<BillSequenceRow> {
   }
 }
 
+class $CreditNotesTable extends CreditNotes
+    with TableInfo<$CreditNotesTable, CreditNoteRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CreditNotesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _codeMeta = const VerificationMeta('code');
+  @override
+  late final GeneratedColumn<String> code = GeneratedColumn<String>(
+    'code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL UNIQUE',
+  );
+  static const VerificationMeta _counterIdMeta = const VerificationMeta(
+    'counterId',
+  );
+  @override
+  late final GeneratedColumn<String> counterId = GeneratedColumn<String>(
+    'counter_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES counters (id)',
+    ),
+  );
+  static const VerificationMeta _serialMeta = const VerificationMeta('serial');
+  @override
+  late final GeneratedColumn<int> serial = GeneratedColumn<int>(
+    'serial',
+    aliasedName,
+    false,
+    check: () => ComparableExpr(serial).isBetweenValues(1, 99999),
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _amountPaiseMeta = const VerificationMeta(
+    'amountPaise',
+  );
+  @override
+  late final GeneratedColumn<int> amountPaise = GeneratedColumn<int>(
+    'amount_paise',
+    aliasedName,
+    false,
+    check: () => ComparableExpr(amountPaise).isBiggerOrEqualValue(1),
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _issuedAtMeta = const VerificationMeta(
+    'issuedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> issuedAt = GeneratedColumn<DateTime>(
+    'issued_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _issuedByMeta = const VerificationMeta(
+    'issuedBy',
+  );
+  @override
+  late final GeneratedColumn<String> issuedBy = GeneratedColumn<String>(
+    'issued_by',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES users (id)',
+    ),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    code,
+    counterId,
+    serial,
+    amountPaise,
+    issuedAt,
+    issuedBy,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'credit_notes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CreditNoteRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('code')) {
+      context.handle(
+        _codeMeta,
+        code.isAcceptableOrUnknown(data['code']!, _codeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_codeMeta);
+    }
+    if (data.containsKey('counter_id')) {
+      context.handle(
+        _counterIdMeta,
+        counterId.isAcceptableOrUnknown(data['counter_id']!, _counterIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_counterIdMeta);
+    }
+    if (data.containsKey('serial')) {
+      context.handle(
+        _serialMeta,
+        serial.isAcceptableOrUnknown(data['serial']!, _serialMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_serialMeta);
+    }
+    if (data.containsKey('amount_paise')) {
+      context.handle(
+        _amountPaiseMeta,
+        amountPaise.isAcceptableOrUnknown(
+          data['amount_paise']!,
+          _amountPaiseMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_amountPaiseMeta);
+    }
+    if (data.containsKey('issued_at')) {
+      context.handle(
+        _issuedAtMeta,
+        issuedAt.isAcceptableOrUnknown(data['issued_at']!, _issuedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_issuedAtMeta);
+    }
+    if (data.containsKey('issued_by')) {
+      context.handle(
+        _issuedByMeta,
+        issuedBy.isAcceptableOrUnknown(data['issued_by']!, _issuedByMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_issuedByMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {counterId, serial},
+  ];
+  @override
+  CreditNoteRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CreditNoteRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      code: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}code'],
+      )!,
+      counterId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}counter_id'],
+      )!,
+      serial: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}serial'],
+      )!,
+      amountPaise: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount_paise'],
+      )!,
+      issuedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}issued_at'],
+      )!,
+      issuedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}issued_by'],
+      )!,
+    );
+  }
+
+  @override
+  $CreditNotesTable createAlias(String alias) {
+    return $CreditNotesTable(attachedDatabase, alias);
+  }
+}
+
+class CreditNoteRow extends DataClass implements Insertable<CreditNoteRow> {
+  final String id;
+  final String code;
+  final String counterId;
+  final int serial;
+  final int amountPaise;
+  final DateTime issuedAt;
+  final String issuedBy;
+  const CreditNoteRow({
+    required this.id,
+    required this.code,
+    required this.counterId,
+    required this.serial,
+    required this.amountPaise,
+    required this.issuedAt,
+    required this.issuedBy,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['code'] = Variable<String>(code);
+    map['counter_id'] = Variable<String>(counterId);
+    map['serial'] = Variable<int>(serial);
+    map['amount_paise'] = Variable<int>(amountPaise);
+    map['issued_at'] = Variable<DateTime>(issuedAt);
+    map['issued_by'] = Variable<String>(issuedBy);
+    return map;
+  }
+
+  CreditNotesCompanion toCompanion(bool nullToAbsent) {
+    return CreditNotesCompanion(
+      id: Value(id),
+      code: Value(code),
+      counterId: Value(counterId),
+      serial: Value(serial),
+      amountPaise: Value(amountPaise),
+      issuedAt: Value(issuedAt),
+      issuedBy: Value(issuedBy),
+    );
+  }
+
+  factory CreditNoteRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CreditNoteRow(
+      id: serializer.fromJson<String>(json['id']),
+      code: serializer.fromJson<String>(json['code']),
+      counterId: serializer.fromJson<String>(json['counterId']),
+      serial: serializer.fromJson<int>(json['serial']),
+      amountPaise: serializer.fromJson<int>(json['amountPaise']),
+      issuedAt: serializer.fromJson<DateTime>(json['issuedAt']),
+      issuedBy: serializer.fromJson<String>(json['issuedBy']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'code': serializer.toJson<String>(code),
+      'counterId': serializer.toJson<String>(counterId),
+      'serial': serializer.toJson<int>(serial),
+      'amountPaise': serializer.toJson<int>(amountPaise),
+      'issuedAt': serializer.toJson<DateTime>(issuedAt),
+      'issuedBy': serializer.toJson<String>(issuedBy),
+    };
+  }
+
+  CreditNoteRow copyWith({
+    String? id,
+    String? code,
+    String? counterId,
+    int? serial,
+    int? amountPaise,
+    DateTime? issuedAt,
+    String? issuedBy,
+  }) => CreditNoteRow(
+    id: id ?? this.id,
+    code: code ?? this.code,
+    counterId: counterId ?? this.counterId,
+    serial: serial ?? this.serial,
+    amountPaise: amountPaise ?? this.amountPaise,
+    issuedAt: issuedAt ?? this.issuedAt,
+    issuedBy: issuedBy ?? this.issuedBy,
+  );
+  CreditNoteRow copyWithCompanion(CreditNotesCompanion data) {
+    return CreditNoteRow(
+      id: data.id.present ? data.id.value : this.id,
+      code: data.code.present ? data.code.value : this.code,
+      counterId: data.counterId.present ? data.counterId.value : this.counterId,
+      serial: data.serial.present ? data.serial.value : this.serial,
+      amountPaise: data.amountPaise.present
+          ? data.amountPaise.value
+          : this.amountPaise,
+      issuedAt: data.issuedAt.present ? data.issuedAt.value : this.issuedAt,
+      issuedBy: data.issuedBy.present ? data.issuedBy.value : this.issuedBy,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CreditNoteRow(')
+          ..write('id: $id, ')
+          ..write('code: $code, ')
+          ..write('counterId: $counterId, ')
+          ..write('serial: $serial, ')
+          ..write('amountPaise: $amountPaise, ')
+          ..write('issuedAt: $issuedAt, ')
+          ..write('issuedBy: $issuedBy')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, code, counterId, serial, amountPaise, issuedAt, issuedBy);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CreditNoteRow &&
+          other.id == this.id &&
+          other.code == this.code &&
+          other.counterId == this.counterId &&
+          other.serial == this.serial &&
+          other.amountPaise == this.amountPaise &&
+          other.issuedAt == this.issuedAt &&
+          other.issuedBy == this.issuedBy);
+}
+
+class CreditNotesCompanion extends UpdateCompanion<CreditNoteRow> {
+  final Value<String> id;
+  final Value<String> code;
+  final Value<String> counterId;
+  final Value<int> serial;
+  final Value<int> amountPaise;
+  final Value<DateTime> issuedAt;
+  final Value<String> issuedBy;
+  final Value<int> rowid;
+  const CreditNotesCompanion({
+    this.id = const Value.absent(),
+    this.code = const Value.absent(),
+    this.counterId = const Value.absent(),
+    this.serial = const Value.absent(),
+    this.amountPaise = const Value.absent(),
+    this.issuedAt = const Value.absent(),
+    this.issuedBy = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CreditNotesCompanion.insert({
+    required String id,
+    required String code,
+    required String counterId,
+    required int serial,
+    required int amountPaise,
+    required DateTime issuedAt,
+    required String issuedBy,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       code = Value(code),
+       counterId = Value(counterId),
+       serial = Value(serial),
+       amountPaise = Value(amountPaise),
+       issuedAt = Value(issuedAt),
+       issuedBy = Value(issuedBy);
+  static Insertable<CreditNoteRow> custom({
+    Expression<String>? id,
+    Expression<String>? code,
+    Expression<String>? counterId,
+    Expression<int>? serial,
+    Expression<int>? amountPaise,
+    Expression<DateTime>? issuedAt,
+    Expression<String>? issuedBy,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (code != null) 'code': code,
+      if (counterId != null) 'counter_id': counterId,
+      if (serial != null) 'serial': serial,
+      if (amountPaise != null) 'amount_paise': amountPaise,
+      if (issuedAt != null) 'issued_at': issuedAt,
+      if (issuedBy != null) 'issued_by': issuedBy,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CreditNotesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? code,
+    Value<String>? counterId,
+    Value<int>? serial,
+    Value<int>? amountPaise,
+    Value<DateTime>? issuedAt,
+    Value<String>? issuedBy,
+    Value<int>? rowid,
+  }) {
+    return CreditNotesCompanion(
+      id: id ?? this.id,
+      code: code ?? this.code,
+      counterId: counterId ?? this.counterId,
+      serial: serial ?? this.serial,
+      amountPaise: amountPaise ?? this.amountPaise,
+      issuedAt: issuedAt ?? this.issuedAt,
+      issuedBy: issuedBy ?? this.issuedBy,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (code.present) {
+      map['code'] = Variable<String>(code.value);
+    }
+    if (counterId.present) {
+      map['counter_id'] = Variable<String>(counterId.value);
+    }
+    if (serial.present) {
+      map['serial'] = Variable<int>(serial.value);
+    }
+    if (amountPaise.present) {
+      map['amount_paise'] = Variable<int>(amountPaise.value);
+    }
+    if (issuedAt.present) {
+      map['issued_at'] = Variable<DateTime>(issuedAt.value);
+    }
+    if (issuedBy.present) {
+      map['issued_by'] = Variable<String>(issuedBy.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CreditNotesCompanion(')
+          ..write('id: $id, ')
+          ..write('code: $code, ')
+          ..write('counterId: $counterId, ')
+          ..write('serial: $serial, ')
+          ..write('amountPaise: $amountPaise, ')
+          ..write('issuedAt: $issuedAt, ')
+          ..write('issuedBy: $issuedBy, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CreditNoteUsesTable extends CreditNoteUses
+    with TableInfo<$CreditNoteUsesTable, CreditNoteUseRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CreditNoteUsesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _creditNoteIdMeta = const VerificationMeta(
+    'creditNoteId',
+  );
+  @override
+  late final GeneratedColumn<String> creditNoteId = GeneratedColumn<String>(
+    'credit_note_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES credit_notes (id)',
+    ),
+  );
+  static const VerificationMeta _billIdMeta = const VerificationMeta('billId');
+  @override
+  late final GeneratedColumn<String> billId = GeneratedColumn<String>(
+    'bill_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES bills (id)',
+    ),
+  );
+  static const VerificationMeta _amountPaiseMeta = const VerificationMeta(
+    'amountPaise',
+  );
+  @override
+  late final GeneratedColumn<int> amountPaise = GeneratedColumn<int>(
+    'amount_paise',
+    aliasedName,
+    false,
+    check: () => ComparableExpr(amountPaise).isBiggerOrEqualValue(1),
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, creditNoteId, billId, amountPaise];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'credit_note_uses';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CreditNoteUseRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('credit_note_id')) {
+      context.handle(
+        _creditNoteIdMeta,
+        creditNoteId.isAcceptableOrUnknown(
+          data['credit_note_id']!,
+          _creditNoteIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_creditNoteIdMeta);
+    }
+    if (data.containsKey('bill_id')) {
+      context.handle(
+        _billIdMeta,
+        billId.isAcceptableOrUnknown(data['bill_id']!, _billIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_billIdMeta);
+    }
+    if (data.containsKey('amount_paise')) {
+      context.handle(
+        _amountPaiseMeta,
+        amountPaise.isAcceptableOrUnknown(
+          data['amount_paise']!,
+          _amountPaiseMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_amountPaiseMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CreditNoteUseRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CreditNoteUseRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      creditNoteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}credit_note_id'],
+      )!,
+      billId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}bill_id'],
+      )!,
+      amountPaise: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount_paise'],
+      )!,
+    );
+  }
+
+  @override
+  $CreditNoteUsesTable createAlias(String alias) {
+    return $CreditNoteUsesTable(attachedDatabase, alias);
+  }
+}
+
+class CreditNoteUseRow extends DataClass
+    implements Insertable<CreditNoteUseRow> {
+  final String id;
+  final String creditNoteId;
+  final String billId;
+  final int amountPaise;
+  const CreditNoteUseRow({
+    required this.id,
+    required this.creditNoteId,
+    required this.billId,
+    required this.amountPaise,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['credit_note_id'] = Variable<String>(creditNoteId);
+    map['bill_id'] = Variable<String>(billId);
+    map['amount_paise'] = Variable<int>(amountPaise);
+    return map;
+  }
+
+  CreditNoteUsesCompanion toCompanion(bool nullToAbsent) {
+    return CreditNoteUsesCompanion(
+      id: Value(id),
+      creditNoteId: Value(creditNoteId),
+      billId: Value(billId),
+      amountPaise: Value(amountPaise),
+    );
+  }
+
+  factory CreditNoteUseRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CreditNoteUseRow(
+      id: serializer.fromJson<String>(json['id']),
+      creditNoteId: serializer.fromJson<String>(json['creditNoteId']),
+      billId: serializer.fromJson<String>(json['billId']),
+      amountPaise: serializer.fromJson<int>(json['amountPaise']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'creditNoteId': serializer.toJson<String>(creditNoteId),
+      'billId': serializer.toJson<String>(billId),
+      'amountPaise': serializer.toJson<int>(amountPaise),
+    };
+  }
+
+  CreditNoteUseRow copyWith({
+    String? id,
+    String? creditNoteId,
+    String? billId,
+    int? amountPaise,
+  }) => CreditNoteUseRow(
+    id: id ?? this.id,
+    creditNoteId: creditNoteId ?? this.creditNoteId,
+    billId: billId ?? this.billId,
+    amountPaise: amountPaise ?? this.amountPaise,
+  );
+  CreditNoteUseRow copyWithCompanion(CreditNoteUsesCompanion data) {
+    return CreditNoteUseRow(
+      id: data.id.present ? data.id.value : this.id,
+      creditNoteId: data.creditNoteId.present
+          ? data.creditNoteId.value
+          : this.creditNoteId,
+      billId: data.billId.present ? data.billId.value : this.billId,
+      amountPaise: data.amountPaise.present
+          ? data.amountPaise.value
+          : this.amountPaise,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CreditNoteUseRow(')
+          ..write('id: $id, ')
+          ..write('creditNoteId: $creditNoteId, ')
+          ..write('billId: $billId, ')
+          ..write('amountPaise: $amountPaise')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, creditNoteId, billId, amountPaise);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CreditNoteUseRow &&
+          other.id == this.id &&
+          other.creditNoteId == this.creditNoteId &&
+          other.billId == this.billId &&
+          other.amountPaise == this.amountPaise);
+}
+
+class CreditNoteUsesCompanion extends UpdateCompanion<CreditNoteUseRow> {
+  final Value<String> id;
+  final Value<String> creditNoteId;
+  final Value<String> billId;
+  final Value<int> amountPaise;
+  final Value<int> rowid;
+  const CreditNoteUsesCompanion({
+    this.id = const Value.absent(),
+    this.creditNoteId = const Value.absent(),
+    this.billId = const Value.absent(),
+    this.amountPaise = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CreditNoteUsesCompanion.insert({
+    required String id,
+    required String creditNoteId,
+    required String billId,
+    required int amountPaise,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       creditNoteId = Value(creditNoteId),
+       billId = Value(billId),
+       amountPaise = Value(amountPaise);
+  static Insertable<CreditNoteUseRow> custom({
+    Expression<String>? id,
+    Expression<String>? creditNoteId,
+    Expression<String>? billId,
+    Expression<int>? amountPaise,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (creditNoteId != null) 'credit_note_id': creditNoteId,
+      if (billId != null) 'bill_id': billId,
+      if (amountPaise != null) 'amount_paise': amountPaise,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CreditNoteUsesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? creditNoteId,
+    Value<String>? billId,
+    Value<int>? amountPaise,
+    Value<int>? rowid,
+  }) {
+    return CreditNoteUsesCompanion(
+      id: id ?? this.id,
+      creditNoteId: creditNoteId ?? this.creditNoteId,
+      billId: billId ?? this.billId,
+      amountPaise: amountPaise ?? this.amountPaise,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (creditNoteId.present) {
+      map['credit_note_id'] = Variable<String>(creditNoteId.value);
+    }
+    if (billId.present) {
+      map['bill_id'] = Variable<String>(billId.value);
+    }
+    if (amountPaise.present) {
+      map['amount_paise'] = Variable<int>(amountPaise.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CreditNoteUsesCompanion(')
+          ..write('id: $id, ')
+          ..write('creditNoteId: $creditNoteId, ')
+          ..write('billId: $billId, ')
+          ..write('amountPaise: $amountPaise, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ReturnsTable extends Returns with TableInfo<$ReturnsTable, ReturnRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ReturnsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _cashierIdMeta = const VerificationMeta(
+    'cashierId',
+  );
+  @override
+  late final GeneratedColumn<String> cashierId = GeneratedColumn<String>(
+    'cashier_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES users (id)',
+    ),
+  );
+  static const VerificationMeta _approvedByMeta = const VerificationMeta(
+    'approvedBy',
+  );
+  @override
+  late final GeneratedColumn<String> approvedBy = GeneratedColumn<String>(
+    'approved_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES users (id)',
+    ),
+  );
+  static const VerificationMeta _refundModeMeta = const VerificationMeta(
+    'refundMode',
+  );
+  @override
+  late final GeneratedColumn<String> refundMode = GeneratedColumn<String>(
+    'refund_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL CHECK (refund_mode IN (\'cash\', \'upi\', \'card\', \'credit_note\'))',
+  );
+  static const VerificationMeta _creditNoteIdMeta = const VerificationMeta(
+    'creditNoteId',
+  );
+  @override
+  late final GeneratedColumn<String> creditNoteId = GeneratedColumn<String>(
+    'credit_note_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES credit_notes (id)',
+    ),
+  );
+  static const VerificationMeta _totalPaiseMeta = const VerificationMeta(
+    'totalPaise',
+  );
+  @override
+  late final GeneratedColumn<int> totalPaise = GeneratedColumn<int>(
+    'total_paise',
+    aliasedName,
+    false,
+    check: () => ComparableExpr(totalPaise).isBiggerOrEqualValue(0),
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _returnedAtMeta = const VerificationMeta(
+    'returnedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> returnedAt = GeneratedColumn<DateTime>(
+    'returned_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    cashierId,
+    approvedBy,
+    refundMode,
+    creditNoteId,
+    totalPaise,
+    returnedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'returns';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ReturnRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('cashier_id')) {
+      context.handle(
+        _cashierIdMeta,
+        cashierId.isAcceptableOrUnknown(data['cashier_id']!, _cashierIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cashierIdMeta);
+    }
+    if (data.containsKey('approved_by')) {
+      context.handle(
+        _approvedByMeta,
+        approvedBy.isAcceptableOrUnknown(data['approved_by']!, _approvedByMeta),
+      );
+    }
+    if (data.containsKey('refund_mode')) {
+      context.handle(
+        _refundModeMeta,
+        refundMode.isAcceptableOrUnknown(data['refund_mode']!, _refundModeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_refundModeMeta);
+    }
+    if (data.containsKey('credit_note_id')) {
+      context.handle(
+        _creditNoteIdMeta,
+        creditNoteId.isAcceptableOrUnknown(
+          data['credit_note_id']!,
+          _creditNoteIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('total_paise')) {
+      context.handle(
+        _totalPaiseMeta,
+        totalPaise.isAcceptableOrUnknown(data['total_paise']!, _totalPaiseMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_totalPaiseMeta);
+    }
+    if (data.containsKey('returned_at')) {
+      context.handle(
+        _returnedAtMeta,
+        returnedAt.isAcceptableOrUnknown(data['returned_at']!, _returnedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_returnedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ReturnRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ReturnRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      cashierId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cashier_id'],
+      )!,
+      approvedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}approved_by'],
+      ),
+      refundMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}refund_mode'],
+      )!,
+      creditNoteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}credit_note_id'],
+      ),
+      totalPaise: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total_paise'],
+      )!,
+      returnedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}returned_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ReturnsTable createAlias(String alias) {
+    return $ReturnsTable(attachedDatabase, alias);
+  }
+}
+
+class ReturnRow extends DataClass implements Insertable<ReturnRow> {
+  final String id;
+  final String cashierId;
+  final String? approvedBy;
+  final String refundMode;
+  final String? creditNoteId;
+  final int totalPaise;
+  final DateTime returnedAt;
+  const ReturnRow({
+    required this.id,
+    required this.cashierId,
+    this.approvedBy,
+    required this.refundMode,
+    this.creditNoteId,
+    required this.totalPaise,
+    required this.returnedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['cashier_id'] = Variable<String>(cashierId);
+    if (!nullToAbsent || approvedBy != null) {
+      map['approved_by'] = Variable<String>(approvedBy);
+    }
+    map['refund_mode'] = Variable<String>(refundMode);
+    if (!nullToAbsent || creditNoteId != null) {
+      map['credit_note_id'] = Variable<String>(creditNoteId);
+    }
+    map['total_paise'] = Variable<int>(totalPaise);
+    map['returned_at'] = Variable<DateTime>(returnedAt);
+    return map;
+  }
+
+  ReturnsCompanion toCompanion(bool nullToAbsent) {
+    return ReturnsCompanion(
+      id: Value(id),
+      cashierId: Value(cashierId),
+      approvedBy: approvedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(approvedBy),
+      refundMode: Value(refundMode),
+      creditNoteId: creditNoteId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(creditNoteId),
+      totalPaise: Value(totalPaise),
+      returnedAt: Value(returnedAt),
+    );
+  }
+
+  factory ReturnRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ReturnRow(
+      id: serializer.fromJson<String>(json['id']),
+      cashierId: serializer.fromJson<String>(json['cashierId']),
+      approvedBy: serializer.fromJson<String?>(json['approvedBy']),
+      refundMode: serializer.fromJson<String>(json['refundMode']),
+      creditNoteId: serializer.fromJson<String?>(json['creditNoteId']),
+      totalPaise: serializer.fromJson<int>(json['totalPaise']),
+      returnedAt: serializer.fromJson<DateTime>(json['returnedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'cashierId': serializer.toJson<String>(cashierId),
+      'approvedBy': serializer.toJson<String?>(approvedBy),
+      'refundMode': serializer.toJson<String>(refundMode),
+      'creditNoteId': serializer.toJson<String?>(creditNoteId),
+      'totalPaise': serializer.toJson<int>(totalPaise),
+      'returnedAt': serializer.toJson<DateTime>(returnedAt),
+    };
+  }
+
+  ReturnRow copyWith({
+    String? id,
+    String? cashierId,
+    Value<String?> approvedBy = const Value.absent(),
+    String? refundMode,
+    Value<String?> creditNoteId = const Value.absent(),
+    int? totalPaise,
+    DateTime? returnedAt,
+  }) => ReturnRow(
+    id: id ?? this.id,
+    cashierId: cashierId ?? this.cashierId,
+    approvedBy: approvedBy.present ? approvedBy.value : this.approvedBy,
+    refundMode: refundMode ?? this.refundMode,
+    creditNoteId: creditNoteId.present ? creditNoteId.value : this.creditNoteId,
+    totalPaise: totalPaise ?? this.totalPaise,
+    returnedAt: returnedAt ?? this.returnedAt,
+  );
+  ReturnRow copyWithCompanion(ReturnsCompanion data) {
+    return ReturnRow(
+      id: data.id.present ? data.id.value : this.id,
+      cashierId: data.cashierId.present ? data.cashierId.value : this.cashierId,
+      approvedBy: data.approvedBy.present
+          ? data.approvedBy.value
+          : this.approvedBy,
+      refundMode: data.refundMode.present
+          ? data.refundMode.value
+          : this.refundMode,
+      creditNoteId: data.creditNoteId.present
+          ? data.creditNoteId.value
+          : this.creditNoteId,
+      totalPaise: data.totalPaise.present
+          ? data.totalPaise.value
+          : this.totalPaise,
+      returnedAt: data.returnedAt.present
+          ? data.returnedAt.value
+          : this.returnedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReturnRow(')
+          ..write('id: $id, ')
+          ..write('cashierId: $cashierId, ')
+          ..write('approvedBy: $approvedBy, ')
+          ..write('refundMode: $refundMode, ')
+          ..write('creditNoteId: $creditNoteId, ')
+          ..write('totalPaise: $totalPaise, ')
+          ..write('returnedAt: $returnedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    cashierId,
+    approvedBy,
+    refundMode,
+    creditNoteId,
+    totalPaise,
+    returnedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ReturnRow &&
+          other.id == this.id &&
+          other.cashierId == this.cashierId &&
+          other.approvedBy == this.approvedBy &&
+          other.refundMode == this.refundMode &&
+          other.creditNoteId == this.creditNoteId &&
+          other.totalPaise == this.totalPaise &&
+          other.returnedAt == this.returnedAt);
+}
+
+class ReturnsCompanion extends UpdateCompanion<ReturnRow> {
+  final Value<String> id;
+  final Value<String> cashierId;
+  final Value<String?> approvedBy;
+  final Value<String> refundMode;
+  final Value<String?> creditNoteId;
+  final Value<int> totalPaise;
+  final Value<DateTime> returnedAt;
+  final Value<int> rowid;
+  const ReturnsCompanion({
+    this.id = const Value.absent(),
+    this.cashierId = const Value.absent(),
+    this.approvedBy = const Value.absent(),
+    this.refundMode = const Value.absent(),
+    this.creditNoteId = const Value.absent(),
+    this.totalPaise = const Value.absent(),
+    this.returnedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ReturnsCompanion.insert({
+    required String id,
+    required String cashierId,
+    this.approvedBy = const Value.absent(),
+    required String refundMode,
+    this.creditNoteId = const Value.absent(),
+    required int totalPaise,
+    required DateTime returnedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       cashierId = Value(cashierId),
+       refundMode = Value(refundMode),
+       totalPaise = Value(totalPaise),
+       returnedAt = Value(returnedAt);
+  static Insertable<ReturnRow> custom({
+    Expression<String>? id,
+    Expression<String>? cashierId,
+    Expression<String>? approvedBy,
+    Expression<String>? refundMode,
+    Expression<String>? creditNoteId,
+    Expression<int>? totalPaise,
+    Expression<DateTime>? returnedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (cashierId != null) 'cashier_id': cashierId,
+      if (approvedBy != null) 'approved_by': approvedBy,
+      if (refundMode != null) 'refund_mode': refundMode,
+      if (creditNoteId != null) 'credit_note_id': creditNoteId,
+      if (totalPaise != null) 'total_paise': totalPaise,
+      if (returnedAt != null) 'returned_at': returnedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ReturnsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? cashierId,
+    Value<String?>? approvedBy,
+    Value<String>? refundMode,
+    Value<String?>? creditNoteId,
+    Value<int>? totalPaise,
+    Value<DateTime>? returnedAt,
+    Value<int>? rowid,
+  }) {
+    return ReturnsCompanion(
+      id: id ?? this.id,
+      cashierId: cashierId ?? this.cashierId,
+      approvedBy: approvedBy ?? this.approvedBy,
+      refundMode: refundMode ?? this.refundMode,
+      creditNoteId: creditNoteId ?? this.creditNoteId,
+      totalPaise: totalPaise ?? this.totalPaise,
+      returnedAt: returnedAt ?? this.returnedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (cashierId.present) {
+      map['cashier_id'] = Variable<String>(cashierId.value);
+    }
+    if (approvedBy.present) {
+      map['approved_by'] = Variable<String>(approvedBy.value);
+    }
+    if (refundMode.present) {
+      map['refund_mode'] = Variable<String>(refundMode.value);
+    }
+    if (creditNoteId.present) {
+      map['credit_note_id'] = Variable<String>(creditNoteId.value);
+    }
+    if (totalPaise.present) {
+      map['total_paise'] = Variable<int>(totalPaise.value);
+    }
+    if (returnedAt.present) {
+      map['returned_at'] = Variable<DateTime>(returnedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReturnsCompanion(')
+          ..write('id: $id, ')
+          ..write('cashierId: $cashierId, ')
+          ..write('approvedBy: $approvedBy, ')
+          ..write('refundMode: $refundMode, ')
+          ..write('creditNoteId: $creditNoteId, ')
+          ..write('totalPaise: $totalPaise, ')
+          ..write('returnedAt: $returnedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ReturnLinesTable extends ReturnLines
+    with TableInfo<$ReturnLinesTable, ReturnLineRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ReturnLinesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _returnIdMeta = const VerificationMeta(
+    'returnId',
+  );
+  @override
+  late final GeneratedColumn<String> returnId = GeneratedColumn<String>(
+    'return_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES returns (id)',
+    ),
+  );
+  static const VerificationMeta _billLineIdMeta = const VerificationMeta(
+    'billLineId',
+  );
+  @override
+  late final GeneratedColumn<String> billLineId = GeneratedColumn<String>(
+    'bill_line_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL UNIQUE REFERENCES bill_lines (id)',
+  );
+  static const VerificationMeta _articleIdMeta = const VerificationMeta(
+    'articleId',
+  );
+  @override
+  late final GeneratedColumn<String> articleId = GeneratedColumn<String>(
+    'article_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES articles (id)',
+    ),
+  );
+  static const VerificationMeta _refundPaiseMeta = const VerificationMeta(
+    'refundPaise',
+  );
+  @override
+  late final GeneratedColumn<int> refundPaise = GeneratedColumn<int>(
+    'refund_paise',
+    aliasedName,
+    false,
+    check: () => ComparableExpr(refundPaise).isBiggerOrEqualValue(0),
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _outcomeMeta = const VerificationMeta(
+    'outcome',
+  );
+  @override
+  late final GeneratedColumn<String> outcome = GeneratedColumn<String>(
+    'outcome',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints:
+        'NOT NULL CHECK (outcome IN (\'RESTOCK\', \'DAMAGED\'))',
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    returnId,
+    billLineId,
+    articleId,
+    refundPaise,
+    outcome,
+    note,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'return_lines';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ReturnLineRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('return_id')) {
+      context.handle(
+        _returnIdMeta,
+        returnId.isAcceptableOrUnknown(data['return_id']!, _returnIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_returnIdMeta);
+    }
+    if (data.containsKey('bill_line_id')) {
+      context.handle(
+        _billLineIdMeta,
+        billLineId.isAcceptableOrUnknown(
+          data['bill_line_id']!,
+          _billLineIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_billLineIdMeta);
+    }
+    if (data.containsKey('article_id')) {
+      context.handle(
+        _articleIdMeta,
+        articleId.isAcceptableOrUnknown(data['article_id']!, _articleIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_articleIdMeta);
+    }
+    if (data.containsKey('refund_paise')) {
+      context.handle(
+        _refundPaiseMeta,
+        refundPaise.isAcceptableOrUnknown(
+          data['refund_paise']!,
+          _refundPaiseMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_refundPaiseMeta);
+    }
+    if (data.containsKey('outcome')) {
+      context.handle(
+        _outcomeMeta,
+        outcome.isAcceptableOrUnknown(data['outcome']!, _outcomeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_outcomeMeta);
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ReturnLineRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ReturnLineRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      returnId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}return_id'],
+      )!,
+      billLineId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}bill_line_id'],
+      )!,
+      articleId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}article_id'],
+      )!,
+      refundPaise: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}refund_paise'],
+      )!,
+      outcome: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}outcome'],
+      )!,
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+    );
+  }
+
+  @override
+  $ReturnLinesTable createAlias(String alias) {
+    return $ReturnLinesTable(attachedDatabase, alias);
+  }
+}
+
+class ReturnLineRow extends DataClass implements Insertable<ReturnLineRow> {
+  final String id;
+  final String returnId;
+  final String billLineId;
+  final String articleId;
+  final int refundPaise;
+  final String outcome;
+  final String? note;
+  const ReturnLineRow({
+    required this.id,
+    required this.returnId,
+    required this.billLineId,
+    required this.articleId,
+    required this.refundPaise,
+    required this.outcome,
+    this.note,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['return_id'] = Variable<String>(returnId);
+    map['bill_line_id'] = Variable<String>(billLineId);
+    map['article_id'] = Variable<String>(articleId);
+    map['refund_paise'] = Variable<int>(refundPaise);
+    map['outcome'] = Variable<String>(outcome);
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    return map;
+  }
+
+  ReturnLinesCompanion toCompanion(bool nullToAbsent) {
+    return ReturnLinesCompanion(
+      id: Value(id),
+      returnId: Value(returnId),
+      billLineId: Value(billLineId),
+      articleId: Value(articleId),
+      refundPaise: Value(refundPaise),
+      outcome: Value(outcome),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+    );
+  }
+
+  factory ReturnLineRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ReturnLineRow(
+      id: serializer.fromJson<String>(json['id']),
+      returnId: serializer.fromJson<String>(json['returnId']),
+      billLineId: serializer.fromJson<String>(json['billLineId']),
+      articleId: serializer.fromJson<String>(json['articleId']),
+      refundPaise: serializer.fromJson<int>(json['refundPaise']),
+      outcome: serializer.fromJson<String>(json['outcome']),
+      note: serializer.fromJson<String?>(json['note']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'returnId': serializer.toJson<String>(returnId),
+      'billLineId': serializer.toJson<String>(billLineId),
+      'articleId': serializer.toJson<String>(articleId),
+      'refundPaise': serializer.toJson<int>(refundPaise),
+      'outcome': serializer.toJson<String>(outcome),
+      'note': serializer.toJson<String?>(note),
+    };
+  }
+
+  ReturnLineRow copyWith({
+    String? id,
+    String? returnId,
+    String? billLineId,
+    String? articleId,
+    int? refundPaise,
+    String? outcome,
+    Value<String?> note = const Value.absent(),
+  }) => ReturnLineRow(
+    id: id ?? this.id,
+    returnId: returnId ?? this.returnId,
+    billLineId: billLineId ?? this.billLineId,
+    articleId: articleId ?? this.articleId,
+    refundPaise: refundPaise ?? this.refundPaise,
+    outcome: outcome ?? this.outcome,
+    note: note.present ? note.value : this.note,
+  );
+  ReturnLineRow copyWithCompanion(ReturnLinesCompanion data) {
+    return ReturnLineRow(
+      id: data.id.present ? data.id.value : this.id,
+      returnId: data.returnId.present ? data.returnId.value : this.returnId,
+      billLineId: data.billLineId.present
+          ? data.billLineId.value
+          : this.billLineId,
+      articleId: data.articleId.present ? data.articleId.value : this.articleId,
+      refundPaise: data.refundPaise.present
+          ? data.refundPaise.value
+          : this.refundPaise,
+      outcome: data.outcome.present ? data.outcome.value : this.outcome,
+      note: data.note.present ? data.note.value : this.note,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReturnLineRow(')
+          ..write('id: $id, ')
+          ..write('returnId: $returnId, ')
+          ..write('billLineId: $billLineId, ')
+          ..write('articleId: $articleId, ')
+          ..write('refundPaise: $refundPaise, ')
+          ..write('outcome: $outcome, ')
+          ..write('note: $note')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    returnId,
+    billLineId,
+    articleId,
+    refundPaise,
+    outcome,
+    note,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ReturnLineRow &&
+          other.id == this.id &&
+          other.returnId == this.returnId &&
+          other.billLineId == this.billLineId &&
+          other.articleId == this.articleId &&
+          other.refundPaise == this.refundPaise &&
+          other.outcome == this.outcome &&
+          other.note == this.note);
+}
+
+class ReturnLinesCompanion extends UpdateCompanion<ReturnLineRow> {
+  final Value<String> id;
+  final Value<String> returnId;
+  final Value<String> billLineId;
+  final Value<String> articleId;
+  final Value<int> refundPaise;
+  final Value<String> outcome;
+  final Value<String?> note;
+  final Value<int> rowid;
+  const ReturnLinesCompanion({
+    this.id = const Value.absent(),
+    this.returnId = const Value.absent(),
+    this.billLineId = const Value.absent(),
+    this.articleId = const Value.absent(),
+    this.refundPaise = const Value.absent(),
+    this.outcome = const Value.absent(),
+    this.note = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ReturnLinesCompanion.insert({
+    required String id,
+    required String returnId,
+    required String billLineId,
+    required String articleId,
+    required int refundPaise,
+    required String outcome,
+    this.note = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       returnId = Value(returnId),
+       billLineId = Value(billLineId),
+       articleId = Value(articleId),
+       refundPaise = Value(refundPaise),
+       outcome = Value(outcome);
+  static Insertable<ReturnLineRow> custom({
+    Expression<String>? id,
+    Expression<String>? returnId,
+    Expression<String>? billLineId,
+    Expression<String>? articleId,
+    Expression<int>? refundPaise,
+    Expression<String>? outcome,
+    Expression<String>? note,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (returnId != null) 'return_id': returnId,
+      if (billLineId != null) 'bill_line_id': billLineId,
+      if (articleId != null) 'article_id': articleId,
+      if (refundPaise != null) 'refund_paise': refundPaise,
+      if (outcome != null) 'outcome': outcome,
+      if (note != null) 'note': note,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ReturnLinesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? returnId,
+    Value<String>? billLineId,
+    Value<String>? articleId,
+    Value<int>? refundPaise,
+    Value<String>? outcome,
+    Value<String?>? note,
+    Value<int>? rowid,
+  }) {
+    return ReturnLinesCompanion(
+      id: id ?? this.id,
+      returnId: returnId ?? this.returnId,
+      billLineId: billLineId ?? this.billLineId,
+      articleId: articleId ?? this.articleId,
+      refundPaise: refundPaise ?? this.refundPaise,
+      outcome: outcome ?? this.outcome,
+      note: note ?? this.note,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (returnId.present) {
+      map['return_id'] = Variable<String>(returnId.value);
+    }
+    if (billLineId.present) {
+      map['bill_line_id'] = Variable<String>(billLineId.value);
+    }
+    if (articleId.present) {
+      map['article_id'] = Variable<String>(articleId.value);
+    }
+    if (refundPaise.present) {
+      map['refund_paise'] = Variable<int>(refundPaise.value);
+    }
+    if (outcome.present) {
+      map['outcome'] = Variable<String>(outcome.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReturnLinesCompanion(')
+          ..write('id: $id, ')
+          ..write('returnId: $returnId, ')
+          ..write('billLineId: $billLineId, ')
+          ..write('articleId: $articleId, ')
+          ..write('refundPaise: $refundPaise, ')
+          ..write('outcome: $outcome, ')
+          ..write('note: $note, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -6896,6 +8662,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $BillLinesTable billLines = $BillLinesTable(this);
   late final $BillPaymentsTable billPayments = $BillPaymentsTable(this);
   late final $BillSequencesTable billSequences = $BillSequencesTable(this);
+  late final $CreditNotesTable creditNotes = $CreditNotesTable(this);
+  late final $CreditNoteUsesTable creditNoteUses = $CreditNoteUsesTable(this);
+  late final $ReturnsTable returns = $ReturnsTable(this);
+  late final $ReturnLinesTable returnLines = $ReturnLinesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6917,6 +8687,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     billLines,
     billPayments,
     billSequences,
+    creditNotes,
+    creditNoteUses,
+    returns,
+    returnLines,
   ];
 }
 
@@ -7458,6 +9232,24 @@ final class $$UsersTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$CreditNotesTable, List<CreditNoteRow>>
+  _creditNotesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.creditNotes,
+    aliasName: 'users__id__credit_notes__issued_by',
+  );
+
+  $$CreditNotesTableProcessedTableManager get creditNotesRefs {
+    final manager = $$CreditNotesTableTableManager(
+      $_db,
+      $_db.creditNotes,
+    ).filter((f) => f.issuedBy.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_creditNotesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
@@ -7534,6 +9326,31 @@ class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
           }) => $$BillsTableFilterComposer(
             $db: $db,
             $table: $db.bills,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> creditNotesRefs(
+    Expression<bool> Function($$CreditNotesTableFilterComposer f) f,
+  ) {
+    final $$CreditNotesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.creditNotes,
+      getReferencedColumn: (t) => t.issuedBy,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CreditNotesTableFilterComposer(
+            $db: $db,
+            $table: $db.creditNotes,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -7671,6 +9488,31 @@ class $$UsersTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> creditNotesRefs<T extends Object>(
+    Expression<T> Function($$CreditNotesTableAnnotationComposer a) f,
+  ) {
+    final $$CreditNotesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.creditNotes,
+      getReferencedColumn: (t) => t.issuedBy,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CreditNotesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.creditNotes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$UsersTableTableManager
@@ -7686,7 +9528,7 @@ class $$UsersTableTableManager
           $$UsersTableUpdateCompanionBuilder,
           (UserRow, $$UsersTableReferences),
           UserRow,
-          PrefetchHooks Function({bool billsRefs})
+          PrefetchHooks Function({bool billsRefs, bool creditNotesRefs})
         > {
   $$UsersTableTableManager(_$AppDatabase db, $UsersTable table)
     : super(
@@ -7759,34 +9601,57 @@ class $$UsersTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({billsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [if (billsRefs) db.bills],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (billsRefs)
-                    await $_getPrefetchedDataByColumns<
-                      UserRow,
-                      $UsersTable,
-                      BillRow,
-                      $BillsTable
-                    >(
-                      currentTable: table,
-                      referencedTable: $$UsersTableReferences._billsRefsTable(
-                        db,
-                      ),
-                      managerFromTypedResult: (p0) =>
-                          $$UsersTableReferences(db, table, p0).billsRefs,
-                      currentColumn: 'id',
-                      referencedColumn: 'cashier_id',
-                      typedResults: items,
-                    ),
-                ];
+          prefetchHooksCallback:
+              ({billsRefs = false, creditNotesRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (billsRefs) db.bills,
+                    if (creditNotesRefs) db.creditNotes,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (billsRefs)
+                        await $_getPrefetchedDataByColumns<
+                          UserRow,
+                          $UsersTable,
+                          BillRow,
+                          $BillsTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$UsersTableReferences
+                              ._billsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$UsersTableReferences(db, table, p0).billsRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'cashier_id',
+                          typedResults: items,
+                        ),
+                      if (creditNotesRefs)
+                        await $_getPrefetchedDataByColumns<
+                          UserRow,
+                          $UsersTable,
+                          CreditNoteRow,
+                          $CreditNotesTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$UsersTableReferences
+                              ._creditNotesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$UsersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).creditNotesRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'issued_by',
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -7803,7 +9668,7 @@ typedef $$UsersTableProcessedTableManager =
       $$UsersTableUpdateCompanionBuilder,
       (UserRow, $$UsersTableReferences),
       UserRow,
-      PrefetchHooks Function({bool billsRefs})
+      PrefetchHooks Function({bool billsRefs, bool creditNotesRefs})
     >;
 typedef $$CountersTableCreateCompanionBuilder = CountersCompanion Function({
   required String id,
@@ -7864,6 +9729,24 @@ final class $$CountersTableReferences
     ).filter((f) => f.counterId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_billSequencesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$CreditNotesTable, List<CreditNoteRow>>
+  _creditNotesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.creditNotes,
+    aliasName: 'counters__id__credit_notes__counter_id',
+  );
+
+  $$CreditNotesTableProcessedTableManager get creditNotesRefs {
+    final manager = $$CreditNotesTableTableManager(
+      $_db,
+      $_db.creditNotes,
+    ).filter((f) => f.counterId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_creditNotesRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -7960,6 +9843,31 @@ class $$CountersTableFilterComposer
           }) => $$BillSequencesTableFilterComposer(
             $db: $db,
             $table: $db.billSequences,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> creditNotesRefs(
+    Expression<bool> Function($$CreditNotesTableFilterComposer f) f,
+  ) {
+    final $$CreditNotesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.creditNotes,
+      getReferencedColumn: (t) => t.counterId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CreditNotesTableFilterComposer(
+            $db: $db,
+            $table: $db.creditNotes,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -8106,6 +10014,31 @@ class $$CountersTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> creditNotesRefs<T extends Object>(
+    Expression<T> Function($$CreditNotesTableAnnotationComposer a) f,
+  ) {
+    final $$CreditNotesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.creditNotes,
+      getReferencedColumn: (t) => t.counterId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CreditNotesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.creditNotes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$CountersTableTableManager
@@ -8121,7 +10054,11 @@ class $$CountersTableTableManager
           $$CountersTableUpdateCompanionBuilder,
           (CounterRow, $$CountersTableReferences),
           CounterRow,
-          PrefetchHooks Function({bool billsRefs, bool billSequencesRefs})
+          PrefetchHooks Function({
+            bool billsRefs,
+            bool billSequencesRefs,
+            bool creditNotesRefs,
+          })
         > {
   $$CountersTableTableManager(_$AppDatabase db, $CountersTable table)
     : super(
@@ -8187,12 +10124,17 @@ class $$CountersTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({billsRefs = false, billSequencesRefs = false}) {
+              ({
+                billsRefs = false,
+                billSequencesRefs = false,
+                creditNotesRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (billsRefs) db.bills,
                     if (billSequencesRefs) db.billSequences,
+                    if (creditNotesRefs) db.creditNotes,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -8237,6 +10179,26 @@ class $$CountersTableTableManager
                           referencedColumn: 'counter_id',
                           typedResults: items,
                         ),
+                      if (creditNotesRefs)
+                        await $_getPrefetchedDataByColumns<
+                          CounterRow,
+                          $CountersTable,
+                          CreditNoteRow,
+                          $CreditNotesTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CountersTableReferences
+                              ._creditNotesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$CountersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).creditNotesRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'counter_id',
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -8257,7 +10219,11 @@ typedef $$CountersTableProcessedTableManager =
       $$CountersTableUpdateCompanionBuilder,
       (CounterRow, $$CountersTableReferences),
       CounterRow,
-      PrefetchHooks Function({bool billsRefs, bool billSequencesRefs})
+      PrefetchHooks Function({
+        bool billsRefs,
+        bool billSequencesRefs,
+        bool creditNotesRefs,
+      })
     >;
 typedef $$ProductsTableCreateCompanionBuilder = ProductsCompanion Function({
   required String id,
@@ -10008,6 +11974,24 @@ final class $$ArticlesTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$ReturnLinesTable, List<ReturnLineRow>>
+  _returnLinesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.returnLines,
+    aliasName: 'articles__id__return_lines__article_id',
+  );
+
+  $$ReturnLinesTableProcessedTableManager get returnLinesRefs {
+    final manager = $$ReturnLinesTableTableManager(
+      $_db,
+      $_db.returnLines,
+    ).filter((f) => f.articleId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_returnLinesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$ArticlesTableFilterComposer
@@ -10111,6 +12095,31 @@ class $$ArticlesTableFilterComposer
           }) => $$BillLinesTableFilterComposer(
             $db: $db,
             $table: $db.billLines,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> returnLinesRefs(
+    Expression<bool> Function($$ReturnLinesTableFilterComposer f) f,
+  ) {
+    final $$ReturnLinesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.returnLines,
+      getReferencedColumn: (t) => t.articleId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReturnLinesTableFilterComposer(
+            $db: $db,
+            $table: $db.returnLines,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -10306,6 +12315,31 @@ class $$ArticlesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> returnLinesRefs<T extends Object>(
+    Expression<T> Function($$ReturnLinesTableAnnotationComposer a) f,
+  ) {
+    final $$ReturnLinesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.returnLines,
+      getReferencedColumn: (t) => t.articleId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReturnLinesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.returnLines,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ArticlesTableTableManager
@@ -10325,6 +12359,7 @@ class $$ArticlesTableTableManager
             bool variantId,
             bool batchId,
             bool billLinesRefs,
+            bool returnLinesRefs,
           })
         > {
   $$ArticlesTableTableManager(_$AppDatabase db, $ArticlesTable table)
@@ -10391,10 +12426,18 @@ class $$ArticlesTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({variantId = false, batchId = false, billLinesRefs = false}) {
+              ({
+                variantId = false,
+                batchId = false,
+                billLinesRefs = false,
+                returnLinesRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
-                  explicitlyWatchedTables: [if (billLinesRefs) db.billLines],
+                  explicitlyWatchedTables: [
+                    if (billLinesRefs) db.billLines,
+                    if (returnLinesRefs) db.returnLines,
+                  ],
                   addJoins:
                       <
                         T extends TableManagerState<
@@ -10458,6 +12501,26 @@ class $$ArticlesTableTableManager
                           referencedColumn: 'article_id',
                           typedResults: items,
                         ),
+                      if (returnLinesRefs)
+                        await $_getPrefetchedDataByColumns<
+                          ArticleRow,
+                          $ArticlesTable,
+                          ReturnLineRow,
+                          $ReturnLinesTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ArticlesTableReferences
+                              ._returnLinesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ArticlesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).returnLinesRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'article_id',
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -10478,7 +12541,12 @@ typedef $$ArticlesTableProcessedTableManager =
       $$ArticlesTableUpdateCompanionBuilder,
       (ArticleRow, $$ArticlesTableReferences),
       ArticleRow,
-      PrefetchHooks Function({bool variantId, bool batchId, bool billLinesRefs})
+      PrefetchHooks Function({
+        bool variantId,
+        bool batchId,
+        bool billLinesRefs,
+        bool returnLinesRefs,
+      })
     >;
 typedef $$AuditLogTableCreateCompanionBuilder = AuditLogCompanion Function({
   required String id,
@@ -11062,6 +13130,24 @@ final class $$BillsTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$CreditNoteUsesTable, List<CreditNoteUseRow>>
+  _creditNoteUsesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.creditNoteUses,
+    aliasName: 'bills__id__credit_note_uses__bill_id',
+  );
+
+  $$CreditNoteUsesTableProcessedTableManager get creditNoteUsesRefs {
+    final manager = $$CreditNoteUsesTableTableManager(
+      $_db,
+      $_db.creditNoteUses,
+    ).filter((f) => f.billId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_creditNoteUsesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$BillsTableFilterComposer extends Composer<_$AppDatabase, $BillsTable> {
@@ -11199,6 +13285,31 @@ class $$BillsTableFilterComposer extends Composer<_$AppDatabase, $BillsTable> {
           }) => $$BillPaymentsTableFilterComposer(
             $db: $db,
             $table: $db.billPayments,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> creditNoteUsesRefs(
+    Expression<bool> Function($$CreditNoteUsesTableFilterComposer f) f,
+  ) {
+    final $$CreditNoteUsesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.creditNoteUses,
+      getReferencedColumn: (t) => t.billId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CreditNoteUsesTableFilterComposer(
+            $db: $db,
+            $table: $db.creditNoteUses,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -11441,6 +13552,31 @@ class $$BillsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> creditNoteUsesRefs<T extends Object>(
+    Expression<T> Function($$CreditNoteUsesTableAnnotationComposer a) f,
+  ) {
+    final $$CreditNoteUsesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.creditNoteUses,
+      getReferencedColumn: (t) => t.billId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CreditNoteUsesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.creditNoteUses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$BillsTableTableManager
@@ -11461,6 +13597,7 @@ class $$BillsTableTableManager
             bool cashierId,
             bool billLinesRefs,
             bool billPaymentsRefs,
+            bool creditNoteUsesRefs,
           })
         > {
   $$BillsTableTableManager(_$AppDatabase db, $BillsTable table)
@@ -11540,12 +13677,14 @@ class $$BillsTableTableManager
                 cashierId = false,
                 billLinesRefs = false,
                 billPaymentsRefs = false,
+                creditNoteUsesRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (billLinesRefs) db.billLines,
                     if (billPaymentsRefs) db.billPayments,
+                    if (creditNoteUsesRefs) db.creditNoteUses,
                   ],
                   addJoins:
                       <
@@ -11630,6 +13769,26 @@ class $$BillsTableTableManager
                           referencedColumn: 'bill_id',
                           typedResults: items,
                         ),
+                      if (creditNoteUsesRefs)
+                        await $_getPrefetchedDataByColumns<
+                          BillRow,
+                          $BillsTable,
+                          CreditNoteUseRow,
+                          $CreditNoteUsesTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BillsTableReferences
+                              ._creditNoteUsesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BillsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).creditNoteUsesRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'bill_id',
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -11655,6 +13814,7 @@ typedef $$BillsTableProcessedTableManager =
         bool cashierId,
         bool billLinesRefs,
         bool billPaymentsRefs,
+        bool creditNoteUsesRefs,
       })
     >;
 typedef $$BillLinesTableCreateCompanionBuilder = BillLinesCompanion Function({
@@ -11721,6 +13881,24 @@ final class $$BillLinesTableReferences
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$ReturnLinesTable, List<ReturnLineRow>>
+  _returnLinesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.returnLines,
+    aliasName: 'bill_lines__id__return_lines__bill_line_id',
+  );
+
+  $$ReturnLinesTableProcessedTableManager get returnLinesRefs {
+    final manager = $$ReturnLinesTableTableManager(
+      $_db,
+      $_db.returnLines,
+    ).filter((f) => f.billLineId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_returnLinesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
     );
   }
 }
@@ -11823,6 +14001,31 @@ class $$BillLinesTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> returnLinesRefs(
+    Expression<bool> Function($$ReturnLinesTableFilterComposer f) f,
+  ) {
+    final $$ReturnLinesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.returnLines,
+      getReferencedColumn: (t) => t.billLineId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReturnLinesTableFilterComposer(
+            $db: $db,
+            $table: $db.returnLines,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 }
 
@@ -12018,6 +14221,31 @@ class $$BillLinesTableAnnotationComposer
     );
     return composer;
   }
+
+  Expression<T> returnLinesRefs<T extends Object>(
+    Expression<T> Function($$ReturnLinesTableAnnotationComposer a) f,
+  ) {
+    final $$ReturnLinesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.returnLines,
+      getReferencedColumn: (t) => t.billLineId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReturnLinesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.returnLines,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$BillLinesTableTableManager
@@ -12033,7 +14261,11 @@ class $$BillLinesTableTableManager
           $$BillLinesTableUpdateCompanionBuilder,
           (BillLineRow, $$BillLinesTableReferences),
           BillLineRow,
-          PrefetchHooks Function({bool billId, bool articleId})
+          PrefetchHooks Function({
+            bool billId,
+            bool articleId,
+            bool returnLinesRefs,
+          })
         > {
   $$BillLinesTableTableManager(_$AppDatabase db, $BillLinesTable table)
     : super(
@@ -12110,56 +14342,80 @@ class $$BillLinesTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({billId = false, articleId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (billId) {
-                      state = state.withJoin(
-                        currentTable: table,
-                        currentColumn: table.billId,
-                        referencedTable: $$BillLinesTableReferences
-                            ._billIdTable(db),
-                        referencedColumn: $$BillLinesTableReferences
-                            ._billIdTable(db)
-                            .id,
-                      ) as T;
-                    }
-                    if (articleId) {
-                      state = state.withJoin(
-                        currentTable: table,
-                        currentColumn: table.articleId,
-                        referencedTable: $$BillLinesTableReferences
-                            ._articleIdTable(db),
-                        referencedColumn: $$BillLinesTableReferences
-                            ._articleIdTable(db)
-                            .id,
-                      ) as T;
-                    }
+          prefetchHooksCallback:
+              ({billId = false, articleId = false, returnLinesRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (returnLinesRefs) db.returnLines,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (billId) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.billId,
+                            referencedTable: $$BillLinesTableReferences
+                                ._billIdTable(db),
+                            referencedColumn: $$BillLinesTableReferences
+                                ._billIdTable(db)
+                                .id,
+                          ) as T;
+                        }
+                        if (articleId) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.articleId,
+                            referencedTable: $$BillLinesTableReferences
+                                ._articleIdTable(db),
+                            referencedColumn: $$BillLinesTableReferences
+                                ._articleIdTable(db)
+                                .id,
+                          ) as T;
+                        }
 
-                    return state;
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (returnLinesRefs)
+                        await $_getPrefetchedDataByColumns<
+                          BillLineRow,
+                          $BillLinesTable,
+                          ReturnLineRow,
+                          $ReturnLinesTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BillLinesTableReferences
+                              ._returnLinesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BillLinesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).returnLinesRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'bill_line_id',
+                          typedResults: items,
+                        ),
+                    ];
                   },
-              getPrefetchedDataCallback: (items) async {
-                return [];
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -12176,7 +14432,11 @@ typedef $$BillLinesTableProcessedTableManager =
       $$BillLinesTableUpdateCompanionBuilder,
       (BillLineRow, $$BillLinesTableReferences),
       BillLineRow,
-      PrefetchHooks Function({bool billId, bool articleId})
+      PrefetchHooks Function({
+        bool billId,
+        bool articleId,
+        bool returnLinesRefs,
+      })
     >;
 typedef $$BillPaymentsTableCreateCompanionBuilder =
     BillPaymentsCompanion Function({
@@ -12760,6 +15020,2192 @@ typedef $$BillSequencesTableProcessedTableManager =
       BillSequenceRow,
       PrefetchHooks Function({bool counterId})
     >;
+typedef $$CreditNotesTableCreateCompanionBuilder =
+    CreditNotesCompanion Function({
+      required String id,
+      required String code,
+      required String counterId,
+      required int serial,
+      required int amountPaise,
+      required DateTime issuedAt,
+      required String issuedBy,
+      Value<int> rowid,
+    });
+typedef $$CreditNotesTableUpdateCompanionBuilder =
+    CreditNotesCompanion Function({
+      Value<String> id,
+      Value<String> code,
+      Value<String> counterId,
+      Value<int> serial,
+      Value<int> amountPaise,
+      Value<DateTime> issuedAt,
+      Value<String> issuedBy,
+      Value<int> rowid,
+    });
+
+final class $$CreditNotesTableReferences
+    extends BaseReferences<_$AppDatabase, $CreditNotesTable, CreditNoteRow> {
+  $$CreditNotesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $CountersTable _counterIdTable(_$AppDatabase db) =>
+      db.counters.createAlias('credit_notes__counter_id__counters__id');
+
+  $$CountersTableProcessedTableManager get counterId {
+    final $_column = $_itemColumn<String>('counter_id')!;
+
+    final manager = $$CountersTableTableManager(
+      $_db,
+      $_db.counters,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_counterIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $UsersTable _issuedByTable(_$AppDatabase db) =>
+      db.users.createAlias('credit_notes__issued_by__users__id');
+
+  $$UsersTableProcessedTableManager get issuedBy {
+    final $_column = $_itemColumn<String>('issued_by')!;
+
+    final manager = $$UsersTableTableManager(
+      $_db,
+      $_db.users,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_issuedByTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$CreditNoteUsesTable, List<CreditNoteUseRow>>
+  _creditNoteUsesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.creditNoteUses,
+    aliasName: 'credit_notes__id__credit_note_uses__credit_note_id',
+  );
+
+  $$CreditNoteUsesTableProcessedTableManager get creditNoteUsesRefs {
+    final manager = $$CreditNoteUsesTableTableManager(
+      $_db,
+      $_db.creditNoteUses,
+    ).filter((f) => f.creditNoteId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_creditNoteUsesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$ReturnsTable, List<ReturnRow>> _returnsRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.returns,
+    aliasName: 'credit_notes__id__returns__credit_note_id',
+  );
+
+  $$ReturnsTableProcessedTableManager get returnsRefs {
+    final manager = $$ReturnsTableTableManager(
+      $_db,
+      $_db.returns,
+    ).filter((f) => f.creditNoteId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_returnsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$CreditNotesTableFilterComposer
+    extends Composer<_$AppDatabase, $CreditNotesTable> {
+  $$CreditNotesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get serial => $composableBuilder(
+    column: $table.serial,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amountPaise => $composableBuilder(
+    column: $table.amountPaise,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get issuedAt => $composableBuilder(
+    column: $table.issuedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$CountersTableFilterComposer get counterId {
+    final $$CountersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.counterId,
+      referencedTable: $db.counters,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CountersTableFilterComposer(
+            $db: $db,
+            $table: $db.counters,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$UsersTableFilterComposer get issuedBy {
+    final $$UsersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.issuedBy,
+      referencedTable: $db.users,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UsersTableFilterComposer(
+            $db: $db,
+            $table: $db.users,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> creditNoteUsesRefs(
+    Expression<bool> Function($$CreditNoteUsesTableFilterComposer f) f,
+  ) {
+    final $$CreditNoteUsesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.creditNoteUses,
+      getReferencedColumn: (t) => t.creditNoteId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CreditNoteUsesTableFilterComposer(
+            $db: $db,
+            $table: $db.creditNoteUses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> returnsRefs(
+    Expression<bool> Function($$ReturnsTableFilterComposer f) f,
+  ) {
+    final $$ReturnsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.returns,
+      getReferencedColumn: (t) => t.creditNoteId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReturnsTableFilterComposer(
+            $db: $db,
+            $table: $db.returns,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$CreditNotesTableOrderingComposer
+    extends Composer<_$AppDatabase, $CreditNotesTable> {
+  $$CreditNotesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get serial => $composableBuilder(
+    column: $table.serial,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amountPaise => $composableBuilder(
+    column: $table.amountPaise,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get issuedAt => $composableBuilder(
+    column: $table.issuedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$CountersTableOrderingComposer get counterId {
+    final $$CountersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.counterId,
+      referencedTable: $db.counters,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CountersTableOrderingComposer(
+            $db: $db,
+            $table: $db.counters,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$UsersTableOrderingComposer get issuedBy {
+    final $$UsersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.issuedBy,
+      referencedTable: $db.users,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UsersTableOrderingComposer(
+            $db: $db,
+            $table: $db.users,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CreditNotesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CreditNotesTable> {
+  $$CreditNotesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get code =>
+      $composableBuilder(column: $table.code, builder: (column) => column);
+
+  GeneratedColumn<int> get serial =>
+      $composableBuilder(column: $table.serial, builder: (column) => column);
+
+  GeneratedColumn<int> get amountPaise => $composableBuilder(
+    column: $table.amountPaise,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get issuedAt =>
+      $composableBuilder(column: $table.issuedAt, builder: (column) => column);
+
+  $$CountersTableAnnotationComposer get counterId {
+    final $$CountersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.counterId,
+      referencedTable: $db.counters,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CountersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.counters,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$UsersTableAnnotationComposer get issuedBy {
+    final $$UsersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.issuedBy,
+      referencedTable: $db.users,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UsersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.users,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> creditNoteUsesRefs<T extends Object>(
+    Expression<T> Function($$CreditNoteUsesTableAnnotationComposer a) f,
+  ) {
+    final $$CreditNoteUsesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.creditNoteUses,
+      getReferencedColumn: (t) => t.creditNoteId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CreditNoteUsesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.creditNoteUses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> returnsRefs<T extends Object>(
+    Expression<T> Function($$ReturnsTableAnnotationComposer a) f,
+  ) {
+    final $$ReturnsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.returns,
+      getReferencedColumn: (t) => t.creditNoteId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReturnsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.returns,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$CreditNotesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CreditNotesTable,
+          CreditNoteRow,
+          $$CreditNotesTableFilterComposer,
+          $$CreditNotesTableOrderingComposer,
+          $$CreditNotesTableAnnotationComposer,
+          $$CreditNotesTableCreateCompanionBuilder,
+          $$CreditNotesTableUpdateCompanionBuilder,
+          (CreditNoteRow, $$CreditNotesTableReferences),
+          CreditNoteRow,
+          PrefetchHooks Function({
+            bool counterId,
+            bool issuedBy,
+            bool creditNoteUsesRefs,
+            bool returnsRefs,
+          })
+        > {
+  $$CreditNotesTableTableManager(_$AppDatabase db, $CreditNotesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CreditNotesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CreditNotesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CreditNotesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> code = const Value.absent(),
+                Value<String> counterId = const Value.absent(),
+                Value<int> serial = const Value.absent(),
+                Value<int> amountPaise = const Value.absent(),
+                Value<DateTime> issuedAt = const Value.absent(),
+                Value<String> issuedBy = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CreditNotesCompanion(
+                id: id,
+                code: code,
+                counterId: counterId,
+                serial: serial,
+                amountPaise: amountPaise,
+                issuedAt: issuedAt,
+                issuedBy: issuedBy,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String code,
+                required String counterId,
+                required int serial,
+                required int amountPaise,
+                required DateTime issuedAt,
+                required String issuedBy,
+                Value<int> rowid = const Value.absent(),
+              }) => CreditNotesCompanion.insert(
+                id: id,
+                code: code,
+                counterId: counterId,
+                serial: serial,
+                amountPaise: amountPaise,
+                issuedAt: issuedAt,
+                issuedBy: issuedBy,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$CreditNotesTable, CreditNoteRow>(table),
+                  $$CreditNotesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({
+                counterId = false,
+                issuedBy = false,
+                creditNoteUsesRefs = false,
+                returnsRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (creditNoteUsesRefs) db.creditNoteUses,
+                    if (returnsRefs) db.returns,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (counterId) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.counterId,
+                            referencedTable: $$CreditNotesTableReferences
+                                ._counterIdTable(db),
+                            referencedColumn: $$CreditNotesTableReferences
+                                ._counterIdTable(db)
+                                .id,
+                          ) as T;
+                        }
+                        if (issuedBy) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.issuedBy,
+                            referencedTable: $$CreditNotesTableReferences
+                                ._issuedByTable(db),
+                            referencedColumn: $$CreditNotesTableReferences
+                                ._issuedByTable(db)
+                                .id,
+                          ) as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (creditNoteUsesRefs)
+                        await $_getPrefetchedDataByColumns<
+                          CreditNoteRow,
+                          $CreditNotesTable,
+                          CreditNoteUseRow,
+                          $CreditNoteUsesTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CreditNotesTableReferences
+                              ._creditNoteUsesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$CreditNotesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).creditNoteUsesRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'credit_note_id',
+                          typedResults: items,
+                        ),
+                      if (returnsRefs)
+                        await $_getPrefetchedDataByColumns<
+                          CreditNoteRow,
+                          $CreditNotesTable,
+                          ReturnRow,
+                          $ReturnsTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CreditNotesTableReferences
+                              ._returnsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$CreditNotesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).returnsRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'credit_note_id',
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$CreditNotesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CreditNotesTable,
+      CreditNoteRow,
+      $$CreditNotesTableFilterComposer,
+      $$CreditNotesTableOrderingComposer,
+      $$CreditNotesTableAnnotationComposer,
+      $$CreditNotesTableCreateCompanionBuilder,
+      $$CreditNotesTableUpdateCompanionBuilder,
+      (CreditNoteRow, $$CreditNotesTableReferences),
+      CreditNoteRow,
+      PrefetchHooks Function({
+        bool counterId,
+        bool issuedBy,
+        bool creditNoteUsesRefs,
+        bool returnsRefs,
+      })
+    >;
+typedef $$CreditNoteUsesTableCreateCompanionBuilder =
+    CreditNoteUsesCompanion Function({
+      required String id,
+      required String creditNoteId,
+      required String billId,
+      required int amountPaise,
+      Value<int> rowid,
+    });
+typedef $$CreditNoteUsesTableUpdateCompanionBuilder =
+    CreditNoteUsesCompanion Function({
+      Value<String> id,
+      Value<String> creditNoteId,
+      Value<String> billId,
+      Value<int> amountPaise,
+      Value<int> rowid,
+    });
+
+final class $$CreditNoteUsesTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $CreditNoteUsesTable, CreditNoteUseRow> {
+  $$CreditNoteUsesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $CreditNotesTable _creditNoteIdTable(_$AppDatabase db) => db
+      .creditNotes
+      .createAlias('credit_note_uses__credit_note_id__credit_notes__id');
+
+  $$CreditNotesTableProcessedTableManager get creditNoteId {
+    final $_column = $_itemColumn<String>('credit_note_id')!;
+
+    final manager = $$CreditNotesTableTableManager(
+      $_db,
+      $_db.creditNotes,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_creditNoteIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $BillsTable _billIdTable(_$AppDatabase db) =>
+      db.bills.createAlias('credit_note_uses__bill_id__bills__id');
+
+  $$BillsTableProcessedTableManager get billId {
+    final $_column = $_itemColumn<String>('bill_id')!;
+
+    final manager = $$BillsTableTableManager(
+      $_db,
+      $_db.bills,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_billIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$CreditNoteUsesTableFilterComposer
+    extends Composer<_$AppDatabase, $CreditNoteUsesTable> {
+  $$CreditNoteUsesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amountPaise => $composableBuilder(
+    column: $table.amountPaise,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$CreditNotesTableFilterComposer get creditNoteId {
+    final $$CreditNotesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.creditNoteId,
+      referencedTable: $db.creditNotes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CreditNotesTableFilterComposer(
+            $db: $db,
+            $table: $db.creditNotes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BillsTableFilterComposer get billId {
+    final $$BillsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.billId,
+      referencedTable: $db.bills,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BillsTableFilterComposer(
+            $db: $db,
+            $table: $db.bills,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CreditNoteUsesTableOrderingComposer
+    extends Composer<_$AppDatabase, $CreditNoteUsesTable> {
+  $$CreditNoteUsesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amountPaise => $composableBuilder(
+    column: $table.amountPaise,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$CreditNotesTableOrderingComposer get creditNoteId {
+    final $$CreditNotesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.creditNoteId,
+      referencedTable: $db.creditNotes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CreditNotesTableOrderingComposer(
+            $db: $db,
+            $table: $db.creditNotes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BillsTableOrderingComposer get billId {
+    final $$BillsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.billId,
+      referencedTable: $db.bills,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BillsTableOrderingComposer(
+            $db: $db,
+            $table: $db.bills,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CreditNoteUsesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CreditNoteUsesTable> {
+  $$CreditNoteUsesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get amountPaise => $composableBuilder(
+    column: $table.amountPaise,
+    builder: (column) => column,
+  );
+
+  $$CreditNotesTableAnnotationComposer get creditNoteId {
+    final $$CreditNotesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.creditNoteId,
+      referencedTable: $db.creditNotes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CreditNotesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.creditNotes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BillsTableAnnotationComposer get billId {
+    final $$BillsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.billId,
+      referencedTable: $db.bills,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BillsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.bills,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CreditNoteUsesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CreditNoteUsesTable,
+          CreditNoteUseRow,
+          $$CreditNoteUsesTableFilterComposer,
+          $$CreditNoteUsesTableOrderingComposer,
+          $$CreditNoteUsesTableAnnotationComposer,
+          $$CreditNoteUsesTableCreateCompanionBuilder,
+          $$CreditNoteUsesTableUpdateCompanionBuilder,
+          (CreditNoteUseRow, $$CreditNoteUsesTableReferences),
+          CreditNoteUseRow,
+          PrefetchHooks Function({bool creditNoteId, bool billId})
+        > {
+  $$CreditNoteUsesTableTableManager(
+    _$AppDatabase db,
+    $CreditNoteUsesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CreditNoteUsesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CreditNoteUsesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CreditNoteUsesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> creditNoteId = const Value.absent(),
+                Value<String> billId = const Value.absent(),
+                Value<int> amountPaise = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CreditNoteUsesCompanion(
+                id: id,
+                creditNoteId: creditNoteId,
+                billId: billId,
+                amountPaise: amountPaise,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String creditNoteId,
+                required String billId,
+                required int amountPaise,
+                Value<int> rowid = const Value.absent(),
+              }) => CreditNoteUsesCompanion.insert(
+                id: id,
+                creditNoteId: creditNoteId,
+                billId: billId,
+                amountPaise: amountPaise,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$CreditNoteUsesTable, CreditNoteUseRow>(table),
+                  $$CreditNoteUsesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({creditNoteId = false, billId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (creditNoteId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.creditNoteId,
+                        referencedTable: $$CreditNoteUsesTableReferences
+                            ._creditNoteIdTable(db),
+                        referencedColumn: $$CreditNoteUsesTableReferences
+                            ._creditNoteIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+                    if (billId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.billId,
+                        referencedTable: $$CreditNoteUsesTableReferences
+                            ._billIdTable(db),
+                        referencedColumn: $$CreditNoteUsesTableReferences
+                            ._billIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$CreditNoteUsesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CreditNoteUsesTable,
+      CreditNoteUseRow,
+      $$CreditNoteUsesTableFilterComposer,
+      $$CreditNoteUsesTableOrderingComposer,
+      $$CreditNoteUsesTableAnnotationComposer,
+      $$CreditNoteUsesTableCreateCompanionBuilder,
+      $$CreditNoteUsesTableUpdateCompanionBuilder,
+      (CreditNoteUseRow, $$CreditNoteUsesTableReferences),
+      CreditNoteUseRow,
+      PrefetchHooks Function({bool creditNoteId, bool billId})
+    >;
+typedef $$ReturnsTableCreateCompanionBuilder = ReturnsCompanion Function({
+  required String id,
+  required String cashierId,
+  Value<String?> approvedBy,
+  required String refundMode,
+  Value<String?> creditNoteId,
+  required int totalPaise,
+  required DateTime returnedAt,
+  Value<int> rowid,
+});
+typedef $$ReturnsTableUpdateCompanionBuilder = ReturnsCompanion Function({
+  Value<String> id,
+  Value<String> cashierId,
+  Value<String?> approvedBy,
+  Value<String> refundMode,
+  Value<String?> creditNoteId,
+  Value<int> totalPaise,
+  Value<DateTime> returnedAt,
+  Value<int> rowid,
+});
+
+final class $$ReturnsTableReferences
+    extends BaseReferences<_$AppDatabase, $ReturnsTable, ReturnRow> {
+  $$ReturnsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $UsersTable _cashierIdTable(_$AppDatabase db) =>
+      db.users.createAlias('returns__cashier_id__users__id');
+
+  $$UsersTableProcessedTableManager get cashierId {
+    final $_column = $_itemColumn<String>('cashier_id')!;
+
+    final manager = $$UsersTableTableManager(
+      $_db,
+      $_db.users,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_cashierIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $UsersTable _approvedByTable(_$AppDatabase db) =>
+      db.users.createAlias('returns__approved_by__users__id');
+
+  $$UsersTableProcessedTableManager? get approvedBy {
+    final $_column = $_itemColumn<String>('approved_by');
+    if ($_column == null) return null;
+    final manager = $$UsersTableTableManager(
+      $_db,
+      $_db.users,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_approvedByTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $CreditNotesTable _creditNoteIdTable(_$AppDatabase db) =>
+      db.creditNotes.createAlias('returns__credit_note_id__credit_notes__id');
+
+  $$CreditNotesTableProcessedTableManager? get creditNoteId {
+    final $_column = $_itemColumn<String>('credit_note_id');
+    if ($_column == null) return null;
+    final manager = $$CreditNotesTableTableManager(
+      $_db,
+      $_db.creditNotes,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_creditNoteIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$ReturnLinesTable, List<ReturnLineRow>>
+  _returnLinesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.returnLines,
+    aliasName: 'returns__id__return_lines__return_id',
+  );
+
+  $$ReturnLinesTableProcessedTableManager get returnLinesRefs {
+    final manager = $$ReturnLinesTableTableManager(
+      $_db,
+      $_db.returnLines,
+    ).filter((f) => f.returnId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_returnLinesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$ReturnsTableFilterComposer
+    extends Composer<_$AppDatabase, $ReturnsTable> {
+  $$ReturnsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get refundMode => $composableBuilder(
+    column: $table.refundMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get totalPaise => $composableBuilder(
+    column: $table.totalPaise,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get returnedAt => $composableBuilder(
+    column: $table.returnedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$UsersTableFilterComposer get cashierId {
+    final $$UsersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.cashierId,
+      referencedTable: $db.users,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UsersTableFilterComposer(
+            $db: $db,
+            $table: $db.users,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$UsersTableFilterComposer get approvedBy {
+    final $$UsersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.approvedBy,
+      referencedTable: $db.users,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UsersTableFilterComposer(
+            $db: $db,
+            $table: $db.users,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CreditNotesTableFilterComposer get creditNoteId {
+    final $$CreditNotesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.creditNoteId,
+      referencedTable: $db.creditNotes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CreditNotesTableFilterComposer(
+            $db: $db,
+            $table: $db.creditNotes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> returnLinesRefs(
+    Expression<bool> Function($$ReturnLinesTableFilterComposer f) f,
+  ) {
+    final $$ReturnLinesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.returnLines,
+      getReferencedColumn: (t) => t.returnId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReturnLinesTableFilterComposer(
+            $db: $db,
+            $table: $db.returnLines,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$ReturnsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ReturnsTable> {
+  $$ReturnsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get refundMode => $composableBuilder(
+    column: $table.refundMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get totalPaise => $composableBuilder(
+    column: $table.totalPaise,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get returnedAt => $composableBuilder(
+    column: $table.returnedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$UsersTableOrderingComposer get cashierId {
+    final $$UsersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.cashierId,
+      referencedTable: $db.users,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UsersTableOrderingComposer(
+            $db: $db,
+            $table: $db.users,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$UsersTableOrderingComposer get approvedBy {
+    final $$UsersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.approvedBy,
+      referencedTable: $db.users,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UsersTableOrderingComposer(
+            $db: $db,
+            $table: $db.users,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CreditNotesTableOrderingComposer get creditNoteId {
+    final $$CreditNotesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.creditNoteId,
+      referencedTable: $db.creditNotes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CreditNotesTableOrderingComposer(
+            $db: $db,
+            $table: $db.creditNotes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ReturnsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ReturnsTable> {
+  $$ReturnsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get refundMode => $composableBuilder(
+    column: $table.refundMode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get totalPaise => $composableBuilder(
+    column: $table.totalPaise,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get returnedAt => $composableBuilder(
+    column: $table.returnedAt,
+    builder: (column) => column,
+  );
+
+  $$UsersTableAnnotationComposer get cashierId {
+    final $$UsersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.cashierId,
+      referencedTable: $db.users,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UsersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.users,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$UsersTableAnnotationComposer get approvedBy {
+    final $$UsersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.approvedBy,
+      referencedTable: $db.users,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UsersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.users,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CreditNotesTableAnnotationComposer get creditNoteId {
+    final $$CreditNotesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.creditNoteId,
+      referencedTable: $db.creditNotes,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CreditNotesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.creditNotes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> returnLinesRefs<T extends Object>(
+    Expression<T> Function($$ReturnLinesTableAnnotationComposer a) f,
+  ) {
+    final $$ReturnLinesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.returnLines,
+      getReferencedColumn: (t) => t.returnId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReturnLinesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.returnLines,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$ReturnsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ReturnsTable,
+          ReturnRow,
+          $$ReturnsTableFilterComposer,
+          $$ReturnsTableOrderingComposer,
+          $$ReturnsTableAnnotationComposer,
+          $$ReturnsTableCreateCompanionBuilder,
+          $$ReturnsTableUpdateCompanionBuilder,
+          (ReturnRow, $$ReturnsTableReferences),
+          ReturnRow,
+          PrefetchHooks Function({
+            bool cashierId,
+            bool approvedBy,
+            bool creditNoteId,
+            bool returnLinesRefs,
+          })
+        > {
+  $$ReturnsTableTableManager(_$AppDatabase db, $ReturnsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ReturnsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ReturnsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ReturnsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> cashierId = const Value.absent(),
+                Value<String?> approvedBy = const Value.absent(),
+                Value<String> refundMode = const Value.absent(),
+                Value<String?> creditNoteId = const Value.absent(),
+                Value<int> totalPaise = const Value.absent(),
+                Value<DateTime> returnedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReturnsCompanion(
+                id: id,
+                cashierId: cashierId,
+                approvedBy: approvedBy,
+                refundMode: refundMode,
+                creditNoteId: creditNoteId,
+                totalPaise: totalPaise,
+                returnedAt: returnedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String cashierId,
+                Value<String?> approvedBy = const Value.absent(),
+                required String refundMode,
+                Value<String?> creditNoteId = const Value.absent(),
+                required int totalPaise,
+                required DateTime returnedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => ReturnsCompanion.insert(
+                id: id,
+                cashierId: cashierId,
+                approvedBy: approvedBy,
+                refundMode: refundMode,
+                creditNoteId: creditNoteId,
+                totalPaise: totalPaise,
+                returnedAt: returnedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ReturnsTable, ReturnRow>(table),
+                  $$ReturnsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({
+                cashierId = false,
+                approvedBy = false,
+                creditNoteId = false,
+                returnLinesRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (returnLinesRefs) db.returnLines,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (cashierId) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.cashierId,
+                            referencedTable: $$ReturnsTableReferences
+                                ._cashierIdTable(db),
+                            referencedColumn: $$ReturnsTableReferences
+                                ._cashierIdTable(db)
+                                .id,
+                          ) as T;
+                        }
+                        if (approvedBy) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.approvedBy,
+                            referencedTable: $$ReturnsTableReferences
+                                ._approvedByTable(db),
+                            referencedColumn: $$ReturnsTableReferences
+                                ._approvedByTable(db)
+                                .id,
+                          ) as T;
+                        }
+                        if (creditNoteId) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.creditNoteId,
+                            referencedTable: $$ReturnsTableReferences
+                                ._creditNoteIdTable(db),
+                            referencedColumn: $$ReturnsTableReferences
+                                ._creditNoteIdTable(db)
+                                .id,
+                          ) as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (returnLinesRefs)
+                        await $_getPrefetchedDataByColumns<
+                          ReturnRow,
+                          $ReturnsTable,
+                          ReturnLineRow,
+                          $ReturnLinesTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ReturnsTableReferences
+                              ._returnLinesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ReturnsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).returnLinesRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'return_id',
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$ReturnsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ReturnsTable,
+      ReturnRow,
+      $$ReturnsTableFilterComposer,
+      $$ReturnsTableOrderingComposer,
+      $$ReturnsTableAnnotationComposer,
+      $$ReturnsTableCreateCompanionBuilder,
+      $$ReturnsTableUpdateCompanionBuilder,
+      (ReturnRow, $$ReturnsTableReferences),
+      ReturnRow,
+      PrefetchHooks Function({
+        bool cashierId,
+        bool approvedBy,
+        bool creditNoteId,
+        bool returnLinesRefs,
+      })
+    >;
+typedef $$ReturnLinesTableCreateCompanionBuilder =
+    ReturnLinesCompanion Function({
+      required String id,
+      required String returnId,
+      required String billLineId,
+      required String articleId,
+      required int refundPaise,
+      required String outcome,
+      Value<String?> note,
+      Value<int> rowid,
+    });
+typedef $$ReturnLinesTableUpdateCompanionBuilder =
+    ReturnLinesCompanion Function({
+      Value<String> id,
+      Value<String> returnId,
+      Value<String> billLineId,
+      Value<String> articleId,
+      Value<int> refundPaise,
+      Value<String> outcome,
+      Value<String?> note,
+      Value<int> rowid,
+    });
+
+final class $$ReturnLinesTableReferences
+    extends BaseReferences<_$AppDatabase, $ReturnLinesTable, ReturnLineRow> {
+  $$ReturnLinesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $ReturnsTable _returnIdTable(_$AppDatabase db) =>
+      db.returns.createAlias('return_lines__return_id__returns__id');
+
+  $$ReturnsTableProcessedTableManager get returnId {
+    final $_column = $_itemColumn<String>('return_id')!;
+
+    final manager = $$ReturnsTableTableManager(
+      $_db,
+      $_db.returns,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_returnIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $BillLinesTable _billLineIdTable(_$AppDatabase db) =>
+      db.billLines.createAlias('return_lines__bill_line_id__bill_lines__id');
+
+  $$BillLinesTableProcessedTableManager get billLineId {
+    final $_column = $_itemColumn<String>('bill_line_id')!;
+
+    final manager = $$BillLinesTableTableManager(
+      $_db,
+      $_db.billLines,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_billLineIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $ArticlesTable _articleIdTable(_$AppDatabase db) =>
+      db.articles.createAlias('return_lines__article_id__articles__id');
+
+  $$ArticlesTableProcessedTableManager get articleId {
+    final $_column = $_itemColumn<String>('article_id')!;
+
+    final manager = $$ArticlesTableTableManager(
+      $_db,
+      $_db.articles,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_articleIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ReturnLinesTableFilterComposer
+    extends Composer<_$AppDatabase, $ReturnLinesTable> {
+  $$ReturnLinesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get refundPaise => $composableBuilder(
+    column: $table.refundPaise,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get outcome => $composableBuilder(
+    column: $table.outcome,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ReturnsTableFilterComposer get returnId {
+    final $$ReturnsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.returnId,
+      referencedTable: $db.returns,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReturnsTableFilterComposer(
+            $db: $db,
+            $table: $db.returns,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BillLinesTableFilterComposer get billLineId {
+    final $$BillLinesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.billLineId,
+      referencedTable: $db.billLines,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BillLinesTableFilterComposer(
+            $db: $db,
+            $table: $db.billLines,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ArticlesTableFilterComposer get articleId {
+    final $$ArticlesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.articleId,
+      referencedTable: $db.articles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ArticlesTableFilterComposer(
+            $db: $db,
+            $table: $db.articles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ReturnLinesTableOrderingComposer
+    extends Composer<_$AppDatabase, $ReturnLinesTable> {
+  $$ReturnLinesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get refundPaise => $composableBuilder(
+    column: $table.refundPaise,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get outcome => $composableBuilder(
+    column: $table.outcome,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ReturnsTableOrderingComposer get returnId {
+    final $$ReturnsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.returnId,
+      referencedTable: $db.returns,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReturnsTableOrderingComposer(
+            $db: $db,
+            $table: $db.returns,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BillLinesTableOrderingComposer get billLineId {
+    final $$BillLinesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.billLineId,
+      referencedTable: $db.billLines,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BillLinesTableOrderingComposer(
+            $db: $db,
+            $table: $db.billLines,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ArticlesTableOrderingComposer get articleId {
+    final $$ArticlesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.articleId,
+      referencedTable: $db.articles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ArticlesTableOrderingComposer(
+            $db: $db,
+            $table: $db.articles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ReturnLinesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ReturnLinesTable> {
+  $$ReturnLinesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get refundPaise => $composableBuilder(
+    column: $table.refundPaise,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get outcome =>
+      $composableBuilder(column: $table.outcome, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  $$ReturnsTableAnnotationComposer get returnId {
+    final $$ReturnsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.returnId,
+      referencedTable: $db.returns,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReturnsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.returns,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BillLinesTableAnnotationComposer get billLineId {
+    final $$BillLinesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.billLineId,
+      referencedTable: $db.billLines,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BillLinesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.billLines,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ArticlesTableAnnotationComposer get articleId {
+    final $$ArticlesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.articleId,
+      referencedTable: $db.articles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ArticlesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.articles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ReturnLinesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ReturnLinesTable,
+          ReturnLineRow,
+          $$ReturnLinesTableFilterComposer,
+          $$ReturnLinesTableOrderingComposer,
+          $$ReturnLinesTableAnnotationComposer,
+          $$ReturnLinesTableCreateCompanionBuilder,
+          $$ReturnLinesTableUpdateCompanionBuilder,
+          (ReturnLineRow, $$ReturnLinesTableReferences),
+          ReturnLineRow,
+          PrefetchHooks Function({
+            bool returnId,
+            bool billLineId,
+            bool articleId,
+          })
+        > {
+  $$ReturnLinesTableTableManager(_$AppDatabase db, $ReturnLinesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ReturnLinesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ReturnLinesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ReturnLinesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> returnId = const Value.absent(),
+                Value<String> billLineId = const Value.absent(),
+                Value<String> articleId = const Value.absent(),
+                Value<int> refundPaise = const Value.absent(),
+                Value<String> outcome = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReturnLinesCompanion(
+                id: id,
+                returnId: returnId,
+                billLineId: billLineId,
+                articleId: articleId,
+                refundPaise: refundPaise,
+                outcome: outcome,
+                note: note,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String returnId,
+                required String billLineId,
+                required String articleId,
+                required int refundPaise,
+                required String outcome,
+                Value<String?> note = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReturnLinesCompanion.insert(
+                id: id,
+                returnId: returnId,
+                billLineId: billLineId,
+                articleId: articleId,
+                refundPaise: refundPaise,
+                outcome: outcome,
+                note: note,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ReturnLinesTable, ReturnLineRow>(table),
+                  $$ReturnLinesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({returnId = false, billLineId = false, articleId = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (returnId) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.returnId,
+                            referencedTable: $$ReturnLinesTableReferences
+                                ._returnIdTable(db),
+                            referencedColumn: $$ReturnLinesTableReferences
+                                ._returnIdTable(db)
+                                .id,
+                          ) as T;
+                        }
+                        if (billLineId) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.billLineId,
+                            referencedTable: $$ReturnLinesTableReferences
+                                ._billLineIdTable(db),
+                            referencedColumn: $$ReturnLinesTableReferences
+                                ._billLineIdTable(db)
+                                .id,
+                          ) as T;
+                        }
+                        if (articleId) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.articleId,
+                            referencedTable: $$ReturnLinesTableReferences
+                                ._articleIdTable(db),
+                            referencedColumn: $$ReturnLinesTableReferences
+                                ._articleIdTable(db)
+                                .id,
+                          ) as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$ReturnLinesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ReturnLinesTable,
+      ReturnLineRow,
+      $$ReturnLinesTableFilterComposer,
+      $$ReturnLinesTableOrderingComposer,
+      $$ReturnLinesTableAnnotationComposer,
+      $$ReturnLinesTableCreateCompanionBuilder,
+      $$ReturnLinesTableUpdateCompanionBuilder,
+      (ReturnLineRow, $$ReturnLinesTableReferences),
+      ReturnLineRow,
+      PrefetchHooks Function({bool returnId, bool billLineId, bool articleId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -12796,4 +17242,12 @@ class $AppDatabaseManager {
       $$BillPaymentsTableTableManager(_db, _db.billPayments);
   $$BillSequencesTableTableManager get billSequences =>
       $$BillSequencesTableTableManager(_db, _db.billSequences);
+  $$CreditNotesTableTableManager get creditNotes =>
+      $$CreditNotesTableTableManager(_db, _db.creditNotes);
+  $$CreditNoteUsesTableTableManager get creditNoteUses =>
+      $$CreditNoteUsesTableTableManager(_db, _db.creditNoteUses);
+  $$ReturnsTableTableManager get returns =>
+      $$ReturnsTableTableManager(_db, _db.returns);
+  $$ReturnLinesTableTableManager get returnLines =>
+      $$ReturnLinesTableTableManager(_db, _db.returnLines);
 }

@@ -1,6 +1,10 @@
-// Each schema version has a migration test (ADR-0006 point 5). Version 1 is the
+// Each schema version has a migration test (ADR-0006 point 5). Each one starts
+// at an older version and must reach the latest schema exactly (drift creates a
+// table with its newest definition, so stopping at an older target would not
+// match older schemas once a later version changes a table). Version 1 is the
 // stock tables; version 2 adds the sign-in users table (P2-2); version 3 adds
-// shop settings and the size and color lists (P2-3); version 4 adds bills (P2-4b).
+// shop settings and the size and color lists (P2-3); version 4 adds bills (P2-4b);
+// version 5 adds returns and credit notes (P2-5b).
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift_dev/api/migrations_native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,18 +17,15 @@ void main() {
   late SchemaVerifier verifier;
   setUpAll(() => verifier = SchemaVerifier(GeneratedHelper()));
 
-  test(
-    'version 1 upgrades to version 2 with the exact expected schema',
-    () async {
-      final connection = await verifier.startAt(1);
-      final db = AppDatabase(connection);
-      addTearDown(db.close);
-      await verifier.migrateAndValidate(db, 2);
-    },
-  );
+  test('version 1 upgrades to the latest version (5) with the exact expected schema', () async {
+    final connection = await verifier.startAt(1);
+    final db = AppDatabase(connection);
+    addTearDown(db.close);
+    await verifier.migrateAndValidate(db, 5);
+  });
 
   test(
-    'stock rows made in version 1 survive the upgrade to version 2',
+    'stock rows made in version 1 survive the upgrade to the latest version',
     () async {
       final schema = await verifier.schemaAt(1);
       schema.rawDatabase.execute(
@@ -32,7 +33,7 @@ void main() {
       );
       final db = AppDatabase(schema.newConnection());
       addTearDown(db.close);
-      await verifier.migrateAndValidate(db, 2);
+      await verifier.migrateAndValidate(db, 5);
       final rows = await db.customSelect('SELECT name FROM products').get();
       expect(rows.single.read<String>('name'), 'Kurta');
       expect(
@@ -43,44 +44,41 @@ void main() {
     },
   );
 
-  test(
-    'version 2 upgrades to version 3 with the exact expected schema',
-    () async {
-      final connection = await verifier.startAt(2);
-      final db = AppDatabase(connection);
-      addTearDown(db.close);
-      await verifier.migrateAndValidate(db, 3);
-    },
-  );
-
-  test('users made in version 2 survive the upgrade to version 3', () async {
-    final schema = await verifier.schemaAt(2);
-    schema.rawDatabase.execute(
-      "INSERT INTO users (id, name, role, credential_hash, active, failures, lock_count, created_at, updated_at) VALUES ('u1', 'Asha', 'CASHIER', 'h', 1, 0, 0, 1700000000, 1700000000)",
-    );
-    final db = AppDatabase(schema.newConnection());
+  test('version 2 upgrades to the latest version (5) with the exact expected schema', () async {
+    final connection = await verifier.startAt(2);
+    final db = AppDatabase(connection);
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 3);
-    final rows = await db.customSelect('SELECT name FROM users').get();
-    expect(rows.single.read<String>('name'), 'Asha');
-    expect(
-      (await db
-              .customSelect('SELECT COUNT(*) AS c FROM size_options')
-              .getSingle())
-          .read<int>('c'),
-      0,
-    );
+    await verifier.migrateAndValidate(db, 5);
   });
 
   test(
-    'version 3 upgrades to version 4 with the exact expected schema',
+    'users made in version 2 survive the upgrade to the latest version',
     () async {
-      final connection = await verifier.startAt(3);
-      final db = AppDatabase(connection);
+      final schema = await verifier.schemaAt(2);
+      schema.rawDatabase.execute(
+        "INSERT INTO users (id, name, role, credential_hash, active, failures, lock_count, created_at, updated_at) VALUES ('u1', 'Asha', 'CASHIER', 'h', 1, 0, 0, 1700000000, 1700000000)",
+      );
+      final db = AppDatabase(schema.newConnection());
       addTearDown(db.close);
-      await verifier.migrateAndValidate(db, 4);
+      await verifier.migrateAndValidate(db, 5);
+      final rows = await db.customSelect('SELECT name FROM users').get();
+      expect(rows.single.read<String>('name'), 'Asha');
+      expect(
+        (await db
+                .customSelect('SELECT COUNT(*) AS c FROM size_options')
+                .getSingle())
+            .read<int>('c'),
+        0,
+      );
     },
   );
+
+  test('version 3 upgrades to the latest version (5) with the exact expected schema', () async {
+    final connection = await verifier.startAt(3);
+    final db = AppDatabase(connection);
+    addTearDown(db.close);
+    await verifier.migrateAndValidate(db, 5);
+  });
 
   test('stock made in version 3 survives; bills start empty and are '
       'protected from edits in version 4', () async {
@@ -90,7 +88,7 @@ void main() {
     );
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 4);
+    await verifier.migrateAndValidate(db, 5);
     expect(
       (await db.customSelect('SELECT name FROM products').getSingle())
           .read<String>('name'),
@@ -111,6 +109,53 @@ void main() {
     final triggers = await db
         .customSelect("SELECT name FROM sqlite_master WHERE type = 'trigger'")
         .get();
-    expect(triggers.length, 6);
+    expect(triggers.length, 14); // 2 for each of 7 never-edited tables
+  });
+
+  test('version 4 upgrades to the latest version (5) with the exact expected schema', () async {
+    final connection = await verifier.startAt(4);
+    final db = AppDatabase(connection);
+    addTearDown(db.close);
+    await verifier.migrateAndValidate(db, 5);
+  });
+
+  test('bills and payments made in version 4 survive, and a credit note '
+      'payment is now allowed in version 5', () async {
+    final schema = await verifier.schemaAt(4);
+    final raw = schema.rawDatabase;
+    raw.execute(
+      "INSERT INTO counters (id, name, lot_first, lot_last, current_lot, next_serial, created_at, updated_at) VALUES ('c1', 'Counter 1', 0, 499, 0, 0, 1700000000, 1700000000)",
+    );
+    raw.execute(
+      "INSERT INTO users (id, name, role, credential_hash, active, failures, lock_count, created_at, updated_at) VALUES ('u1', 'Asha', 'CASHIER', 'h', 1, 0, 0, 1700000000, 1700000000)",
+    );
+    raw.execute(
+      "INSERT INTO bills (id, bill_no, counter_id, cashier_id, total_paise, change_paise, billed_at, created_at) VALUES ('b1', '2026-27/C1/000001', 'c1', 'u1', 49900, 0, 1700000000, 1700000000)",
+    );
+    raw.execute(
+      "INSERT INTO bill_payments (id, bill_id, mode, amount_paise) VALUES ('p1', 'b1', 'cash', 49900)",
+    );
+    final db = AppDatabase(schema.newConnection());
+    addTearDown(db.close);
+    await verifier.migrateAndValidate(db, 5);
+    final rows = await db
+        .customSelect('SELECT mode, amount_paise FROM bill_payments')
+        .get();
+    expect(rows.single.read<String>('mode'), 'cash');
+    expect(rows.single.read<int>('amount_paise'), 49900);
+    await db.customStatement(
+      "INSERT INTO bill_payments (id, bill_id, mode, amount_paise) VALUES ('p2', 'b1', 'credit_note', 100)",
+    );
+    await expectLater(
+      db.customStatement(
+        "INSERT INTO bill_payments (id, bill_id, mode, amount_paise) VALUES ('p3', 'b1', 'cheque', 100)",
+      ),
+      throwsA(anything),
+    );
+    // the no-edit rule still holds on the rebuilt table
+    await expectLater(
+      db.customStatement('DELETE FROM bill_payments'),
+      throwsA(anything),
+    );
   });
 }

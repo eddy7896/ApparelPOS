@@ -40,6 +40,7 @@ void main() {
         Permission.configureGst,
         Permission.manageUsers,
         Permission.overrideDiscountLimit,
+        Permission.approveLateReturn,
         Permission.backupAndRestore,
       ]) {
         expect(can(Role.cashier, p), isFalse, reason: '$p');

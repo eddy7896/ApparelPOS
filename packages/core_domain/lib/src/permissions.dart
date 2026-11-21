@@ -42,6 +42,7 @@ enum Permission {
   printLabels,
   setMarkdown,
   overrideDiscountLimit,
+  approveLateReturn,
   viewCost,
   viewMargins,
   viewDaybook,
