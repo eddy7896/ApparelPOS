@@ -48,8 +48,10 @@ Purpose: phases and task IDs. Size S <= 1 day, M <= 3 days, L <= 1 week. Phases 
 | P2-5c | Returns screen, credit note slip print, credit note at the register | L | screen tests | P2-5b | done |
 | P2-6a | Shift rules: denominations, cash count, expected cash, variance | S | unit tests; mutation-checked | P2-4a | done |
 | P2-6b | Shifts, blind close (data layer), daybook table; sales and returns need an open shift and write daybook rows (schema v6); the open-shift screen | L | E-SHIFT-1, E-AUDIT-1 | P2-6a, P2-5b | done |
-| P2-6c | Screens: blind close, forced close of a stale shift at sign-in, owner's shift list with variance | L | screen tests; E-SHIFT-1 | P2-6b | doing |
-| P2-7 | Owner reports (daily) | M | totals match daybook | P2-6 | todo |
+| P2-6c | Screens: blind close, forced close of a stale shift at sign-in, owner's shift list with variance | L | screen tests; E-SHIFT-1 | P2-6b | done |
+| P2-7a | Report rules: India day bounds, net sales, cost of goods, profit, top styles | S | unit tests; mutation-checked | P2-6a | doing |
+| P2-7b | Daily report data: sales, bills, garments, money by mode, refunds, discounts, returns, shift variances, profit, top 5 styles; totals match the daybook | M | totals match daybook; permission tests | P2-7a, P2-6b | todo |
+| P2-7c | Daily report screen in Manager Mode: one day at a time with arrows | M | screen tests | P2-7b | todo |
 
 ## P3 go-live
 | ID | Task | Size | Acceptance | Depends on | Status |
