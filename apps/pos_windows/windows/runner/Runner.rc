@@ -85,17 +85,21 @@ VS_VERSION_INFO VERSIONINFO
  FILETYPE VFT_APP
  FILESUBTYPE 0x0L
 BEGIN
+    // CompanyName and ProductName decide where Windows keeps the shop's data:
+    // %APPDATA%\<CompanyName>\<ProductName>. Changing either one makes the app look in a
+    // new empty place and the shop appear to lose everything. tools/checks/data-location.mjs
+    // fails the build if they change.
     BLOCK "StringFileInfo"
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.apparelpos" "\0"
-            VALUE "FileDescription", "pos_windows" "\0"
+            VALUE "CompanyName", "Apparel PoS" "\0"
+            VALUE "FileDescription", "Apparel PoS counter app" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "pos_windows" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.apparelpos. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Apparel PoS. All rights reserved." "\0"
             VALUE "OriginalFilename", "pos_windows.exe" "\0"
-            VALUE "ProductName", "pos_windows" "\0"
+            VALUE "ProductName", "Apparel PoS" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
