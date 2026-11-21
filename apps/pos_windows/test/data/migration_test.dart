@@ -1,6 +1,6 @@
 // Each schema version has a migration test (ADR-0006 point 5). Version 1 is the
 // stock tables; version 2 adds the sign-in users table (P2-2); version 3 adds
-// shop settings and the size and color lists (P2-3).
+// shop settings and the size and color lists (P2-3); version 4 adds bills (P2-4b).
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift_dev/api/migrations_native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -70,5 +70,47 @@ void main() {
           .read<int>('c'),
       0,
     );
+  });
+
+  test(
+    'version 3 upgrades to version 4 with the exact expected schema',
+    () async {
+      final connection = await verifier.startAt(3);
+      final db = AppDatabase(connection);
+      addTearDown(db.close);
+      await verifier.migrateAndValidate(db, 4);
+    },
+  );
+
+  test('stock made in version 3 survives; bills start empty and are '
+      'protected from edits in version 4', () async {
+    final schema = await verifier.schemaAt(3);
+    schema.rawDatabase.execute(
+      "INSERT INTO products (id, name, created_at, updated_at) VALUES ('p1', 'Kurta', 1700000000, 1700000000)",
+    );
+    final db = AppDatabase(schema.newConnection());
+    addTearDown(db.close);
+    await verifier.migrateAndValidate(db, 4);
+    expect(
+      (await db.customSelect('SELECT name FROM products').getSingle())
+          .read<String>('name'),
+      'Kurta',
+    );
+    for (final t in [
+      'bills',
+      'bill_lines',
+      'bill_payments',
+      'bill_sequences',
+    ]) {
+      expect(
+        (await db.customSelect('SELECT COUNT(*) AS c FROM $t').getSingle())
+            .read<int>('c'),
+        0,
+      );
+    }
+    final triggers = await db
+        .customSelect("SELECT name FROM sqlite_master WHERE type = 'trigger'")
+        .get();
+    expect(triggers.length, 6);
   });
 }
