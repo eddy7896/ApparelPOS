@@ -1,14 +1,19 @@
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 
+import '../services.dart';
 import '../session_controller.dart';
+import 'restore_screen.dart';
 import 'notice.dart';
 
 /// First launch: create the owner account (ADR-0002 D1, install wizard).
 class SetupScreen extends StatefulWidget {
-  const SetupScreen({super.key, required this.session});
+  const SetupScreen({super.key, required this.session, this.services});
 
   final SessionController session;
+
+  /// Needed only for the Restore link (null in tests of the form alone).
+  final AppServices? services;
 
   @override
   State<SetupScreen> createState() => _SetupScreenState();
@@ -129,6 +134,25 @@ class _SetupScreenState extends State<SetupScreen> {
                     'Practice owner password: $practiceOwnerPassword\nPractice cashier PIN: $practiceCashierPin',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+                if (widget.services?.backup != null) ...[
+                  const SizedBox(height: 16),
+                  TextButton(
+                    key: const Key('setup-restore'),
+                    onPressed: _busy
+                        ? null
+                        : () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => RestoreScreen(
+                                services: widget.services!,
+                                firstRun: true,
+                              ),
+                            ),
+                          ),
+                    child: const Text(
+                      'This is a new computer: restore from a backup',
+                    ),
                   ),
                 ],
                 const EncryptionNotice(),

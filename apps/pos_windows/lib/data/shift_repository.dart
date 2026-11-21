@@ -142,6 +142,17 @@ class ShiftRepository {
     );
   }
 
+  /// How many shifts are open right now (anyone's): a backup follows a close
+  /// only when this is zero.
+  Future<int> openShiftCount() async =>
+      (await _db
+              .customSelect(
+                'SELECT COUNT(*) AS c FROM shifts s '
+                'WHERE NOT EXISTS (SELECT 1 FROM shift_closes c WHERE c.shift_id = s.id)',
+              )
+              .getSingle())
+          .read<int>('c');
+
   /// True when [userId] has an open shift that was opened on an earlier shop
   /// day (India time): it must be closed before selling (owner, 2026-11-21).
   Future<bool> hasStaleShift(String userId) async {

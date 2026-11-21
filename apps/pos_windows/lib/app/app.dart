@@ -73,7 +73,7 @@ class _PosAppState extends State<PosApp> {
                   body: Center(child: CircularProgressIndicator()),
                 );
               case SessionStage.needsSetup:
-                return SetupScreen(session: session);
+                return SetupScreen(session: session, services: widget.services);
               case SessionStage.locked:
                 return LockScreen(session: session);
               case SessionStage.signedIn:

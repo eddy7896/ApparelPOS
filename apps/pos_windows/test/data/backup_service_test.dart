@@ -12,6 +12,8 @@ import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pos_windows/data/app_database.dart';
 import 'package:pos_windows/data/backup/backup_service.dart';
+import 'package:pos_windows/data/backup/native_backup_controller.dart';
+import 'package:pos_windows/data/shift_repository.dart';
 import 'package:pos_windows/data/encryption/encrypted_connection.dart';
 import 'package:pos_windows/data/encryption/key_store.dart';
 import 'package:pos_windows/data/stock_repository.dart';
@@ -675,4 +677,248 @@ void main() {
       expect(listBackups(Directory('${root.path}/nope')), isEmpty);
     },
   );
+
+  group('the first launch on a new computer', () {
+    test('a brand new empty database and its key are replaced by the backup and its key', () async {
+      await backups.backupNow(role: Role.owner);
+      final keyA = (await keysA.read())!;
+      final machineB = Directory('${root.path}/machineB')..createSync();
+      final dbB = File('${machineB.path}/apparel_pos.db');
+      final keysB = MemoryKeyStore();
+      // what happens on the first launch: the app has already made a new database and key
+      final fresh = AppDatabase(
+        await openEncryptedDatabase(dbB, keysB, inBackground: false),
+      );
+      await fresh
+          .customSelect('SELECT 1')
+          .get(); // the app writes its own tables on first launch
+      await fresh.close();
+      final newKey = (await keysB.read())!;
+      expect(newKey, isNot(keyA));
+      final backup = File('${usb.path}/${BackupName.format(now)}');
+      // without the first-launch switch it is refused
+      await expectLater(
+        restoreBackup(
+          backup: backup,
+          target: dbB,
+          keys: keysB,
+          recoveryKey: keyA,
+          appSchemaVersion: db.schemaVersion,
+        ),
+        throwsA(isA<RestoreKeyMismatch>()),
+      );
+      await restoreBackup(
+        backup: backup,
+        target: dbB,
+        keys: keysB,
+        recoveryKey: keyA,
+        appSchemaVersion: db.schemaVersion,
+        replaceKey: true,
+      );
+      expect(await keysB.read(), keyA);
+      final opened = AppDatabase(
+        await openEncryptedDatabase(dbB, keysB, inBackground: false),
+      );
+      addTearDown(opened.close);
+      expect(
+        (await opened.select(opened.products).get()).single.name,
+        secretStyle,
+      );
+    });
+  });
+
+  group('the controller the screens use', () {
+    late File dbB;
+    late AppDatabase dbBOpen;
+    late MemoryKeyStore keysB;
+    late NativeBackupController controller;
+    late File backupFile;
+    late int quits;
+    late Uint8List keyA;
+
+    Future<void> setUpMachineB({bool withKey = true}) async {
+      final machineB = Directory('${root.path}/machineB')..createSync();
+      dbB = File('${machineB.path}/apparel_pos.db');
+      keysB = MemoryKeyStore();
+      dbBOpen = AppDatabase(
+        await openEncryptedDatabase(dbB, keysB, inBackground: false),
+      );
+      await dbBOpen.customSelect('SELECT 1').get(); // make sure it is created
+      quits = 0;
+      controller = NativeBackupController(
+        dbBOpen,
+        dbB,
+        keysB,
+        BackupService(dbBOpen, dbB, keysB, newId: newId, now: () => now),
+        quitApp: () async => quits++,
+      );
+    }
+
+    setUp(() async {
+      await backups.backupNow(role: Role.owner);
+      keyA = (await keysA.read())!;
+      backupFile = File('${usb.path}/${BackupName.format(now)}');
+    });
+
+    test('first run: restores with the recovery key text, closes the database, asks for a restart', () async {
+      await setUpMachineB();
+      final r = await controller.restore(
+        backupPath: backupFile.path,
+        recoveryKeyText: RecoveryKey.format(keyA).toLowerCase(),
+        firstRun: true,
+      );
+      expect(r.outcome, RestoreOutcome.done);
+      expect(r.needsRestart, isTrue);
+      expect(await keysB.read(), keyA);
+      expect(
+        beforeRestoreCopies(dbB),
+        isEmpty,
+      ); // the empty database that was here is gone
+      final opened = AppDatabase(
+        await openEncryptedDatabase(dbB, keysB, inBackground: false),
+      );
+      addTearDown(opened.close);
+      expect(
+        (await opened.select(opened.products).get()).single.name,
+        secretStyle,
+      );
+      await controller.quit();
+      expect(quits, 1);
+    });
+
+    test('first run is refused when a user already exists', () async {
+      await setUpMachineB();
+      await dbBOpen
+          .into(dbBOpen.users)
+          .insert(
+            UsersCompanion.insert(
+              id: 'u',
+              name: 'Asha',
+              role: 'OWNER',
+              credentialHash: 'x',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+      final r = await controller.restore(
+        backupPath: backupFile.path,
+        recoveryKeyText: RecoveryKey.format(keyA),
+        firstRun: true,
+      );
+      expect(r.outcome, RestoreOutcome.notEmpty);
+      expect(r.needsRestart, isFalse);
+      expect(
+        await dbBOpen.customSelect('SELECT 1 AS x').getSingle(),
+        isNotNull,
+      ); // still open
+    });
+
+    test('mistakes are reported without closing the database', () async {
+      await setUpMachineB();
+      Future<RestoreReport> go({String? key, String? path}) =>
+          controller.restore(
+            backupPath: path ?? backupFile.path,
+            recoveryKeyText: key,
+            firstRun: true,
+          );
+      expect(
+        (await go(key: 'nonsense')).outcome,
+        RestoreOutcome.badRecoveryKey,
+      );
+      expect(
+        (await go(key: RecoveryKey.format(newDatabaseKey(Random(2))))).outcome,
+        RestoreOutcome.wrongKey,
+      );
+      final garbage = File('${root.path}/apparel-pos-20261121-120000.backup')
+        ..writeAsBytesSync(Uint8List(5000));
+      expect(
+        (await go(key: RecoveryKey.format(keyA), path: garbage.path)).outcome,
+        anyOf(RestoreOutcome.damaged, RestoreOutcome.wrongKey),
+      );
+      for (final report in [
+        await go(key: 'x'),
+        await go(key: RecoveryKey.format(newDatabaseKey(Random(2)))),
+      ]) {
+        expect(report.needsRestart, isFalse);
+      }
+      await dbBOpen.customSelect('SELECT 1').get(); // still usable
+    });
+
+    test('with no key on this computer and none typed it asks for the recovery key', () async {
+      await setUpMachineB();
+      await dbBOpen.close();
+      final empty = NativeBackupController(
+        dbBOpen,
+        dbB,
+        MemoryKeyStore(),
+        BackupService(
+          dbBOpen,
+          dbB,
+          MemoryKeyStore(),
+          newId: newId,
+          now: () => now,
+        ),
+        quitApp: () async {},
+      );
+      expect(
+        (await empty.restore(backupPath: backupFile.path)).outcome,
+        RestoreOutcome.keyRequired,
+      );
+    });
+
+    test('kept-aside copies are counted and only a manager or owner may delete them', () async {
+      // a manager restoring over this very database (as Manager Mode does)
+      await db.customStatement(
+        "INSERT INTO app_settings (name, value) VALUES ('after-backup', 'today')",
+      );
+      await db.customStatement('PRAGMA wal_checkpoint(TRUNCATE)');
+      final live = NativeBackupController(
+        db,
+        dbA,
+        keysA,
+        backups,
+        quitApp: () async => quits++,
+      );
+      quits = 0;
+      final r = await live.restore(backupPath: backupFile.path);
+      expect(r.outcome, RestoreOutcome.done);
+      expect(await live.beforeRestoreCopyCount(), 1);
+      await expectLater(
+        live.discardBeforeRestoreCopies(role: Role.cashier),
+        throwsA(isA<PermissionDenied>()),
+      );
+      expect(await live.beforeRestoreCopyCount(), 1);
+      await live.discardBeforeRestoreCopies(role: Role.manager);
+      expect(await live.beforeRestoreCopyCount(), 0);
+      db = AppDatabase(
+        await openEncryptedDatabase(dbA, keysA, inBackground: false),
+      ); // for tearDown
+    });
+  });
+
+  test('openShiftCount counts shifts with no close', () async {
+    for (final id in ['c1', 'c2']) {
+      await db
+          .into(db.users)
+          .insert(
+            UsersCompanion.insert(
+              id: id,
+              name: id,
+              role: 'CASHIER',
+              credentialHash: 'x',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+    }
+    final shifts = ShiftRepository(db, newId: newId, now: () => now);
+    expect(await shifts.openShiftCount(), 0);
+    await shifts.openShift(role: Role.cashier, userId: 'c1', counts: const {});
+    await shifts.openShift(role: Role.cashier, userId: 'c2', counts: const {});
+    expect(await shifts.openShiftCount(), 2);
+    await shifts.closeShift(role: Role.cashier, userId: 'c1', counts: const {});
+    expect(await shifts.openShiftCount(), 1);
+    await shifts.closeShift(role: Role.cashier, userId: 'c2', counts: const {});
+    expect(await shifts.openShiftCount(), 0);
+  });
 }

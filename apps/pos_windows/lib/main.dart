@@ -1,11 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 import 'app/app.dart';
 import 'app/label_printer.dart';
 import 'app/services.dart';
-import 'app/startup_failed.dart';
 import 'app/session_controller.dart';
+import 'app/startup_failed.dart';
 import 'data/auth_service.dart';
 import 'data/connection/connection.dart';
 import 'data/recovery_key_repository.dart';
@@ -26,12 +28,14 @@ Future<void> main() async {
 }
 
 Future<void> _start() async {
+  String newId() => const Uuid().v4();
   final db = await openAppDatabase();
-  final auth = AuthService(db, newId: () => const Uuid().v4());
-  final stock = StockRepository(db, newId: () => const Uuid().v4());
-  final sales = SalesRepository(db, newId: () => const Uuid().v4());
-  final returns = ReturnsRepository(db, newId: () => const Uuid().v4());
-  final shifts = ShiftRepository(db, newId: () => const Uuid().v4());
+  final auth = AuthService(db, newId: newId);
+  final stock = StockRepository(db, newId: newId);
+  final sales = SalesRepository(db, newId: newId);
+  final returns = ReturnsRepository(db, newId: newId);
+  final shifts = ShiftRepository(db, newId: newId);
+  final backup = await openBackupController(db, newId);
   await stock.ensureCounter();
   final session = SessionController(auth: auth);
   runApp(
@@ -45,11 +49,8 @@ Future<void> _start() async {
         reports: ReportRepository(db),
         recovery: appKeyStore == null
             ? null
-            : RecoveryKeyRepository(
-                db,
-                appKeyStore!,
-                newId: () => const Uuid().v4(),
-              ),
+            : RecoveryKeyRepository(db, appKeyStore!, newId: newId),
+        backup: backup,
         auth: auth,
         printer: const SystemLabelPrinter(),
         fonts: loadBundledLabelFonts,
@@ -57,4 +58,6 @@ Future<void> _start() async {
     ),
   );
   await session.start();
+  // The start-up backup (if one is due and places are chosen); never throws.
+  unawaited(backup?.backupIfDue());
 }

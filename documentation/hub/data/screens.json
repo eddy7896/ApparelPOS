@@ -77,6 +77,28 @@
       "task": "P2-7c",
       "images": {},
       "device": "desktop"
+    },
+    {
+      "id": "pos-backups",
+      "app": "pos_windows",
+      "title": "Backups and restore",
+      "note": "Choose the USB drive and a second folder, Back up now, status and failures, restore from a backup (owner's password and RESTORE typed), first-launch restore on a new computer. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "",
+      "task": "P3-2c",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-recovery-key",
+      "app": "pos_windows",
+      "title": "Recovery key",
+      "note": "Shown once to the owner or manager after first sign-in; they type the last group back. No screenshot yet: not seen on screen.",
+      "status": "built",
+      "pr": "#29",
+      "task": "P3-1",
+      "images": {},
+      "device": "desktop"
     }
   ]
 }
