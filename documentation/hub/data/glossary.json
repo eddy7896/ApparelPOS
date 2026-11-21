@@ -21,6 +21,11 @@
       "group": "Apparel PoS"
     },
     {
+      "term": "Bill number",
+      "definition": "Looks like 2026-27/C1/000123: financial year (April to March), counter, and that counter's running number. Two counters never clash.",
+      "group": "Apparel PoS"
+    },
+    {
       "term": "Blind close",
       "definition": "Cash close where the cashier enters denominations and does not see the expected amount.",
       "group": "Apparel PoS"
