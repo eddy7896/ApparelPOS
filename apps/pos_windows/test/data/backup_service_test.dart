@@ -71,7 +71,11 @@ void main() {
   });
   tearDown(() async {
     await db.close();
-    root.deleteSync(recursive: true);
+    try {
+      root.deleteSync(recursive: true);
+    } on FileSystemException {
+      // a temp folder left behind is harmless; a failed cleanup must not fail a test
+    }
   });
 
   /// Every row of every table, as text, for comparing two databases.
@@ -743,6 +747,9 @@ void main() {
       dbBOpen = AppDatabase(
         await openEncryptedDatabase(dbB, keysB, inBackground: false),
       );
+      addTearDown(
+        dbBOpen.close,
+      ); // Windows cannot delete a file that is still open
       await dbBOpen.customSelect('SELECT 1').get(); // make sure it is created
       quits = 0;
       controller = NativeBackupController(
