@@ -92,7 +92,10 @@ void main() {
         .where((l) => !l.trimLeft().startsWith('//'))
         .join('\n');
     expect(RegExp(r'\b(double|num)\b').hasMatch(code), isFalse);
-    expect(RegExp(r'(?<![~/])/(?![/=*])').hasMatch(code), isFalse,
-        reason: 'use ~/ for integer division');
+    expect(
+      RegExp(r'(?<![~/])/(?![/=*])').hasMatch(code),
+      isFalse,
+      reason: 'use ~/ for integer division',
+    );
   });
 }

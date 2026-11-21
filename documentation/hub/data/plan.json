@@ -30,8 +30,10 @@
     { "id": "P2-7a", "name": "Report rules: India day, profit, top styles", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 26, "status": "done", "pct": 100, "pr": "#26" },
     { "id": "P2-7b", "name": "Daily report data", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 26.1, "status": "done", "pct": 100, "pr": "#27" },
     { "id": "P2-7c", "name": "Daily report screen", "phase": 2, "phaseName": "Counter app (release 1)", "milestone": "", "order": 26.2, "status": "doing", "pct": 90, "pr": "#28" },
-    { "id": "P3-1", "name": "SQLCipher encryption spike and rollout", "phase": 3, "phaseName": "Go-live hardening", "milestone": "", "order": 30, "status": "doing", "pct": 90, "pr": "#29" },
-    { "id": "P3-2", "name": "Daily backup and restore test", "phase": 3, "phaseName": "Go-live hardening", "milestone": "", "order": 31, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P3-1", "name": "SQLCipher encryption spike and rollout", "phase": 3, "phaseName": "Go-live hardening", "milestone": "", "order": 30, "status": "done", "pct": 100, "pr": "#29" },
+    { "id": "P3-2a", "name": "Backup rules: names, keep 60, when due", "phase": 3, "phaseName": "Go-live hardening", "milestone": "", "order": 31, "status": "doing", "pct": 90, "pr": "" },
+    { "id": "P3-2b", "name": "Backup service and restore to a clean machine", "phase": 3, "phaseName": "Go-live hardening", "milestone": "", "order": 31.1, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P3-2c", "name": "Backup screens and automatic backup", "phase": 3, "phaseName": "Go-live hardening", "milestone": "", "order": 31.2, "status": "todo", "pct": 0, "pr": "" },
     { "id": "P3-3", "name": "Installer and runbook", "phase": 3, "phaseName": "Go-live hardening", "milestone": "", "order": 32, "status": "todo", "pct": 0, "pr": "" },
     { "id": "P3-4", "name": "GST toggle scaffold (settings, tax fields)", "phase": 3, "phaseName": "Go-live hardening", "milestone": "", "order": 33, "status": "todo", "pct": 0, "pr": "" }
   ]
