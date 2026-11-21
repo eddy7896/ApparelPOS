@@ -261,7 +261,7 @@ class BillPayments extends Table {
   TextColumn get id => text()();
   TextColumn get billId => text().references(Bills, #id)();
   TextColumn get mode => text().customConstraint(
-    "NOT NULL CHECK (mode IN ('cash', 'upi', 'card'))",
+    "NOT NULL CHECK (mode IN ('cash', 'upi', 'card', 'credit_note'))",
   )();
   IntColumn get amountPaise =>
       integer().check(amountPaise.isBiggerOrEqualValue(1))();
@@ -282,6 +282,80 @@ class BillSequences extends Table {
   Set<Column> get primaryKey => {counterId, yearLabel};
 }
 
+/// A credit note: a barcode with an expiry (SSOT 16). Never edited; what is
+/// left on it is its amount minus its uses.
+@DataClassName('CreditNoteRow')
+class CreditNotes extends Table {
+  TextColumn get id => text()();
+  TextColumn get code => text().customConstraint('NOT NULL UNIQUE')();
+  TextColumn get counterId => text().references(Counters, #id)();
+  IntColumn get serial => integer().check(serial.isBetweenValues(1, 99999))();
+  IntColumn get amountPaise =>
+      integer().check(amountPaise.isBiggerOrEqualValue(1))();
+  DateTimeColumn get issuedAt => dateTime()();
+  TextColumn get issuedBy => text().references(Users, #id)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {counterId, serial},
+  ];
+}
+
+/// Money taken off a credit note by a bill.
+@DataClassName('CreditNoteUseRow')
+class CreditNoteUses extends Table {
+  TextColumn get id => text()();
+  TextColumn get creditNoteId => text().references(CreditNotes, #id)();
+  TextColumn get billId => text().references(Bills, #id)();
+  IntColumn get amountPaise =>
+      integer().check(amountPaise.isBiggerOrEqualValue(1))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// One return: who took it, who approved it if it was late, how it was paid out.
+@DataClassName('ReturnRow')
+class Returns extends Table {
+  TextColumn get id => text()();
+  TextColumn get cashierId => text().references(Users, #id)();
+  TextColumn get approvedBy => text().nullable().references(Users, #id)();
+  TextColumn get refundMode => text().customConstraint(
+    "NOT NULL CHECK (refund_mode IN ('cash', 'upi', 'card', 'credit_note'))",
+  )();
+  TextColumn get creditNoteId =>
+      text().nullable().references(CreditNotes, #id)();
+  IntColumn get totalPaise =>
+      integer().check(totalPaise.isBiggerOrEqualValue(0))();
+  DateTimeColumn get returnedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// One garment in a return. A bill line can be returned once (unique), and the
+/// refund is the line's net price exactly (E-RETURN-1).
+@DataClassName('ReturnLineRow')
+class ReturnLines extends Table {
+  TextColumn get id => text()();
+  TextColumn get returnId => text().references(Returns, #id)();
+  TextColumn get billLineId =>
+      text().customConstraint('NOT NULL UNIQUE REFERENCES bill_lines (id)')();
+  TextColumn get articleId => text().references(Articles, #id)();
+  IntColumn get refundPaise =>
+      integer().check(refundPaise.isBiggerOrEqualValue(0))();
+  TextColumn get outcome => text().customConstraint(
+    "NOT NULL CHECK (outcome IN ('RESTOCK', 'DAMAGED'))",
+  )();
+  TextColumn get note => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(
   tables: [
     AppSettings,
@@ -300,34 +374,47 @@ class BillSequences extends Table {
     BillLines,
     BillPayments,
     BillSequences,
+    CreditNotes,
+    CreditNoteUses,
+    Returns,
+    ReturnLines,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
     // Each version adds a step here and a migration test.
     onUpgrade: (m, from, to) async {
-      if (from < 2) {
+      if (from < 2 && to >= 2) {
         await m.createTable(users); // version 2: sign-in users (P2-2)
       }
-      if (from < 3) {
+      if (from < 3 && to >= 3) {
         // version 3: shop settings and the size and color lists (P2-3)
         await m.createTable(appSettings);
         await m.createTable(sizeOptions);
         await m.createTable(colorOptions);
       }
-      if (from < 4) {
+      if (from < 4 && to >= 4) {
         // version 4: bills, their lines, payments and the bill serials (P2-4b)
         await m.createTable(bills);
         await m.createTable(billLines);
         await m.createTable(billPayments);
         await m.createTable(billSequences);
+      }
+      if (from < 5 && to >= 5) {
+        // version 5: returns and credit notes (P2-5b); bill payments may now
+        // be paid by credit note, which changes a CHECK, so the table is rebuilt.
+        await m.createTable(creditNotes);
+        await m.createTable(creditNoteUses);
+        await m.createTable(returns);
+        await m.createTable(returnLines);
+        await m.alterTable(TableMigration(billPayments));
       }
     },
     beforeOpen: (details) async {
@@ -341,8 +428,26 @@ class AppDatabase extends _$AppDatabase {
       await customStatement('PRAGMA journal_mode = WAL');
       await customStatement('PRAGMA foreign_keys = ON');
       // Sales are never edited or deleted, only reversed (E-AUDIT-1). The
-      // database itself refuses, whatever code asks.
-      for (final table in ['bills', 'bill_lines', 'bill_payments']) {
+      // database itself refuses, whatever code asks. (Only for tables that exist
+      // yet, so a test can stop a migration at an older version.)
+      final existing = {
+        for (final r in await customSelect(
+          "SELECT name FROM sqlite_master WHERE type = 'table'",
+        ).get())
+          r.read<String>('name'),
+      };
+      for (final table in [
+        'bills',
+        'bill_lines',
+        'bill_payments',
+        'credit_notes',
+        'credit_note_uses',
+        'returns',
+        'return_lines',
+      ]) {
+        if (!existing.contains(table)) {
+          continue;
+        }
         for (final verb in ['UPDATE', 'DELETE']) {
           await customStatement(
             'CREATE TRIGGER IF NOT EXISTS ${table}_no_${verb.toLowerCase()} '

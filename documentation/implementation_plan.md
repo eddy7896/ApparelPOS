@@ -43,8 +43,8 @@ Purpose: phases and task IDs. Size S <= 1 day, M <= 3 days, L <= 1 week. Phases 
 | P2-4c | Register screen: scan, bill lines, discount, pay, on-screen bill and PDF print | L | E-OFFLINE-1; screen tests | P2-4b | done |
 | P2-4e | Markdown at the register (manager or owner sets a percent or amount markdown on a garment) | S | owner picks percent or amount each time; screen tests | P2-4c | todo |
 | P2-4d | Pay later (udhaar): customer records, balance owed, later payments | L | owner chose 2026-11-20; questions needed first | P2-4c | todo |
-| P2-5a | Return rules: window, refund total, refund modes, credit note code, expiry and balance | S | unit tests; mutation-checked | P2-4a | doing |
-| P2-5b | Return and credit note tables, save a return in one transaction (restock or damaged), use a credit note on a bill, exchange | L | E-RETURN-1, E-SALE-1, E-AUDIT-1 | P2-5a, P2-4c | todo |
+| P2-5a | Return rules: window, refund total, refund modes, credit note code, expiry and balance | S | unit tests; mutation-checked | P2-4a | done |
+| P2-5b | Return and credit note tables, save a return in one transaction (restock or damaged), use a credit note on a bill, exchange | L | E-RETURN-1, E-SALE-1, E-AUDIT-1 | P2-5a, P2-4c | doing |
 | P2-5c | Returns screen, credit note slip print, credit note at the register | L | screen tests | P2-5b | todo |
 | P2-6 | Blind shift close and daybook | M | E-SHIFT-1 | P2-4 | todo |
 | P2-7 | Owner reports (daily) | M | totals match daybook | P2-6 | todo |

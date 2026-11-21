@@ -83,6 +83,42 @@ final class BillLineInput {
   final PriceCut? discount;
 }
 
+/// A credit note as the counter sees it.
+final class CreditNoteInfo {
+  const CreditNoteInfo({
+    required this.id,
+    required this.code,
+    required this.amount,
+    required this.balance,
+    required this.issuedAt,
+    required this.lastDay,
+    required this.valid,
+  });
+  final String id;
+  final String code;
+
+  /// What it was issued for.
+  final Money amount;
+
+  /// What is left on it (amount minus what bills have taken).
+  final Money balance;
+  final DateTime issuedAt;
+  final DateTime lastDay;
+
+  /// False once past its last day.
+  final bool valid;
+
+  /// True when it can pay something: not expired and money left.
+  bool get usable => valid && balance.paise > 0;
+}
+
+/// Money to take off a credit note for this bill.
+final class CreditNoteUseInput {
+  const CreditNoteUseInput(this.code, this.amount);
+  final String code;
+  final Money amount;
+}
+
 final class SavedBillLine {
   const SavedBillLine({
     required this.barcode,
@@ -138,6 +174,41 @@ class SalesRepository {
     require(role, Permission.viewStockAndPrices);
     final row = await _find(barcode);
     return row?.item;
+  }
+
+  /// Looks up a credit note by its code. Needs `sell`. Null if there is none.
+  Future<CreditNoteInfo?> lookupCreditNote({
+    required Role? role,
+    required String code,
+  }) async {
+    require(role, Permission.sell);
+    return _creditNote(code);
+  }
+
+  Future<CreditNoteInfo?> _creditNote(String code) async {
+    final rows = await _db
+        .customSelect(
+          'SELECT n.id AS id, n.amount_paise AS amount, n.issued_at AS issued_at, '
+          'n.amount_paise - COALESCE((SELECT SUM(u.amount_paise) FROM credit_note_uses u '
+          'WHERE u.credit_note_id = n.id), 0) AS balance '
+          'FROM credit_notes n WHERE n.code = ?',
+          variables: [Variable<String>(code)],
+        )
+        .get();
+    if (rows.isEmpty) {
+      return null;
+    }
+    final r = rows.single;
+    final issuedAt = r.read<DateTime>('issued_at');
+    return CreditNoteInfo(
+      id: r.read<String>('id'),
+      code: code,
+      amount: Money(r.read<int>('amount')),
+      balance: Money(r.read<int>('balance')),
+      issuedAt: issuedAt,
+      lastDay: creditNoteLastDay(issuedAt),
+      valid: isCreditNoteValid(issuedAt, _now()),
+    );
   }
 
   Future<_Found?> _find(String barcode) async {
@@ -198,8 +269,21 @@ class SalesRepository {
     int discountLimitBp = defaultCashierDiscountLimitBp,
     Role? discountApproverRole,
     String? discountApprovedBy,
+    List<CreditNoteUseInput> creditNotes = const [],
   }) async {
     require(role, Permission.sell);
+    if (payments.any((p) => p.mode == PaymentMode.creditNote)) {
+      throw InvalidBill('pay by credit note through creditNotes, not payments');
+    }
+    final noteCodes = <String>{};
+    for (final c in creditNotes) {
+      if (!noteCodes.add(c.code)) {
+        throw InvalidBill('credit note ${c.code} is used twice');
+      }
+      if (c.amount.paise <= 0) {
+        throw InvalidBill('a credit note amount must be above zero');
+      }
+    }
     if ((discountApproverRole == null) != (discountApprovedBy == null)) {
       throw ArgumentError(
         'give both discountApproverRole and discountApprovedBy, or neither',
@@ -313,7 +397,31 @@ class SalesRepository {
           Money.zero,
           (sum, l) => sum + l.priced.finalPrice,
         );
-        final settlement = settle(total, payments);
+        final usedNotes = <(CreditNoteInfo, Money)>[];
+        for (final c in creditNotes) {
+          final info = await _creditNote(c.code);
+          if (info == null) {
+            throw InvalidBill('credit note ${c.code} was not found');
+          }
+          if (!info.valid) {
+            throw InvalidBill('credit note ${c.code} has expired');
+          }
+          if (c.amount > info.balance) {
+            throw InvalidBill(
+              'credit note ${c.code} has only ${formatRupees(info.balance)} left',
+            );
+          }
+          usedNotes.add((info, c.amount));
+        }
+        final creditTotal = usedNotes.fold<Money>(
+          Money.zero,
+          (sum, u) => sum + u.$2,
+        );
+        final settlement = settle(total, [
+          ...payments,
+          if (creditTotal.paise > 0)
+            Payment(PaymentMode.creditNote, creditTotal),
+        ]);
         if (!settlement.isPaid) {
           throw BillNotPaid(settlement.due);
         }
@@ -371,6 +479,18 @@ class SalesRepository {
                   billId: billId,
                   mode: e.key.dbValue,
                   amountPaise: e.value.paise,
+                ),
+              );
+        }
+        for (final (info, amount) in usedNotes) {
+          await _db
+              .into(_db.creditNoteUses)
+              .insert(
+                CreditNoteUsesCompanion.insert(
+                  id: _newId(),
+                  creditNoteId: info.id,
+                  billId: billId,
+                  amountPaise: amount.paise,
                 ),
               );
         }
