@@ -92,6 +92,19 @@ void main() {
       expect(s.changeText, isNull);
       expect(s.shopName, isNull);
     });
+    test('a credit note payment is named', () {
+      final s = describeBill(
+        bill: bill(
+          settlement: settle(Money(194810), [
+            Payment(PaymentMode.creditNote, Money(100000)),
+            Payment(PaymentMode.cash, Money(94810)),
+          ]),
+        ),
+        shopName: null,
+        cashierName: 'Asha',
+      );
+      expect(s.payments, ['Cash ₹948.10', 'Credit note ₹1,000.00']);
+    });
     test('the date rolls over at India midnight', () {
       expect(
         billDateText(DateTime.utc(2026, 12, 31, 18, 30)),

@@ -69,6 +69,7 @@ const Map<PaymentMode, String> _modeNames = {
   PaymentMode.cash: 'Cash',
   PaymentMode.upi: 'UPI',
   PaymentMode.card: 'Card',
+  PaymentMode.creditNote: 'Credit note',
 };
 
 BillSheet describeBill({
