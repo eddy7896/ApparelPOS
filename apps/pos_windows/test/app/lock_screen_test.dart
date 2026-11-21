@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pos_windows/app/app.dart';
+import 'package:pos_windows/app/ui/notice.dart';
 import 'package:pos_windows/app/label_printer.dart';
 import 'package:pos_windows/app/services.dart';
 import 'package:pos_windows/app/session_controller.dart';
@@ -174,9 +175,34 @@ void main() {
       expect(find.textContaining('argon2'), findsNothing);
     });
 
-    testWidgets('says the database is not encrypted yet', (tester) async {
-      await show(tester);
-      expect(find.textContaining('not encrypted'), findsOneWidget);
+    testWidgets(
+      'shows no encryption warning on desktop, where it is encrypted',
+      (tester) async {
+        await show(tester);
+        expect(find.textContaining('not encrypted'), findsNothing);
+        expect(find.textContaining('Browser preview'), findsNothing);
+      },
+    );
+
+    testWidgets('the browser preview warns that nothing is encrypted or kept', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: EncryptionNotice(encrypted: false)),
+        ),
+      );
+      expect(find.textContaining('not encrypted'), findsNothing);
+      expect(
+        find.textContaining('nothing here is encrypted or kept'),
+        findsOneWidget,
+      );
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: EncryptionNotice(encrypted: true)),
+        ),
+      );
+      expect(find.textContaining('encrypted'), findsNothing);
     });
 
     testWidgets(

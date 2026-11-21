@@ -12,7 +12,7 @@ The owner has no Windows computer to develop on. Flutter can run the same app in
 2. The web build is never used with real shop data and never deployed for the shop. It shows a "development only" line on screen.
 3. Business rules stay in `core_domain` (pure Dart, so it runs on both). No rule is written in the app that only works on one platform.
 4. Anything that exists only on Windows (SQLCipher encryption, the Windows credential store, USB or printer access, backups to USB, the installer) sits behind an interface in the app, with a stand-in for the browser. A stand-in must never claim to be encrypted.
-5. A passing web build proves screens and logic work. It does **not** verify encryption (E-ENC-1), offline behaviour on the laptop, printing, scanning or backups; those are checked only on Windows (CI build now, a real machine before go-live).
+5. A passing web build proves screens and logic work. It does **not** verify encryption (E-ENC-1; the preview is not encrypted), offline behaviour on the laptop, printing, scanning or backups; those are checked only on Windows (CI build now, a real machine before go-live).
 6. CI builds the web target (`flutter build web`) next to the Windows build.
 
 ## Alternatives considered

@@ -56,7 +56,7 @@ Purpose: phases and task IDs. Size S <= 1 day, M <= 3 days, L <= 1 week. Phases 
 ## P3 go-live
 | ID | Task | Size | Acceptance | Depends on | Status |
 |---|---|---|---|---|---|
-| P3-1 | SQLCipher encryption spike and rollout | M | E-ENC-1 | P2-1 | todo |
+| P3-1 | SQLCipher encryption spike and rollout | M | E-ENC-1 | P2-1 | doing |
 | P3-2 | Daily backup and restore test | M | E-BACKUP-1 | P3-1 | todo |
 | P3-3 | Installer and runbook | M | owner can install | P3-2 | todo |
 | P3-4 | GST toggle scaffold (settings, tax fields) | M | E-GST-1 | P2-4 | todo |

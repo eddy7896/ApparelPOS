@@ -23,7 +23,7 @@ Purpose: which checks exist, when they run, and the rules for changing them. All
 | E-AUTH-2 | Lockout after repeated wrong PINs |
 | E-AUTHZ-1 | Cashier queries return no cost fields |
 | E-AUTHZ-2 | Permission matrix denies by default |
-| E-ENC-1 | Database file is unreadable without the key |
+| E-ENC-1 | Database file is unreadable without the key (built: `encrypted_connection_test.dart`; Windows runtime unverified) |
 | E-SALE-1 | Same barcode cannot be sold twice |
 | E-RETURN-1 | Return refunds exact net price and tax |
 | E-SHIFT-1 | Blind close shows no expected amount; variance correct |

@@ -1,4 +1,5 @@
 import '../data/auth_service.dart';
+import '../data/recovery_key_repository.dart';
 import '../data/report_repository.dart';
 import '../data/returns_repository.dart';
 import '../data/sales_repository.dart';
@@ -16,6 +17,7 @@ class AppServices {
     required this.reports,
     required this.auth,
     required this.printer,
+    this.recovery,
     required this.fonts,
   });
 
@@ -27,6 +29,9 @@ class AppServices {
 
   /// Used by the register to check a manager's password for a big discount.
   final AuthService auth;
+
+  /// The recovery key (null in the browser preview, which has no encryption).
+  final RecoveryKeyRepository? recovery;
   final LabelPrinter printer;
   final Future<LabelFonts> Function() fonts;
 }

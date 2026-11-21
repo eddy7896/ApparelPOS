@@ -43,6 +43,7 @@ dependencies:
   path_provider: ^2.1.6
   printing: ^5.15.1
   pdf: ^3.13.1
+  flutter_secure_storage: ^11.2.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -103,3 +104,12 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Encryption at rest (E-ENC-1, ADR-0003): use the SQLCipher build of SQLite instead
+# of plain SQLite. The binary comes from the sqlite3.dart GitHub releases and is
+# checked against hashes pinned inside package:sqlite3. Windows, macOS and
+# Linux all use it.
+hooks:
+  user_defines:
+    sqlite3:
+      source: sqlcipher
