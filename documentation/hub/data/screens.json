@@ -61,8 +61,8 @@
       "app": "pos_windows",
       "title": "Blind shift close",
       "note": "Open a shift by counting the drawer, blind close (no expected amount shown), forced close of an earlier day, owner list of closes. No screenshot yet: not seen on screen.",
-      "status": "open-pr",
-      "pr": "",
+      "status": "built",
+      "pr": "#25",
       "task": "P2-6c",
       "images": {},
       "device": "desktop"
