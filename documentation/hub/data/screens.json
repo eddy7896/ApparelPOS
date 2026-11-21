@@ -50,8 +50,8 @@
       "app": "pos_windows",
       "title": "Returns",
       "note": "Scan a sold garment, back in stock or damaged, refund by cash, UPI, card, credit note or exchange; manager approval after 7 days; credit note slip. No screenshot yet: not seen on screen.",
-      "status": "open-pr",
-      "pr": "",
+      "status": "built",
+      "pr": "#22",
       "task": "P2-5c",
       "images": {},
       "device": "desktop"
