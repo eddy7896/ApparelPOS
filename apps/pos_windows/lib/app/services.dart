@@ -1,4 +1,5 @@
 import '../data/auth_service.dart';
+import '../data/returns_repository.dart';
 import '../data/sales_repository.dart';
 import '../data/stock_repository.dart';
 import 'label_printer.dart';
@@ -8,6 +9,7 @@ class AppServices {
   const AppServices({
     required this.stock,
     required this.sales,
+    required this.returns,
     required this.auth,
     required this.printer,
     required this.fonts,
@@ -15,6 +17,7 @@ class AppServices {
 
   final StockRepository stock;
   final SalesRepository sales;
+  final ReturnsRepository returns;
 
   /// Used by the register to check a manager's password for a big discount.
   final AuthService auth;

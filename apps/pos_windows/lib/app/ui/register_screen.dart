@@ -6,9 +6,9 @@ import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../data/auth_service.dart';
 import '../../data/sales_repository.dart';
 import '../bill_pdf.dart';
+import 'approval_dialog.dart';
 import '../services.dart';
 import '../session_controller.dart';
 
@@ -18,23 +18,24 @@ class RegisterScreen extends StatelessWidget {
     super.key,
     required this.session,
     required this.services,
+    this.creditNoteCode,
   });
 
   final SessionController session;
   final AppServices services;
 
+  /// A credit note to apply at once (an exchange starts this way).
+  final String? creditNoteCode;
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Billing')),
-    body: RegisterPanel(session: session, services: services),
+    body: RegisterPanel(
+      session: session,
+      services: services,
+      creditNoteCode: creditNoteCode,
+    ),
   );
-}
-
-class _Approver {
-  const _Approver(this.userId, this.role, this.name);
-  final String userId;
-  final Role role;
-  final String name;
 }
 
 class _Line {
@@ -56,10 +57,14 @@ class RegisterPanel extends StatefulWidget {
     super.key,
     required this.session,
     required this.services,
+    this.creditNoteCode,
   });
 
   final SessionController session;
   final AppServices services;
+
+  /// A credit note to apply as soon as the register opens (an exchange).
+  final String? creditNoteCode;
 
   @override
   State<RegisterPanel> createState() => _RegisterPanelState();
@@ -74,7 +79,8 @@ class _RegisterPanelState extends State<RegisterPanel> {
   final _customerName = TextEditingController();
   final _customerPhone = TextEditingController();
   final _lines = <_Line>[];
-  _Approver? _approver;
+  final _notes = <CreditNoteInfo>[];
+  Approver? _approver;
   String? _message;
   bool _busy = false;
   SavedBill? _saved;
@@ -83,6 +89,15 @@ class _RegisterPanelState extends State<RegisterPanel> {
 
   AppServices get _s => widget.services;
   Role get _role => widget.session.user!.role;
+
+  @override
+  void initState() {
+    super.initState();
+    final code = widget.creditNoteCode;
+    if (code != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _addNote(code));
+    }
+  }
 
   @override
   void dispose() {
@@ -108,6 +123,30 @@ class _RegisterPanelState extends State<RegisterPanel> {
     Money.zero,
     (sum, l) => sum + (l.priced?.finalPrice ?? l.item.mrp),
   );
+
+  /// How much of each credit note this bill takes, in the order added: the
+  /// smaller of its balance and what is still to pay (the rest stays on it).
+  List<(CreditNoteInfo, Money)> get _noteUses {
+    var due = _total;
+    final out = <(CreditNoteInfo, Money)>[];
+    for (final n in _notes) {
+      final use = useCredit(balance: n.balance, due: due);
+      out.add((n, use.used));
+      due -= use.used;
+    }
+    return out;
+  }
+
+  Money get _notesTotal =>
+      _noteUses.fold<Money>(Money.zero, (sum, u) => sum + u.$2);
+
+  /// What the typed payments must cover after the credit notes.
+  Money get _toPay => _total - _notesTotal;
+
+  List<Payment> get _allPayments => [
+    ...?_payments,
+    if (_notesTotal.paise > 0) Payment(PaymentMode.creditNote, _notesTotal),
+  ];
 
   /// Typed payments; null when any box holds something that is not an amount.
   List<Payment>? get _payments {
@@ -138,7 +177,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
       return null;
     }
     try {
-      return settle(_total, p);
+      return settle(_total, _allPayments);
     } on NonCashOverpayment {
       return null;
     }
@@ -150,7 +189,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
       return 'An amount is not a valid rupee amount.';
     }
     try {
-      settle(_total, p);
+      settle(_total, _allPayments);
     } on NonCashOverpayment {
       return 'UPI and card together are more than the total.';
     }
@@ -173,6 +212,11 @@ class _RegisterPanelState extends State<RegisterPanel> {
     }
     _barcode.clear();
     widget.session.noteActivity();
+    if (CreditNoteCode.tryParse(code) != null) {
+      await _addNote(code);
+      _barcodeFocus.requestFocus();
+      return;
+    }
     if (_lines.any((l) => l.item.barcode == code)) {
       _say('$code is already on this bill.');
       _barcodeFocus.requestFocus();
@@ -197,6 +241,29 @@ class _RegisterPanelState extends State<RegisterPanel> {
       });
     }
     _barcodeFocus.requestFocus();
+  }
+
+  Future<void> _addNote(String code) async {
+    if (_notes.any((n) => n.code == code)) {
+      _say('That credit note is already on this bill.');
+      return;
+    }
+    final info = await _s.sales.lookupCreditNote(role: _role, code: code);
+    if (!mounted) {
+      return;
+    }
+    if (info == null) {
+      _say('Credit note not found: $code.');
+    } else if (!info.valid) {
+      _say('This credit note has expired.');
+    } else if (info.balance.paise <= 0) {
+      _say('This credit note has nothing left on it.');
+    } else {
+      setState(() {
+        _notes.add(info);
+        _message = null;
+      });
+    }
   }
 
   // ---- discounts ------------------------------------------------------------
@@ -247,23 +314,13 @@ class _RegisterPanelState extends State<RegisterPanel> {
     });
   }
 
-  Future<_Approver?> _askManager() async {
-    final choices = [
-      for (final c in await _s.auth.signInChoices())
-        if (can(c.role, Permission.overrideDiscountLimit)) c,
-    ];
-    if (!mounted) {
-      return null;
-    }
-    if (choices.isEmpty) {
-      _say('No manager or owner is set up to approve this discount.');
-      return null;
-    }
-    return showDialog<_Approver>(
-      context: context,
-      builder: (_) => _ApprovalDialog(auth: _s.auth, choices: choices),
-    );
-  }
+  Future<Approver?> _askManager() => askApprover(
+    context,
+    _s.auth,
+    permission: Permission.overrideDiscountLimit,
+    message: 'This discount is over your limit. A manager or the owner must approve it.',
+    onNobody: _say,
+  );
 
   // ---- saving ---------------------------------------------------------------
 
@@ -284,6 +341,10 @@ class _RegisterPanelState extends State<RegisterPanel> {
             BillLineInput(l.item.barcode, discount: l.discount),
         ],
         payments: payments,
+        creditNotes: [
+          for (final (n, used) in _noteUses)
+            if (used.paise > 0) CreditNoteUseInput(n.code, used),
+        ],
         customerName: name,
         customerPhone: phone,
         discountApproverRole: _approver?.role,
@@ -344,6 +405,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
   void _newBill() {
     setState(() {
       _lines.clear();
+      _notes.clear();
       _approver = null;
       _saved = null;
       _message = null;
@@ -398,7 +460,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
           focusNode: _barcodeFocus,
           autofocus: true,
           decoration: const InputDecoration(
-            labelText: 'Scan or type the barcode, then Enter',
+            labelText: 'Scan or type a barcode or credit note, then Enter',
             border: OutlineInputBorder(),
             prefixIcon: Icon(Icons.qr_code_scanner),
           ),
@@ -501,6 +563,27 @@ class _RegisterPanelState extends State<RegisterPanel> {
             key: const Key('total-text'),
             style: Theme.of(context).textTheme.displaySmall,
           ),
+          for (final (n, used) in _noteUses)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Credit note ${n.code}: -${formatRupees(used)} '
+                      '(${formatRupees(n.balance - used)} stays on it)',
+                      key: Key('note-applied-${n.code}'),
+                    ),
+                  ),
+                  IconButton(
+                    key: Key('note-remove-${n.code}'),
+                    tooltip: 'Remove credit note',
+                    icon: const Icon(Icons.close),
+                    onPressed: () => setState(() => _notes.remove(n)),
+                  ),
+                ],
+              ),
+            ),
           const SizedBox(height: 12),
           _amountField('cash-field', 'Cash received', _cash),
           _amountField('upi-field', 'UPI', _upi),
@@ -512,11 +595,12 @@ class _RegisterPanelState extends State<RegisterPanel> {
               onPressed: _lines.isEmpty
                   ? null
                   : () => setState(() {
+                      final due = _toPay.paise < 0 ? Money.zero : _toPay;
                       _cash.text =
-                          (_total.paise ~/ 100).toString() +
-                          ((_total.paise % 100) == 0
+                          (due.paise ~/ 100).toString() +
+                          ((due.paise % 100) == 0
                               ? ''
-                              : '.${(_total.paise % 100).toString().padLeft(2, '0')}');
+                              : '.${(due.paise % 100).toString().padLeft(2, '0')}');
                       _upi.clear();
                       _card.clear();
                     }),
@@ -703,112 +787,6 @@ class _DiscountDialogState extends State<_DiscountDialog> {
         key: const Key('discount-apply'),
         onPressed: () => Navigator.of(context).pop(_c.text),
         child: const Text('Apply'),
-      ),
-    ],
-  );
-}
-
-class _ApprovalDialog extends StatefulWidget {
-  const _ApprovalDialog({required this.auth, required this.choices});
-  final AuthService auth;
-  final List<SignInChoice> choices;
-  @override
-  State<_ApprovalDialog> createState() => _ApprovalDialogState();
-}
-
-class _ApprovalDialogState extends State<_ApprovalDialog> {
-  final _password = TextEditingController();
-  late SignInChoice _who = widget.choices.first;
-  String? _error;
-  bool _busy = false;
-
-  @override
-  void dispose() {
-    _password.dispose();
-    super.dispose();
-  }
-
-  Future<void> _approve() async {
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    final result = await widget.auth.signIn(
-      userId: _who.userId,
-      secret: _password.text,
-    );
-    if (!mounted) {
-      return;
-    }
-    switch (result) {
-      case SignedIn():
-        Navigator.of(context)
-            .pop(_Approver(result.userId, result.role, result.name));
-      case WrongSecret():
-        setState(() {
-          _busy = false;
-          _error = 'Wrong password. ${result.triesLeft} tries left.';
-        });
-      case AccountLocked():
-        setState(() {
-          _busy = false;
-          _error = 'That account is locked for now.';
-        });
-      case UnknownUser():
-        setState(() {
-          _busy = false;
-          _error = 'That user is not available.';
-        });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Manager approval'),
-    content: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Text(
-          'This discount is over your limit. A manager or the owner must approve it.',
-        ),
-        const SizedBox(height: 12),
-        DropdownButton<SignInChoice>(
-          key: const Key('approver-picker'),
-          value: _who,
-          isExpanded: true,
-          items: [
-            for (final c in widget.choices)
-              DropdownMenuItem(value: c, child: Text(c.name)),
-          ],
-          onChanged: (c) => setState(() => _who = c!),
-        ),
-        TextField(
-          key: const Key('approver-password'),
-          controller: _password,
-          obscureText: true,
-          decoration: const InputDecoration(labelText: 'Their password'),
-          onSubmitted: (_) => _approve(),
-        ),
-        if (_error != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              _error!,
-              key: const Key('approval-error'),
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-          ),
-      ],
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.of(context).pop(),
-        child: const Text('Cancel'),
-      ),
-      FilledButton(
-        key: const Key('approver-ok'),
-        onPressed: _busy ? null : _approve,
-        child: const Text('Approve'),
       ),
     ],
   );

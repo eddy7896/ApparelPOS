@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../services.dart';
 import '../session_controller.dart';
 import 'register_screen.dart';
+import 'returns_screen.dart';
 import 'stock_entry_screen.dart';
 
 /// What opens after sign-in: the register for a cashier; Billing and Stock
@@ -22,6 +23,18 @@ class HomeShell extends StatelessWidget {
       appBar: AppBar(
         title: Text(sales ? 'Sales Mode' : 'Manager Mode'),
         actions: [
+          if (sales)
+            TextButton.icon(
+              key: const Key('returns-button'),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      ReturnsScreen(session: session, services: services),
+                ),
+              ),
+              icon: const Icon(Icons.assignment_return),
+              label: const Text('Returns'),
+            ),
           Center(child: Text('Signed in: ${user.name}')),
           const SizedBox(width: 12),
           TextButton.icon(
@@ -51,6 +64,18 @@ class HomeShell extends StatelessWidget {
                     ),
                     icon: const Icon(Icons.point_of_sale),
                     label: const Text('Billing'),
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    key: const Key('returns-button'),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            ReturnsScreen(session: session, services: services),
+                      ),
+                    ),
+                    icon: const Icon(Icons.assignment_return),
+                    label: const Text('Returns'),
                   ),
                   const SizedBox(height: 12),
                   FilledButton.icon(
