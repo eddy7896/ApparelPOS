@@ -14,6 +14,7 @@ import '../services.dart';
 import '../session_controller.dart';
 import 'approval_dialog.dart';
 import 'register_screen.dart';
+import 'shift_gate.dart';
 
 /// How the customer is paid out. An exchange is a credit note that the
 /// register applies to the new bill at once.
@@ -242,7 +243,11 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Returns')),
-    body: _saved != null ? _savedView(context) : _form(context),
+    body: ShiftGate(
+      session: widget.session,
+      services: _s,
+      child: _saved != null ? _savedView(context) : _form(context),
+    ),
   );
 
   Widget _form(BuildContext context) {

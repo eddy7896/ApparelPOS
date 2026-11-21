@@ -8,6 +8,7 @@ import 'package:core_domain/core_domain.dart';
 import 'package:drift/drift.dart';
 
 import 'app_database.dart';
+import 'shift_repository.dart';
 
 /// What happens to a returned garment.
 enum ReturnOutcome {
@@ -254,6 +255,7 @@ class ReturnsRepository {
       entityId: returnId,
       actor: cashierId,
       body: () async {
+        final shiftId = await requireOpenShiftId(_db, cashierId);
         final lines = <ReturnCandidate>[];
         for (final i in items) {
           final found = await _find(i.barcode, windowDays);
@@ -278,6 +280,7 @@ class ReturnsRepository {
               ReturnsCompanion.insert(
                 id: returnId,
                 cashierId: cashierId,
+                shiftId: Value(shiftId),
                 approvedBy: Value(usedApprover ? approvedBy : null),
                 refundMode: refundMode.dbValue,
                 creditNoteId: Value(note?.id),
@@ -285,6 +288,18 @@ class ReturnsRepository {
                 returnedAt: at,
               ),
             );
+        if (total.paise > 0) {
+          await addDaybookRow(
+            _db,
+            id: _newId(),
+            at: at,
+            shiftId: shiftId,
+            kind: 'REFUND_${refundMode.dbValue.toUpperCase()}',
+            amountPaise: -total.paise,
+            refType: 'return',
+            refId: returnId,
+          );
+        }
         for (var k = 0; k < items.length; k++) {
           final l = lines[k];
           final input = items[k];

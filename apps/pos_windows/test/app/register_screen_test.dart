@@ -16,6 +16,7 @@ import 'package:pos_windows/data/app_database.dart';
 import 'package:pos_windows/data/auth_service.dart';
 import 'package:pos_windows/data/returns_repository.dart';
 import 'package:pos_windows/data/sales_repository.dart';
+import 'package:pos_windows/data/shift_repository.dart';
 import 'package:pos_windows/data/stock_repository.dart';
 
 class FakePrinter implements LabelPrinter {
@@ -33,6 +34,7 @@ void main() {
   late AuthService auth;
   late StockRepository stock;
   late SalesRepository sales;
+  late ShiftRepository shifts;
   late SessionController session;
   late FakePrinter printer;
   late List<String> barcodes; // two M Blue at 499.00, one L Blue at 999.00
@@ -47,6 +49,7 @@ void main() {
     auth = AuthService(db, newId: newId);
     stock = StockRepository(db, newId: newId);
     sales = SalesRepository(db, newId: newId);
+    shifts = ShiftRepository(db, newId: newId);
     session = SessionController(auth: auth);
     printer = FakePrinter();
     await stock.ensureCounter();
@@ -92,6 +95,11 @@ void main() {
       role: Role.manager,
       secret: managerPassword,
     );
+    await shifts.openShift(
+      role: Role.cashier,
+      userId: cashierId,
+      counts: {Denomination.note500: 4},
+    );
   });
   tearDown(() async {
     session.dispose();
@@ -107,13 +115,26 @@ void main() {
     }
   }
 
-  Future<void> open(WidgetTester tester, {String? as, String? secret}) async {
+  Future<void> open(
+    WidgetTester tester, {
+    String? as,
+    String? secret,
+    bool withShift = true,
+  }) async {
     tester.view.physicalSize = const Size(1500, 1000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.runAsync(() async {
       await session.start();
       await session.signIn(as ?? cashierId, secret ?? '482916');
+      if (withShift &&
+          await shifts.currentShift(session.user!.userId) == null) {
+        await shifts.openShift(
+          role: session.user!.role,
+          userId: session.user!.userId,
+          counts: {Denomination.note500: 4},
+        );
+      }
     });
     await tester.pumpWidget(
       PosApp(
@@ -122,6 +143,7 @@ void main() {
           stock: stock,
           sales: sales,
           returns: ReturnsRepository(db, newId: newId),
+          shifts: shifts,
           auth: auth,
           printer: printer,
           fonts: () async => LabelFonts(

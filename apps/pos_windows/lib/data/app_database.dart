@@ -219,6 +219,7 @@ class Bills extends Table {
   TextColumn get billNo => text().customConstraint('NOT NULL UNIQUE')();
   TextColumn get counterId => text().references(Counters, #id)();
   TextColumn get cashierId => text().references(Users, #id)();
+  TextColumn get shiftId => text().nullable().references(Shifts, #id)();
   TextColumn get customerName => text().nullable()();
   TextColumn get customerPhone => text().nullable()();
   IntColumn get totalPaise =>
@@ -322,6 +323,7 @@ class CreditNoteUses extends Table {
 class Returns extends Table {
   TextColumn get id => text()();
   TextColumn get cashierId => text().references(Users, #id)();
+  TextColumn get shiftId => text().nullable().references(Shifts, #id)();
   TextColumn get approvedBy => text().nullable().references(Users, #id)();
   TextColumn get refundMode => text().customConstraint(
     "NOT NULL CHECK (refund_mode IN ('cash', 'upi', 'card', 'credit_note'))",
@@ -356,6 +358,68 @@ class ReturnLines extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// A shift: one cashier's working period at a counter, opened with the cash in
+/// the drawer counted by notes and coins. Never edited; closing writes a
+/// separate row in `shift_closes`.
+@DataClassName('ShiftRow')
+class Shifts extends Table {
+  TextColumn get id => text()();
+  TextColumn get cashierId => text().references(Users, #id)();
+  TextColumn get counterId => text().references(Counters, #id)();
+  DateTimeColumn get openedAt => dateTime()();
+  IntColumn get openingPaise =>
+      integer().check(openingPaise.isBiggerOrEqualValue(0))();
+
+  /// The opening count as JSON: denomination name to how many.
+  TextColumn get openingCount => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// The blind close of a shift (one per shift). The expected amount and the
+/// variance are stored here for the owner; the cashier is never shown them
+/// (E-SHIFT-1).
+@DataClassName('ShiftCloseRow')
+class ShiftCloses extends Table {
+  TextColumn get id => text()();
+  TextColumn get shiftId =>
+      text().customConstraint('NOT NULL UNIQUE REFERENCES shifts (id)')();
+  DateTimeColumn get closedAt => dateTime()();
+  IntColumn get countedPaise =>
+      integer().check(countedPaise.isBiggerOrEqualValue(0))();
+  IntColumn get expectedPaise => integer()();
+  IntColumn get variancePaise => integer()();
+
+  /// The closing count as JSON: denomination name to how many.
+  TextColumn get countDetail => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// The money ledger. One row per payment mode of each bill (positive) and per
+/// refund (negative), written in the same transaction as the sale or return.
+/// Never edited; a mistake is reversed by a new row.
+@DataClassName('DaybookRow')
+class Daybook extends Table {
+  TextColumn get id => text()();
+  DateTimeColumn get at => dateTime()();
+  TextColumn get shiftId => text().references(Shifts, #id)();
+  TextColumn get kind => text().customConstraint(
+    "NOT NULL CHECK (kind IN ('SALE_CASH', 'SALE_UPI', 'SALE_CARD', 'SALE_CREDIT_NOTE', "
+    "'REFUND_CASH', 'REFUND_UPI', 'REFUND_CARD', 'REFUND_CREDIT_NOTE'))",
+  )();
+  IntColumn get amountPaise => integer().check(amountPaise.equals(0).not())();
+  TextColumn get refType => text().customConstraint(
+    "NOT NULL CHECK (ref_type IN ('bill', 'return'))",
+  )();
+  TextColumn get refId => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(
   tables: [
     AppSettings,
@@ -378,13 +442,16 @@ class ReturnLines extends Table {
     CreditNoteUses,
     Returns,
     ReturnLines,
+    Shifts,
+    ShiftCloses,
+    Daybook,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -416,6 +483,24 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(returnLines);
         await m.alterTable(TableMigration(billPayments));
       }
+      if (from < 6 && to >= 6) {
+        // version 6: shifts, blind closes and the daybook (P2-6b); bills and
+        // returns record the shift they were made in.
+        await m.createTable(shifts);
+        await m.createTable(shiftCloses);
+        await m.createTable(daybook);
+        // Older steps create bills and returns with today's definition, which
+        // already has the column; add it only where it is missing.
+        Future<bool> has(String table) async => (await customSelect(
+          'PRAGMA table_info($table)',
+        ).get()).any((r) => r.read<String>('name') == 'shift_id');
+        if (!await has('bills')) {
+          await m.addColumn(bills, bills.shiftId);
+        }
+        if (!await has('returns')) {
+          await m.addColumn(returns, returns.shiftId);
+        }
+      }
     },
     beforeOpen: (details) async {
       final before = details.versionBefore;
@@ -444,6 +529,9 @@ class AppDatabase extends _$AppDatabase {
         'credit_note_uses',
         'returns',
         'return_lines',
+        'shifts',
+        'shift_closes',
+        'daybook',
       ]) {
         if (!existing.contains(table)) {
           continue;

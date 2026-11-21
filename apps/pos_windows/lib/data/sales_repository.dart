@@ -9,6 +9,7 @@ import 'package:core_domain/core_domain.dart';
 import 'package:drift/drift.dart';
 
 import 'app_database.dart';
+import 'shift_repository.dart';
 
 /// Why a garment cannot go on a bill.
 enum NotSellableReason { notFound, alreadySold, notInStock }
@@ -426,6 +427,7 @@ class SalesRepository {
           throw BillNotPaid(settlement.due);
         }
 
+        final shiftId = await requireOpenShiftId(_db, cashierId);
         final counter = (await _db.select(_db.counters).get()).first;
         final counterNo = await _counterNo();
         final billNumber = await _nextBillNumber(
@@ -442,6 +444,7 @@ class SalesRepository {
                 billNo: billNumber.format(),
                 counterId: counter.id,
                 cashierId: cashierId,
+                shiftId: Value(shiftId),
                 customerName: Value(name),
                 customerPhone: Value(phone),
                 totalPaise: total.paise,
@@ -481,6 +484,18 @@ class SalesRepository {
                   amountPaise: e.value.paise,
                 ),
               );
+        }
+        for (final e in settlement.byMode.entries) {
+          await addDaybookRow(
+            _db,
+            id: _newId(),
+            at: at,
+            shiftId: shiftId,
+            kind: 'SALE_${e.key.dbValue.toUpperCase()}',
+            amountPaise: e.value.paise,
+            refType: 'bill',
+            refId: billId,
+          );
         }
         for (final (info, amount) in usedNotes) {
           await _db

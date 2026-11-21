@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import '../../data/sales_repository.dart';
 import '../bill_pdf.dart';
 import 'approval_dialog.dart';
+import 'shift_gate.dart';
 import '../services.dart';
 import '../session_controller.dart';
 
@@ -30,10 +31,14 @@ class RegisterScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Billing')),
-    body: RegisterPanel(
+    body: ShiftGate(
       session: session,
       services: services,
-      creditNoteCode: creditNoteCode,
+      child: RegisterPanel(
+        session: session,
+        services: services,
+        creditNoteCode: creditNoteCode,
+      ),
     ),
   );
 }
