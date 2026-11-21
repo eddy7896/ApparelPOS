@@ -64,6 +64,7 @@ class _CloseShiftScreenState extends State<CloseShiftScreen> {
         userId: widget.session.user!.userId,
         counts: counts,
       );
+      widget.services.backupAfterShiftClose();
       if (mounted) {
         setState(() => _closed = true);
       }

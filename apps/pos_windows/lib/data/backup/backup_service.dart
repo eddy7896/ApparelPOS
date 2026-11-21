@@ -24,12 +24,9 @@ import 'package:sqlite3/sqlite3.dart' as raw;
 import '../app_database.dart';
 import '../encryption/encrypted_connection.dart';
 import '../encryption/key_store.dart';
+import 'backup_models.dart';
 
-/// No backup place has been chosen yet.
-final class NoBackupPlaces implements Exception {
-  @override
-  String toString() => 'NoBackupPlaces: choose where backups go first';
-}
+export 'backup_models.dart';
 
 /// The snapshot of the database could not be made or did not check out.
 final class BackupFailed implements Exception {
@@ -37,61 +34,6 @@ final class BackupFailed implements Exception {
   final String message;
   @override
   String toString() => 'BackupFailed: $message';
-}
-
-/// What happened in one place.
-final class PlaceResult {
-  const PlaceResult({
-    required this.slot,
-    required this.ok,
-    this.fileName,
-    this.error,
-    this.pruned = 0,
-  });
-  final int slot;
-  final bool ok;
-  final String? fileName;
-
-  /// A short reason when [ok] is false.
-  final String? error;
-
-  /// How many old backups were deleted from this place.
-  final int pruned;
-}
-
-/// What happened in one backup run.
-final class BackupResult {
-  const BackupResult({required this.at, required this.places});
-  final DateTime at;
-  final List<PlaceResult> places;
-
-  /// Every place got its copy.
-  bool get complete => places.isNotEmpty && places.every((p) => p.ok);
-
-  /// At least one place got its copy.
-  bool get anySaved => places.any((p) => p.ok);
-}
-
-/// What the manager sees about backups.
-final class BackupStatus {
-  const BackupStatus({
-    required this.places,
-    required this.lastAttemptAt,
-    required this.lastSavedAt,
-    required this.lastCompleteAt,
-    required this.failures,
-  });
-
-  /// Chosen places by slot (1 and 2); null where none is chosen.
-  final Map<int, String?> places;
-  final DateTime? lastAttemptAt;
-  final DateTime? lastSavedAt;
-
-  /// Last time every place got a copy.
-  final DateTime? lastCompleteAt;
-
-  /// Slot number to reason, for the places that failed last time.
-  final Map<int, String> failures;
 }
 
 const String _placeSetting = 'backup_place_';
@@ -457,6 +399,7 @@ Future<RestoreResult> restoreBackup({
   required int appSchemaVersion,
   DateTime? now,
   Future<void> Function()? afterMovedAside,
+  bool replaceKey = false,
 }) async {
   final stored = await keys.read();
   final key = recoveryKey ?? stored;
@@ -465,7 +408,7 @@ Future<RestoreResult> restoreBackup({
   }
   final version = checkBackupFile(backup, key, maxVersion: appSchemaVersion);
   final hasCurrent = target.existsSync() && target.lengthSync() > 0;
-  if (hasCurrent && stored != null && !_same(stored, key)) {
+  if (!replaceKey && hasCurrent && stored != null && !_same(stored, key)) {
     throw RestoreKeyMismatch();
   }
   final stamp = _suffix(now ?? DateTime.now().toUtc());
@@ -507,7 +450,7 @@ Future<RestoreResult> restoreBackup({
     putBack();
     rethrow;
   }
-  if (stored == null) {
+  if (stored == null || (replaceKey && !_same(stored, key))) {
     await keys.write(key);
   }
   final aside = File('${target.path}$stamp');

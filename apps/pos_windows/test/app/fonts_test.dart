@@ -8,7 +8,8 @@ void main() {
   for (final name in ['NotoSans-Regular.ttf', 'NotoSans-Bold.ttf', 'OFL.txt']) {
     test('$name in the app is identical to the copy in core_domain', () {
       final app = File('assets/fonts/$name').readAsBytesSync();
-      final core = File('../../packages/core_domain/assets/fonts/$name').readAsBytesSync();
+      final core = File('../../packages/core_domain/assets/fonts/$name')
+          .readAsBytesSync();
       expect(app, core);
     });
   }

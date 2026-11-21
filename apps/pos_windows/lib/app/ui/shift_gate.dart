@@ -63,6 +63,7 @@ class _ShiftGateState extends State<ShiftGate> {
         userId: widget.session.user!.userId,
         counts: counts,
       );
+      widget.services.backupAfterShiftClose();
       await _load();
     } on NoOpenShift {
       await _load();
