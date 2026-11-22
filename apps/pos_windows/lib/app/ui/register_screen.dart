@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../data/sales_repository.dart';
+import '../../data/stock_lookup_repository.dart';
 import '../bill_pdf.dart';
 import 'approval_dialog.dart';
 import 'close_shift_screen.dart';
@@ -100,6 +101,10 @@ class _RegisterPanelState extends State<RegisterPanel> {
   String? _message;
   bool _busy = false;
   SavedBill? _saved;
+  List<StyleStock>? _nameResults;
+
+  /// How many garments of the picked size and color to add at once.
+  int _qty = 1;
   String? _savedCustomerName;
   String? _savedCustomerPhone;
 
@@ -227,6 +232,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
       return;
     }
     _barcode.clear();
+    _nameResults = null;
     widget.session.noteActivity();
     if (CreditNoteCode.tryParse(code) != null) {
       await _addNote(code);
@@ -257,6 +263,111 @@ class _RegisterPanelState extends State<RegisterPanel> {
       });
     }
     _barcodeFocus.requestFocus();
+  }
+
+  static final _digitsOnly = RegExp(r'^\d+$');
+
+  /// Typing letters searches the shop's styles by name (Stock lookup rules:
+  /// cashier-safe, no cost); typing digits is a barcode or credit note.
+  Future<void> _onType(String text) async {
+    final t = text.trim();
+    final repo = _s.stockLookup;
+    if (repo == null || t.isEmpty || _digitsOnly.hasMatch(t)) {
+      if (_nameResults != null) {
+        setState(() => _nameResults = null);
+      }
+      return;
+    }
+    final results = await repo.search(role: _role, query: t);
+    if (!mounted || _barcode.text.trim() != t) {
+      return; // the text changed while searching
+    }
+    setState(() => _nameResults = results);
+  }
+
+  /// Enter in the field: digits are scanned; letters pick the only match, or
+  /// ask the cashier to choose from the list.
+  Future<void> _submit(String raw) async {
+    final t = raw.trim();
+    if (t.isEmpty || _digitsOnly.hasMatch(t) || _s.stockLookup == null) {
+      await _scan(raw);
+      return;
+    }
+    final results = _nameResults;
+    final choices = [
+      for (final s in results ?? const <StyleStock>[])
+        for (final v in s.variants)
+          if (v.inStock > 0) v,
+    ];
+    if (choices.length == 1) {
+      await _addByName(choices.single);
+    } else if (results != null && results.isEmpty) {
+      _say('No style like "$t" in the shop.');
+    } else {
+      _say('Choose the size and color from the list below.');
+    }
+    _barcodeFocus.requestFocus();
+  }
+
+  /// Puts one in-stock garment of the chosen size and color on the bill (the
+  /// lowest barcode not already on it). Every usual check still applies.
+  Future<void> _addByName(VariantStock v, {int? count}) async {
+    final want = clampGarmentCount(count ?? _qty);
+    final onBill = {for (final l in _lines) l.item.barcode};
+    final codes = pickGarments(v.barcodes, onBill, want);
+    if (codes.isEmpty) {
+      _say(
+        v.inStock == 0
+            ? 'None left in ${v.size} ${v.color}.'
+            : 'All of ${v.size} ${v.color} that can be listed are already on this bill. Scan the tag.',
+      );
+      _barcodeFocus.requestFocus();
+      return;
+    }
+    final before = _lines.length;
+    for (final code in codes) {
+      await _scan(code);
+      if (!mounted) {
+        return;
+      }
+    }
+    final added = _lines.length - before;
+    setState(() => _qty = 1);
+    if (added == 0) {
+      // the usual message from the scan (already sold, not found) stays
+      if (_message == null) {
+        _say('Could not add ${v.size} ${v.color}.');
+      }
+    } else if (added < want) {
+      _say(
+        'Only $added of $want could be added: the rest are not in stock '
+        'or are already on this bill.',
+      );
+    }
+    _barcodeFocus.requestFocus();
+  }
+
+  /// One more garment of the same style, size and color as [l].
+  Future<void> _addAnother(_Line l) async {
+    final repo = _s.stockLookup;
+    if (repo == null) {
+      return;
+    }
+    final found = await repo.search(role: _role, query: l.item.barcode);
+    if (!mounted) {
+      return;
+    }
+    final variants = [
+      for (final s in found)
+        if (s.name == l.item.productName)
+          for (final v in s.variants)
+            if (v.size == l.item.size && v.color == l.item.color) v,
+    ];
+    if (variants.isEmpty) {
+      _say('Could not find another ${l.item.size} ${l.item.color}.');
+      return;
+    }
+    await _addByName(variants.first, count: 1);
   }
 
   Future<void> _addNote(String code) async {
@@ -494,15 +605,17 @@ class _RegisterPanelState extends State<RegisterPanel> {
           controller: _barcode,
           focusNode: _barcodeFocus,
           autofocus: true,
-          decoration: const InputDecoration(
-            labelText: 'Scan or type a barcode or credit note, then Enter',
+          decoration: InputDecoration(
+            labelText: _s.stockLookup == null
+                ? 'Scan or type a barcode or credit note, then Enter'
+                : 'Scan a tag, or type an item name',
             border: OutlineInputBorder(),
             prefixIcon: Icon(Icons.qr_code_scanner),
           ),
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          onSubmitted: _scan,
+          onChanged: _onType,
+          onSubmitted: _submit,
         ),
+        if (_nameResults != null) _nameResultsPanel(context),
         if (_message != null)
           Container(
             key: const Key('message-banner'),
@@ -552,6 +665,94 @@ class _RegisterPanelState extends State<RegisterPanel> {
     );
   }
 
+  Widget _nameResultsPanel(BuildContext context) {
+    final results = _nameResults!;
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      key: const Key('name-results'),
+      margin: const EdgeInsets.only(top: 8),
+      constraints: const BoxConstraints(maxHeight: 300),
+      decoration: BoxDecoration(
+        border: Border.all(color: scheme.outlineVariant),
+        borderRadius: BorderRadius.circular(12),
+        color: scheme.surfaceContainerLowest,
+      ),
+      child: results.isEmpty
+          ? const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text(
+                'No style like that in the shop.',
+                key: Key('name-results-empty'),
+              ),
+            )
+          : ListView(
+              shrinkWrap: true,
+              padding: const EdgeInsets.all(12),
+              children: [
+                Row(
+                  children: [
+                    const Text('How many'),
+                    IconButton(
+                      key: const Key('qty-minus'),
+                      tooltip: 'One fewer',
+                      onPressed: () =>
+                          setState(() => _qty = clampGarmentCount(_qty - 1)),
+                      icon: const Icon(Icons.remove_circle_outline),
+                    ),
+                    Text(
+                      '$_qty',
+                      key: const Key('qty-value'),
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    IconButton(
+                      key: const Key('qty-plus'),
+                      tooltip: 'One more',
+                      onPressed: () =>
+                          setState(() => _qty = clampGarmentCount(_qty + 1)),
+                      icon: const Icon(Icons.add_circle_outline),
+                    ),
+                    const Text('of the size and color you pick'),
+                  ],
+                ),
+                for (final s in results)
+                  Padding(
+                    key: Key('name-style-${s.name}'),
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          s.name,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            for (final v in s.variants)
+                              OutlinedButton(
+                                key: Key('pick-${s.name}-${v.size}-${v.color}'),
+                                onPressed: v.inStock == 0
+                                    ? null
+                                    : () => _addByName(v),
+                                child: Text(
+                                  v.inStock == 0
+                                      ? '${v.size} ${v.color}  none left'
+                                      : '${v.size} ${v.color}  ${formatRupees(v.mrp)}  ${v.inStock} left',
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+    );
+  }
+
   Widget _lineTile(_Line l) {
     final priced = l.priced;
     final off = priced == null ? Money.zero : priced.discountAmount;
@@ -573,6 +774,13 @@ class _RegisterPanelState extends State<RegisterPanel> {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(width: 8),
+            if (_s.stockLookup != null)
+              IconButton(
+                key: Key('more-${l.item.barcode}'),
+                tooltip: 'Add another ${l.item.size} ${l.item.color}',
+                icon: const Icon(Icons.add_circle_outline),
+                onPressed: () => _addAnother(l),
+              ),
             TextButton(
               key: Key('discount-${l.item.barcode}'),
               onPressed: () => _editDiscount(l),

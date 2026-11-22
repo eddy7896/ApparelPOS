@@ -123,6 +123,41 @@ void main() {
     });
   });
 
+  group('which garments can be picked', () {
+    test(
+      'each size and color lists its in-stock barcodes, lowest first',
+      () async {
+        final codes = await buy('Cotton Kurta', [('M', 'Blue', 3, 499)]);
+        final s = only(await lookup.search(role: Role.cashier, query: 'kurta'));
+        expect(variant(s, 'M', 'Blue').barcodes, codes);
+        expect(variant(s, 'M', 'Blue').barcodes.length, 3);
+      },
+    );
+
+    test('sold, damaged and returned garments are not offered', () async {
+      final codes = await buy('Denim Jeans', [('L', 'Black', 4, 1299)]);
+      await setStatus(codes[0], 'SOLD');
+      await setStatus(codes[1], 'DAMAGED');
+      await setStatus(codes[2], 'RETURNED');
+      final s = only(await lookup.search(role: Role.cashier, query: 'denim'));
+      expect(variant(s, 'L', 'Black').barcodes, [codes[3]]);
+    });
+
+    test('a used-up size and color has no barcodes', () async {
+      final codes = await buy('Linen Shirt', [('M', 'White', 1, 899)]);
+      await setStatus(codes[0], 'SOLD');
+      final s = only(await lookup.search(role: Role.cashier, query: 'linen'));
+      expect(variant(s, 'M', 'White').barcodes, isEmpty);
+    });
+
+    test('at most 50 are listed, the count is still the real number', () async {
+      await buy('Cotton Kurta', [('M', 'Blue', 60, 499)]);
+      final s = only(await lookup.search(role: Role.cashier, query: 'kurta'));
+      expect(variant(s, 'M', 'Blue').barcodes.length, 50);
+      expect(variant(s, 'M', 'Blue').inStock, 60);
+    });
+  });
+
   group('finding it', () {
     setUp(() async {
       await buy('Cotton Kurta', [('M', 'Blue', 1, 499)]);

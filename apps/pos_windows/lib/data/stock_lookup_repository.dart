@@ -13,6 +13,7 @@ final class VariantStock {
     required this.color,
     required this.mrp,
     required this.inStock,
+    this.barcodes = const [],
   });
   final String size;
   final String color;
@@ -20,7 +21,13 @@ final class VariantStock {
 
   /// Garments of this size and color that can be sold now.
   final int inStock;
+
+  /// The barcodes of up to [maxListedBarcodes] of them, lowest first, so the
+  /// register can put one on a bill when the cashier picks this size and color.
+  final List<String> barcodes;
 }
+
+const int maxListedBarcodes = 50;
 
 /// One style with all its sizes and colors.
 final class StyleStock {
@@ -62,7 +69,7 @@ class StockLookupRepository {
         : "p.name LIKE ? ESCAPE '\\'";
     final rows = await _db
         .customSelect(
-          'SELECT p.name AS name, v.size AS size, v.color AS color, '
+          'SELECT p.name AS name, v.id AS vid, v.size AS size, v.color AS color, '
           'v.mrp_paise AS mrp, '
           "(SELECT COUNT(*) FROM articles a WHERE a.variant_id = v.id AND a.status = 'IN_STOCK') AS n "
           'FROM products p JOIN variants v ON v.product_id = p.id '
@@ -73,6 +80,27 @@ class StockLookupRepository {
           ],
         )
         .get();
+    // The in-stock garments of those variants, for picking at the register.
+    final listed = <String, List<String>>{};
+    final codeRows = await _db
+        .customSelect(
+          'SELECT v.id AS vid, a.barcode_value AS code FROM variants v '
+          'JOIN products p ON p.id = v.product_id '
+          'JOIN articles a ON a.variant_id = v.id '
+          "WHERE a.status = 'IN_STOCK' AND $where "
+          'ORDER BY a.barcode_value',
+          variables: [
+            if (isBarcode) Variable<String>(q),
+            if (!isBarcode && q.isNotEmpty) Variable<String>('%$escaped%'),
+          ],
+        )
+        .get();
+    for (final r in codeRows) {
+      final list = listed.putIfAbsent(r.read<String>('vid'), () => []);
+      if (list.length < maxListedBarcodes) {
+        list.add(r.read<String>('code'));
+      }
+    }
     final byName = <String, List<VariantStock>>{};
     for (final r in rows) {
       byName
@@ -83,6 +111,7 @@ class StockLookupRepository {
               color: r.read<String>('color'),
               mrp: Money(r.read<int>('mrp')),
               inStock: r.read<int>('n'),
+              barcodes: listed[r.read<String>('vid')] ?? const [],
             ),
           );
     }

@@ -15,6 +15,7 @@ export 'src/hangtag_artwork.dart';
 export 'src/label_layout.dart';
 export 'src/money.dart';
 export 'src/payment.dart';
+export 'src/pick_garments.dart';
 export 'src/permissions.dart';
 export 'src/pricing.dart';
 export 'src/purchase.dart';
