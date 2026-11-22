@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'brand_theme.dart';
 import 'services.dart';
 import 'session_controller.dart';
 import 'ui/home_shell.dart';
@@ -26,6 +27,9 @@ class PosApp extends StatefulWidget {
   @override
   State<PosApp> createState() => _PosAppState();
 }
+
+/// Stands in for the brand controller when there is none.
+final ChangeNotifier _noBrand = ChangeNotifier();
 
 class _PosAppState extends State<PosApp> {
   final _navigator = GlobalKey<NavigatorState>();
@@ -53,13 +57,19 @@ class _PosAppState extends State<PosApp> {
   @override
   Widget build(BuildContext context) {
     final session = widget.session;
+    // The theme follows the shop's settings (main color); with no brand
+    // controller it is the placeholder look.
+    return ListenableBuilder(
+      listenable: widget.services.brand ?? _noBrand,
+      builder: (context, _) => _app(session),
+    );
+  }
+
+  Widget _app(SessionController session) {
     return MaterialApp(
       navigatorKey: _navigator,
       title: 'Apparel PoS',
-      theme: ThemeData(
-        colorSchemeSeed: const Color(0xFF3949AB),
-        useMaterial3: true,
-      ),
+      theme: brandTheme(widget.services.currentBrand),
       debugShowCheckedModeBanner: false,
       home: _IdleGuard(
         session: session,
@@ -75,7 +85,10 @@ class _PosAppState extends State<PosApp> {
               case SessionStage.needsSetup:
                 return SetupScreen(session: session, services: widget.services);
               case SessionStage.locked:
-                return LockScreen(session: session);
+                return LockScreen(
+                  session: session,
+                  brand: widget.services.currentBrand,
+                );
               case SessionStage.signedIn:
                 return HomeShell(session: session, services: widget.services);
             }

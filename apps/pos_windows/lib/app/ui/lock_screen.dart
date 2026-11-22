@@ -3,14 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../data/auth_service.dart';
+import '../../data/brand.dart';
 import '../session_controller.dart';
+import 'brand_mark.dart';
 import 'notice.dart';
 
 /// Pick your name, then type your PIN (cashier) or password (manager, owner).
 class LockScreen extends StatefulWidget {
-  const LockScreen({super.key, required this.session});
+  LockScreen({super.key, required this.session, Brand? brand})
+    : brand = brand ?? Brand.placeholder;
 
   final SessionController session;
+
+  /// The shop's name, logo and color for the header.
+  final Brand brand;
 
   @override
   State<LockScreen> createState() => _LockScreenState();
@@ -95,10 +101,12 @@ class _LockScreenState extends State<LockScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  'Apparel PoS',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.headlineMedium,
+                Center(
+                  child: BrandMark(
+                    brand: widget.brand,
+                    size: 56,
+                    nameStyle: Theme.of(context).textTheme.headlineMedium,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(

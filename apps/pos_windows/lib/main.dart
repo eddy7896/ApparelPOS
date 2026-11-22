@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 import 'app/app.dart';
+import 'app/brand_controller.dart';
 import 'app/label_printer.dart';
 import 'app/services.dart';
 import 'app/session_controller.dart';
 import 'app/startup_failed.dart';
 import 'data/auth_service.dart';
+import 'data/brand_repository.dart';
 import 'data/connection/connection.dart';
 import 'data/recovery_key_repository.dart';
 import 'data/report_repository.dart';
@@ -36,7 +38,9 @@ Future<void> _start() async {
   final returns = ReturnsRepository(db, newId: newId);
   final shifts = ShiftRepository(db, newId: newId);
   final backup = await openBackupController(db, newId);
+  final brand = BrandController(BrandRepository(db, newId: newId));
   await stock.ensureCounter();
+  await brand.reload();
   final session = SessionController(auth: auth);
   runApp(
     PosApp(
@@ -51,6 +55,7 @@ Future<void> _start() async {
             ? null
             : RecoveryKeyRepository(db, appKeyStore!, newId: newId),
         backup: backup,
+        brand: brand,
         auth: auth,
         printer: const SystemLabelPrinter(),
         fonts: loadBundledLabelFonts,

@@ -136,7 +136,12 @@ class _BackupScreenState extends State<BackupScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Backups')),
+    appBar: AppBar(
+      title: Text(
+        'Backups · ${widget.services.currentBrand.displayName}',
+        key: const Key('backups-title'),
+      ),
+    ),
     body: _body(context),
   );
 

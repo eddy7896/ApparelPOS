@@ -172,9 +172,13 @@ class StockRepository {
 
   Future<void> setShopName({required Role? role, required String name}) async {
     require(role, Permission.manageSettings);
-    final clean = name.trim();
-    if (clean.isEmpty) {
-      throw ArgumentError.value(name, 'name', 'must not be blank');
+    final clean = cleanShopName(name);
+    if (clean == null) {
+      throw ArgumentError.value(
+        name,
+        'name',
+        'must be 1 to $maxShopNameLength characters, with no control characters',
+      );
     }
     await _db
         .into(_db.appSettings)
