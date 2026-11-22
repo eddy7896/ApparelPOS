@@ -30,6 +30,11 @@ abstract final class UiColors {
   static const Color amberBorder = Color(0xFFE8D9AE);
   static const Color amberInk = Color(0xFF6E3B00);
 
+  /// Out of stock, an error: red tints with dark red text.
+  static const Color dangerSoft = Color(0xFFFDE8E8);
+  static const Color dangerLine = Color(0xFFE0B4B6);
+  static const Color dangerInk = Color(0xFF8F1F24);
+
   /// The dimmed backdrop behind a popup.
   static const Color scrim = Color(0x8C18202F);
 }
