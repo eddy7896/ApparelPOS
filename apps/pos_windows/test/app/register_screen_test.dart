@@ -1,12 +1,12 @@
 // The billing register: scan, discounts with manager approval, payment, the
 // saved bill and printing. P2-4c.
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:core_domain/core_domain.dart';
 import 'package:drift/drift.dart' show Variable, driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pos_windows/app/app.dart';
 import 'package:pos_windows/app/label_printer.dart';
@@ -288,6 +288,34 @@ void main() {
       expect(textOf(tester, 'saved-change'), 'Change to give: ₹1.00');
       expect(await statusOf(barcodes[0]), 'SOLD');
     });
+    testWidgets('quick cash buttons offer round amounts and fill the cash', (
+      tester,
+    ) async {
+      await open(tester);
+      expect(find.byKey(const Key('quick-cash-500')), findsNothing);
+      await scan(tester, barcodes[0]); // ₹499
+      expect(find.byKey(const Key('quick-cash-500')), findsOneWidget);
+      expect(find.byKey(const Key('quick-cash-1000')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('quick-cash-1000')));
+      await tester.pump();
+      expect(textOf(tester, 'change-text'), 'Change to give: ₹501.00');
+      expect(canComplete(tester), isTrue);
+    });
+    testWidgets('the buttons are at least 48 by 48 for touch', (tester) async {
+      await open(tester);
+      await scan(tester, barcodes[0]);
+      for (final key in [
+        'exact-cash',
+        'quick-cash-500',
+        'complete-bill',
+        'discount-${barcodes[0]}',
+        'remove-${barcodes[0]}',
+      ]) {
+        final size = tester.getSize(find.byKey(Key(key)));
+        expect(size.height, greaterThanOrEqualTo(48), reason: key);
+        expect(size.width, greaterThanOrEqualTo(48), reason: key);
+      }
+    });
     testWidgets('Exact cash fills the total', (tester) async {
       await open(tester);
       await scan(tester, barcodes[0]);
@@ -494,6 +522,46 @@ void main() {
         String.fromCharCodes(printer.printed.single.sublist(0, 5)),
         '%PDF-',
       );
+    });
+    testWidgets('bill done is a popup over the register, not a new screen', (
+      tester,
+    ) async {
+      await open(tester);
+      expect(find.byKey(const Key('bill-done-popup')), findsNothing);
+      await scan(tester, barcodes[0]);
+      await tester.tap(find.byKey(const Key('exact-cash')));
+      await tester.pump();
+      await tapRunAsync(tester, 'complete-bill');
+      expect(find.byKey(const Key('bill-done-popup')), findsOneWidget);
+      // the register is still drawn behind it
+      expect(find.byKey(const Key('total-text')), findsOneWidget);
+      // and cannot be reached: tapping a button behind does nothing
+      await tester.tap(
+        find.byKey(const Key('complete-bill')),
+        warnIfMissed: false,
+      );
+      await tester.pump();
+      expect(await statusOf(barcodes[0]), 'SOLD');
+      await tester.tap(find.byKey(const Key('new-bill')));
+      await tester.pump();
+      expect(find.byKey(const Key('bill-done-popup')), findsNothing);
+    });
+    testWidgets('Enter on the popup starts the next bill', (tester) async {
+      await sellOneBill(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      expect(find.byKey(const Key('bill-done-popup')), findsNothing);
+      expect(textOf(tester, 'total-text'), '₹0.00');
+    });
+    testWidgets('P on the popup prints the bill', (tester) async {
+      await sellOneBill(tester);
+      await tester.runAsync(() async {
+        await tester.sendKeyEvent(LogicalKeyboardKey.keyP);
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+      });
+      await pump(tester);
+      expect(printer.printed.length, 1);
+      expect(find.byKey(const Key('bill-done-popup')), findsOneWidget);
     });
     testWidgets('New bill starts empty, ready to scan', (tester) async {
       await sellOneBill(tester);

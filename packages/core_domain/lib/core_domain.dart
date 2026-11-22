@@ -17,6 +17,7 @@ export 'src/payment.dart';
 export 'src/permissions.dart';
 export 'src/pricing.dart';
 export 'src/purchase.dart';
+export 'src/quick_cash.dart';
 export 'src/recovery_key.dart';
 export 'src/report_rules.dart';
 export 'src/return_rules.dart';
