@@ -47,6 +47,10 @@ class RegisterScreen extends StatelessWidget {
   );
 }
 
+/// How the customer is paying (the mock-up's payment card): one mode for the
+/// whole bill, or Split across cash, UPI and card.
+enum _PayMethod { cash, upi, card, split }
+
 class _Line {
   _Line(this.item);
   final SaleItem item;
@@ -106,6 +110,8 @@ class _RegisterPanelState extends State<RegisterPanel> {
 
   /// How many garments of the picked size and color to add at once.
   int _qty = 1;
+
+  _PayMethod _method = _PayMethod.cash;
   String? _savedCustomerName;
   String? _savedCustomerPhone;
 
@@ -172,11 +178,24 @@ class _RegisterPanelState extends State<RegisterPanel> {
 
   /// Typed payments; null when any box holds something that is not an amount.
   List<Payment>? get _payments {
+    // UPI or card for the whole bill: the app records the mode and the amount
+    // still to pay; the money is taken on the customer's phone or the machine.
+    if (_method == _PayMethod.upi || _method == _PayMethod.card) {
+      final due = _toPay;
+      return due.paise > 0
+          ? [
+              Payment(
+                _method == _PayMethod.upi ? PaymentMode.upi : PaymentMode.card,
+                due,
+              ),
+            ]
+          : [];
+    }
     final out = <Payment>[];
     for (final (mode, c) in [
       (PaymentMode.cash, _cash),
-      (PaymentMode.upi, _upi),
-      (PaymentMode.card, _card),
+      if (_method == _PayMethod.split) (PaymentMode.upi, _upi),
+      if (_method == _PayMethod.split) (PaymentMode.card, _card),
     ]) {
       final t = c.text.trim();
       if (t.isEmpty) {
@@ -551,6 +570,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
       ]) {
         c.clear();
       }
+      _method = _PayMethod.cash;
     });
     _barcodeFocus.requestFocus();
   }
@@ -962,6 +982,82 @@ class _RegisterPanelState extends State<RegisterPanel> {
     );
   }
 
+  /// One payment mode chip: the chosen one has a 2 dp outline in the main color.
+  Widget _methodChip(String key, String label, _PayMethod m) {
+    final scheme = Theme.of(context).colorScheme;
+    final on = _method == m;
+    return OutlinedButton(
+      key: Key('method-$key'),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(0, 52),
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        backgroundColor: on ? scheme.primaryContainer : Colors.white,
+        foregroundColor: on ? scheme.onPrimaryContainer : UiColors.ink,
+        side: BorderSide(
+          color: on ? scheme.primary : UiColors.lineStrong,
+          width: on ? 2 : 1,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      onPressed: () => _setMethod(m),
+      child: Text(label),
+    );
+  }
+
+  void _setMethod(_PayMethod m) {
+    setState(() {
+      _method = m;
+      if (m != _PayMethod.split) {
+        _upi.clear();
+        _card.clear();
+      }
+      if (m == _PayMethod.upi || m == _PayMethod.card) {
+        _cash.clear();
+      }
+    });
+  }
+
+  /// A cash amount chip (Exact or a round amount); lit when that amount is
+  /// what has been entered.
+  Widget _cashChip({
+    required String key,
+    required String label,
+    required bool enabled,
+    required Money amount,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final entered = parseRupees(_cash.text.trim());
+    final on =
+        enabled && entered != null && entered == amount && amount.paise > 0;
+    return OutlinedButton(
+      key: Key(key),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(0, 52),
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        backgroundColor: on ? scheme.primaryContainer : Colors.white,
+        side: BorderSide(
+          color: on ? scheme.primary : UiColors.lineStrong,
+          width: on ? 2 : 1,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      onPressed: !enabled
+          ? null
+          : () => setState(() {
+              final rupees = amount.paise ~/ 100;
+              final paise = amount.paise % 100;
+              _cash.text = paise == 0
+                  ? '$rupees'
+                  : '$rupees.${paise.toString().padLeft(2, '0')}';
+              if (_method != _PayMethod.split) {
+                _upi.clear();
+                _card.clear();
+              }
+            }),
+      child: Text(label),
+    );
+  }
+
   Widget _amountField(String key, String label, TextEditingController c) =>
       Padding(
         padding: const EdgeInsets.only(bottom: 8),
@@ -981,181 +1077,271 @@ class _RegisterPanelState extends State<RegisterPanel> {
   Widget _right(BuildContext context) {
     final settlement = _settlement;
     final problem = _paymentProblem;
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
-              borderRadius: BorderRadius.circular(14),
-            ),
+    // The total and payment scroll; Complete bill stays pinned at the bottom
+    // so it is always in reach (the mock-up's right column).
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  'Total to pay',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onPrimary,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Total to pay',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
+                      ),
+                      Text(
+                        formatRupees(_total),
+                        key: const Key('total-text'),
+                        style: Theme.of(context).textTheme.displayMedium
+                            ?.copyWith(
+                              color: Theme.of(context).colorScheme.onPrimary,
+                              fontWeight: FontWeight.w800,
+                            ),
+                      ),
+                      Text(
+                        _lines.isEmpty
+                            ? 'Scan the first tag to begin.'
+                            : '${_lines.length} ${_lines.length == 1 ? 'garment' : 'garments'}',
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Text(
-                  formatRupees(_total),
-                  key: const Key('total-text'),
-                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onPrimary,
-                    fontWeight: FontWeight.w800,
+                for (final (n, used) in _noteUses)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Credit note ${n.code}: -${formatRupees(used)} '
+                            '(${formatRupees(n.balance - used)} stays on it)',
+                            key: Key('note-applied-${n.code}'),
+                          ),
+                        ),
+                        IconButton(
+                          key: Key('note-remove-${n.code}'),
+                          tooltip: 'Remove credit note',
+                          icon: const Icon(Icons.close),
+                          onPressed: () => setState(() => _notes.remove(n)),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: UiColors.line),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        'How is the customer paying?',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: UiColors.inkSoft,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          _methodChip('cash', 'Cash', _PayMethod.cash),
+                          _methodChip('upi', 'UPI', _PayMethod.upi),
+                          _methodChip('card', 'Card', _PayMethod.card),
+                          _methodChip('split', 'Split', _PayMethod.split),
+                        ],
+                      ),
+                      if (_method == _PayMethod.cash ||
+                          _method == _PayMethod.split) ...[
+                        const SizedBox(height: 14),
+                        const Text(
+                          'Cash received',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: UiColors.inkSoft,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _cashChip(
+                              key: 'exact-cash',
+                              label: 'Exact',
+                              enabled: _lines.isNotEmpty,
+                              amount: _toPay.paise < 0 ? Money.zero : _toPay,
+                            ),
+                            if (_lines.isNotEmpty)
+                              for (final amount in quickCashAmounts(_toPay))
+                                _cashChip(
+                                  key: 'quick-cash-${amount.paise ~/ 100}',
+                                  label: formatRupees(amount),
+                                  enabled: true,
+                                  amount: amount,
+                                ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        _amountField(
+                          'cash-field',
+                          'Or type the cash received',
+                          _cash,
+                        ),
+                      ],
+                      if (_method == _PayMethod.split) ...[
+                        _amountField('upi-field', 'UPI', _upi),
+                        _amountField('card-field', 'Card', _card),
+                      ],
+                      if (_method == _PayMethod.upi ||
+                          _method == _PayMethod.card) ...[
+                        const SizedBox(height: 14),
+                        Container(
+                          key: const Key('non-cash-note'),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: UiColors.canvas,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Text(
+                            "Take the payment on the customer's phone or card "
+                            'machine, then press Complete bill. The app records '
+                            'the mode only.',
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: UiColors.inkSoft,
+                            ),
+                          ),
+                        ),
+                      ],
+                      if (problem != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: Text(
+                            problem,
+                            key: const Key('payment-problem'),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        )
+                      else if (_lines.isNotEmpty &&
+                          settlement != null &&
+                          settlement.change.paise > 0)
+                        Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(top: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: UiColors.successSoft,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            'Change to give: ${formatRupees(settlement.change)}',
+                            key: const Key('change-text'),
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(
+                                  color: UiColors.successInk,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                          ),
+                        )
+                      else if (_lines.isNotEmpty &&
+                          settlement != null &&
+                          !settlement.isPaid)
+                        Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(top: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: UiColors.amberSoft,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            'Still due: ${formatRupees(settlement.due)}',
+                            key: const Key('due-text'),
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  color: UiColors.amberInk,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-                Text(
-                  _lines.isEmpty
-                      ? 'Scan the first tag to begin.'
-                      : '${_lines.length} ${_lines.length == 1 ? 'garment' : 'garments'}',
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Theme.of(context).colorScheme.onPrimary,
-                  ),
+                const SizedBox(height: 12),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        key: const Key('customer-name'),
+                        controller: _customerName,
+                        decoration: const InputDecoration(
+                          labelText: 'Customer name (optional)',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        key: const Key('customer-phone'),
+                        controller: _customerPhone,
+                        decoration: const InputDecoration(
+                          labelText: 'Phone (optional)',
+                        ),
+                        keyboardType: TextInputType.phone,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          for (final (n, used) in _noteUses)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Credit note ${n.code}: -${formatRupees(used)} '
-                      '(${formatRupees(n.balance - used)} stays on it)',
-                      key: Key('note-applied-${n.code}'),
-                    ),
-                  ),
-                  IconButton(
-                    key: Key('note-remove-${n.code}'),
-                    tooltip: 'Remove credit note',
-                    icon: const Icon(Icons.close),
-                    onPressed: () => setState(() => _notes.remove(n)),
-                  ),
-                ],
-              ),
-            ),
-          const SizedBox(height: 16),
-          const Text(
-            'How is the customer paying?',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: UiColors.inkSoft,
-            ),
-          ),
-          const SizedBox(height: 8),
-          _amountField('cash-field', 'Cash received', _cash),
-          _amountField('upi-field', 'UPI', _upi),
-          _amountField('card-field', 'Card', _card),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              OutlinedButton(
-                key: const Key('exact-cash'),
-                onPressed: _lines.isEmpty
-                    ? null
-                    : () => setState(() {
-                        final due = _toPay.paise < 0 ? Money.zero : _toPay;
-                        _cash.text =
-                            (due.paise ~/ 100).toString() +
-                            ((due.paise % 100) == 0
-                                ? ''
-                                : '.${(due.paise % 100).toString().padLeft(2, '0')}');
-                        _upi.clear();
-                        _card.clear();
-                      }),
-                child: const Text('Exact cash'),
-              ),
-              if (_lines.isNotEmpty)
-                for (final amount in quickCashAmounts(_toPay))
-                  OutlinedButton(
-                    key: Key('quick-cash-${amount.paise ~/ 100}'),
-                    onPressed: () => setState(() {
-                      _cash.text = (amount.paise ~/ 100).toString();
-                      _upi.clear();
-                      _card.clear();
-                    }),
-                    child: Text(formatRupees(amount)),
-                  ),
-            ],
-          ),
-          if (problem != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Text(
-                problem,
-                key: const Key('payment-problem'),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            )
-          else if (_lines.isNotEmpty &&
-              settlement != null &&
-              settlement.change.paise > 0)
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.only(top: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: UiColors.successSoft,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                'Change to give: ${formatRupees(settlement.change)}',
-                key: const Key('change-text'),
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: UiColors.successInk,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            )
-          else if (_lines.isNotEmpty &&
-              settlement != null &&
-              !settlement.isPaid)
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.only(top: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: UiColors.amberSoft,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                'Still due: ${formatRupees(settlement.due)}',
-                key: const Key('due-text'),
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: UiColors.amberInk,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          const SizedBox(height: 12),
-          TextField(
-            key: const Key('customer-name'),
-            controller: _customerName,
-            decoration: const InputDecoration(
-              labelText: 'Customer name (optional)',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            key: const Key('customer-phone'),
-            controller: _customerPhone,
-            decoration: const InputDecoration(
-              labelText: 'Customer phone (optional)',
-              border: OutlineInputBorder(),
-            ),
-            keyboardType: TextInputType.phone,
-          ),
-          const SizedBox(height: 16),
+        ),
+        const SizedBox(height: 12),
+        ...[
           FilledButton(
             key: const Key('complete-bill'),
             style: FilledButton.styleFrom(
@@ -1223,7 +1409,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
             ],
           ),
         ],
-      ),
+      ],
     );
   }
 }

@@ -360,6 +360,185 @@ void main() {
     });
   });
 
+  group('the payment card (mock-up board 3)', () {
+    Future<void> choose(WidgetTester tester, String m) async {
+      await tester.tap(find.byKey(Key('method-$m')));
+      await tester.pump();
+    }
+
+    testWidgets(
+      'Cash, UPI, Card and Split chips; Cash is chosen to begin with',
+      (tester) async {
+        await open(tester);
+        for (final m in ['cash', 'upi', 'card', 'split']) {
+          expect(find.byKey(Key('method-$m')), findsOneWidget, reason: m);
+        }
+        expect(find.byKey(const Key('cash-field')), findsOneWidget);
+        expect(find.byKey(const Key('upi-field')), findsNothing);
+        expect(find.byKey(const Key('card-field')), findsNothing);
+        expect(find.byKey(const Key('non-cash-note')), findsNothing);
+      },
+    );
+
+    testWidgets('the chosen chip has the 2 dp outline in the main color', (
+      tester,
+    ) async {
+      await open(tester);
+      OutlinedButton chip(String m) =>
+          tester.widget<OutlinedButton>(find.byKey(Key('method-$m')));
+      BorderSide? side(OutlinedButton b) => b.style?.side?.resolve({});
+      expect(side(chip('cash'))!.width, 2);
+      expect(side(chip('upi'))!.width, 1);
+      await choose(tester, 'upi');
+      expect(side(chip('upi'))!.width, 2);
+      expect(side(chip('cash'))!.width, 1);
+    });
+
+    testWidgets(
+      'UPI pays the whole bill: no amount to type, the mock-up note shows, Complete is ready',
+      (tester) async {
+        await open(tester);
+        await scan(tester, barcodes[0]);
+        expect(canComplete(tester), isFalse); // nothing paid yet in cash
+        await choose(tester, 'upi');
+        expect(find.byKey(const Key('non-cash-note')), findsOneWidget);
+        expect(find.byKey(const Key('cash-field')), findsNothing);
+        expect(find.byKey(const Key('quick-cash-500')), findsNothing);
+        expect(canComplete(tester), isTrue);
+        await tapRunAsync(tester, 'complete-bill');
+        final rows = await tester.runAsync(
+          () => db
+              .customSelect('SELECT mode, amount_paise FROM bill_payments')
+              .get(),
+        );
+        expect(
+          {
+            for (final r in rows!)
+              r.read<String>('mode'): r.read<int>('amount_paise'),
+          },
+          {'upi': 49900},
+        );
+      },
+    );
+
+    testWidgets('Card pays the whole bill as card', (tester) async {
+      await open(tester);
+      await scan(tester, barcodes[0]);
+      await scan(tester, barcodes[1]);
+      await choose(tester, 'card');
+      await tapRunAsync(tester, 'complete-bill');
+      final rows = await tester.runAsync(
+        () => db
+            .customSelect('SELECT mode, amount_paise FROM bill_payments')
+            .get(),
+      );
+      expect(
+        {
+          for (final r in rows!)
+            r.read<String>('mode'): r.read<int>('amount_paise'),
+        },
+        {'card': 99800},
+      );
+    });
+
+    testWidgets('UPI follows the bill: a garment added later is included', (
+      tester,
+    ) async {
+      await open(tester);
+      await scan(tester, barcodes[0]);
+      await choose(tester, 'upi');
+      await scan(tester, barcodes[1]);
+      await tapRunAsync(tester, 'complete-bill');
+      final rows = await tester.runAsync(
+        () => db.customSelect('SELECT amount_paise FROM bill_payments').get(),
+      );
+      expect(rows!.single.read<int>('amount_paise'), 99800);
+    });
+
+    testWidgets('going back to Cash clears the UPI choice', (tester) async {
+      await open(tester);
+      await scan(tester, barcodes[0]);
+      await choose(tester, 'upi');
+      await choose(tester, 'cash');
+      expect(find.byKey(const Key('non-cash-note')), findsNothing);
+      expect(canComplete(tester), isFalse);
+    });
+
+    testWidgets('Split brings back the cash, UPI and card amounts', (
+      tester,
+    ) async {
+      await open(tester);
+      await choose(tester, 'split');
+      expect(find.byKey(const Key('cash-field')), findsOneWidget);
+      expect(find.byKey(const Key('upi-field')), findsOneWidget);
+      expect(find.byKey(const Key('card-field')), findsOneWidget);
+      expect(find.byKey(const Key('exact-cash')), findsOneWidget);
+    });
+
+    testWidgets('the cash chip that matches the amount is lit', (tester) async {
+      await open(tester);
+      await scan(tester, barcodes[0]);
+      await tester.tap(find.byKey(const Key('quick-cash-500')));
+      await tester.pump();
+      BorderSide? side(String k) => tester
+          .widget<OutlinedButton>(find.byKey(Key(k)))
+          .style
+          ?.side
+          ?.resolve({});
+      expect(side('quick-cash-500')!.width, 2);
+      expect(side('quick-cash-1000')!.width, 1);
+    });
+
+    testWidgets('going to UPI and back leaves no stale cash amount', (
+      tester,
+    ) async {
+      await open(tester);
+      await scan(tester, barcodes[0]);
+      await type(tester, 'cash-field', '300');
+      await choose(tester, 'upi');
+      await choose(tester, 'cash');
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const Key('cash-field')))
+            .controller!
+            .text,
+        '',
+      );
+    });
+
+    testWidgets(
+      'Complete bill sits at the bottom of the right column, not just after the fields',
+      (tester) async {
+        await open(tester); // window is 1000 high
+        final r = tester.getRect(find.byKey(const Key('complete-bill')));
+        expect(r.bottom, greaterThan(900));
+      },
+    );
+
+    testWidgets('a new bill starts on Cash again', (tester) async {
+      await open(tester);
+      await scan(tester, barcodes[0]);
+      await choose(tester, 'upi');
+      await tapRunAsync(tester, 'complete-bill');
+      await tester.tap(find.byKey(const Key('new-bill')));
+      await tester.pump();
+      expect(find.byKey(const Key('cash-field')), findsOneWidget);
+      expect(find.byKey(const Key('non-cash-note')), findsNothing);
+    });
+
+    testWidgets('Complete bill is always on screen, even on a short window', (
+      tester,
+    ) async {
+      await open(tester);
+      tester.view.physicalSize = const Size(1500, 760);
+      await scan(tester, barcodes[0]);
+      await tester.pump();
+      final r = tester.getRect(find.byKey(const Key('complete-bill')));
+      expect(r.bottom, lessThanOrEqualTo(760));
+      expect(r.top, greaterThanOrEqualTo(0));
+    });
+  });
+
   group('paying', () {
     testWidgets('not enough cash keeps Complete off and shows what is due', (
       tester,
@@ -425,6 +604,8 @@ void main() {
     ) async {
       await open(tester);
       await scan(tester, barcodes[0]);
+      await tester.tap(find.byKey(const Key('method-split')));
+      await tester.pump();
       await type(tester, 'upi-field', '600');
       expect(find.byKey(const Key('payment-problem')), findsOneWidget);
       expect(canComplete(tester), isFalse);
@@ -432,6 +613,8 @@ void main() {
     testWidgets('a split of UPI and cash is saved per mode', (tester) async {
       await open(tester);
       await scan(tester, barcodes[0]);
+      await tester.tap(find.byKey(const Key('method-split')));
+      await tester.pump();
       await type(tester, 'upi-field', '300');
       await type(tester, 'cash-field', '199');
       expect(canComplete(tester), isTrue);
