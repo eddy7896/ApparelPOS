@@ -29,6 +29,8 @@ final class DailyReport {
     required this.topStyles,
     required this.costOfGoods,
     required this.profit,
+    required this.billsByHour,
+    required this.salesByHour,
   });
 
   final ShopDay day;
@@ -57,6 +59,10 @@ final class DailyReport {
   /// Shifts closed during the day, with their variance.
   final List<ShiftCloseReport> shiftCloses;
   final List<StyleSales> topStyles;
+
+  /// Bills made and what they came to in each hour (0 to 23) of the day.
+  final List<int> billsByHour;
+  final List<Money> salesByHour;
 
   /// Null unless the person may see margins.
   final Money? costOfGoods;
@@ -188,6 +194,25 @@ class ReportRepository {
         ),
     ]);
 
+    // Bills and sales in each hour of the shop day (India time).
+    final hourRows = await _db
+        .customSelect(
+          'SELECT CAST(strftime(\'%H\', billed_at + ${shopUtcOffset.inSeconds}, \'unixepoch\') AS INTEGER) AS h, '
+          'COUNT(*) AS n, COALESCE(SUM(total_paise), 0) AS t FROM bills '
+          'WHERE billed_at >= ? AND billed_at < ? GROUP BY h',
+          variables: [
+            Variable<DateTime>(day.startUtc),
+            Variable<DateTime>(day.endUtc),
+          ],
+        )
+        .get();
+    final billsByHour = List<int>.filled(24, 0);
+    final salesByHour = List<Money>.filled(24, Money.zero);
+    for (final r in hourRows) {
+      billsByHour[r.read<int>('h')] = r.read<int>('n');
+      salesByHour[r.read<int>('h')] = Money(r.read<int>('t'));
+    }
+
     final closes = await _closesOn(day);
     final net = netSales(sales: salesTotal, refunds: refundsTotal);
 
@@ -215,6 +240,8 @@ class ReportRepository {
       topStyles: top,
       costOfGoods: cost,
       profit: profit,
+      billsByHour: billsByHour,
+      salesByHour: salesByHour,
     );
   }
 

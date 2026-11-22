@@ -248,6 +248,147 @@ void main() {
     );
   });
 
+  group('charts and tables', () {
+    testWidgets('headline tiles: net sales, sales, refunded and profit', (
+      tester,
+    ) async {
+      await tester.runAsync(busyDay);
+      await openReport(tester);
+      expect(textOf(tester, 'kpi-net'), '₹1,488.30');
+      expect(textOf(tester, 'kpi-sales'), '₹3,286.30');
+      expect(find.text('3 bills, 4 garments'), findsOneWidget);
+      expect(textOf(tester, 'kpi-refunded'), '₹1,798.00');
+      expect(find.text('2 returns'), findsOneWidget);
+      expect(find.byKey(const Key('kpi-profit')), findsOneWidget);
+    });
+
+    testWidgets(
+      'bills through the day: the readout starts on the busiest hour and follows a tap',
+      (tester) async {
+        await tester.runAsync(busyDay); // bills at 10:30, 11:30 and 12:30
+        await openReport(tester);
+        expect(find.byKey(const Key('hours-chart')), findsOneWidget);
+        expect(
+          textOf(tester, 'hours-readout'),
+          startsWith('Busiest: 10 am to 11 am, 1 bills, ₹1,798.00'),
+        );
+        await tester.tap(find.byKey(const Key('hour-12')));
+        await tester.pump();
+        expect(
+          textOf(tester, 'hours-readout'),
+          '12 pm to 1 pm: 1 bills, ₹1,039.20',
+        );
+        await tester.tap(find.byKey(const Key('hour-15')));
+        await tester.pump();
+        expect(textOf(tester, 'hours-readout'), '3 pm to 4 pm: 0 bills, ₹0.00');
+      },
+    );
+
+    testWidgets(
+      'money taken is a ranked bar per mode with its share, and matches the daybook',
+      (tester) async {
+        await tester.runAsync(busyDay);
+        await openReport(tester);
+        expect(find.byKey(const Key('chart-money-cash')), findsOneWidget);
+        expect(find.byKey(const Key('chart-money-upi')), findsOneWidget);
+        expect(find.byKey(const Key('chart-money-card')), findsOneWidget);
+        expect(find.byKey(const Key('chart-money-credit_note')), findsNothing);
+        expect(find.text('54%'), findsOneWidget); // 1798 of 3286.30
+        expect(find.byKey(const Key('chart-daybook-ok')), findsOneWidget);
+        final cash = tester
+            .getTopLeft(find.byKey(const Key('chart-money-cash')))
+            .dy;
+        final card = tester
+            .getTopLeft(find.byKey(const Key('chart-money-card')))
+            .dy;
+        final upi = tester
+            .getTopLeft(find.byKey(const Key('chart-money-upi')))
+            .dy;
+        expect(cash, lessThan(card));
+        expect(card, lessThan(upi)); // largest first
+      },
+    );
+
+    testWidgets('refunds, best sellers and cash over and short are drawn', (
+      tester,
+    ) async {
+      await tester.runAsync(busyDay);
+      await openReport(tester);
+      expect(find.byKey(const Key('chart-refund-credit_note')), findsOneWidget);
+      expect(find.byKey(const Key('chart-refund-cash')), findsOneWidget);
+      expect(find.byKey(const Key('chart-style-Cotton Kurta')), findsOneWidget);
+      expect(find.byKey(const Key('chart-style-Denim Jeans')), findsOneWidget);
+      expect(find.byKey(const Key('close-0')), findsOneWidget);
+      expect(find.text('-₹799.00'), findsOneWidget); // counted 2500 of 3299
+    });
+
+    testWidgets(
+      'Show charts as tables swaps every chart for its numbers and back',
+      (tester) async {
+        await tester.runAsync(busyDay);
+        await openReport(tester);
+        await tester.tap(find.byKey(const Key('report-table-toggle')));
+        await tester.pump();
+        for (final k in [
+          'table-hours',
+          'table-money',
+          'table-refunds',
+          'table-styles',
+          'table-closes',
+        ]) {
+          expect(find.byKey(Key(k)), findsOneWidget, reason: k);
+        }
+        expect(find.byKey(const Key('hours-chart')), findsNothing);
+        expect(find.byKey(const Key('chart-money-cash')), findsNothing);
+        expect(find.text('Total taken'), findsWidgets);
+        expect(find.text('10 am to 11 am'), findsOneWidget);
+        expect(find.text('Short ₹799.00'), findsWidgets);
+        await tester.tap(find.byKey(const Key('report-table-toggle')));
+        await tester.pump();
+        expect(find.byKey(const Key('hours-chart')), findsOneWidget);
+        expect(find.byKey(const Key('table-money')), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'an empty day says so in each chart, and the table toggle still works',
+      (tester) async {
+        await openReport(tester);
+        expect(find.byKey(const Key('chart-no-bills')), findsOneWidget);
+        expect(find.byKey(const Key('chart-no-money')), findsOneWidget);
+        expect(find.byKey(const Key('chart-no-refunds')), findsOneWidget);
+        expect(find.byKey(const Key('chart-no-sales')), findsOneWidget);
+        expect(find.byKey(const Key('chart-no-closes')), findsOneWidget);
+        await tester.tap(find.byKey(const Key('report-table-toggle')));
+        await tester.pump();
+        expect(find.byKey(const Key('chart-no-bills')), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'the chart cards keep their place when the day changes, with the table choice kept',
+      (tester) async {
+        await tester.runAsync(busyDay);
+        await openReport(tester);
+        await tester.tap(find.byKey(const Key('report-table-toggle')));
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('day-prev')));
+        await slide(tester);
+        expect(find.byKey(const Key('report-table-toggle')), findsOneWidget);
+        expect(find.text('Show the charts'), findsOneWidget);
+      },
+    );
+
+    testWidgets('a narrow window lays out without errors', (tester) async {
+      await tester.runAsync(busyDay);
+      tester.view.physicalSize = const Size(700, 2400);
+      await openReport(tester);
+      tester.view.physicalSize = const Size(700, 2400);
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   group('the figures', () {
     testWidgets('sales, bills, garments, discounts and markdowns', (
       tester,
@@ -325,6 +466,7 @@ void main() {
       await tester.runAsync(busyDay);
       await openReport(tester);
       expect(find.byKey(const Key('mismatch-warning')), findsNothing);
+      expect(find.byKey(const Key('chart-daybook-ok')), findsOneWidget);
     });
     testWidgets('a daybook row nothing explains shows a warning', (
       tester,
@@ -340,6 +482,10 @@ void main() {
       });
       await openReport(tester);
       expect(find.byKey(const Key('mismatch-warning')), findsOneWidget);
+      expect(
+        find.byKey(const Key('chart-daybook-ok')),
+        findsNothing,
+      ); // never says it matches
     });
   });
 

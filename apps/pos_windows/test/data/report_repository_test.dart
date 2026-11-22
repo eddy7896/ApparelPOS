@@ -196,6 +196,43 @@ void main() {
         RefundMode.creditNote: Money(129900),
       });
     });
+    test('bills and sales by hour of the shop day (India time)', () async {
+      await busyDay(); // bills at 10:30, 11:30 and 12:30 India
+      final r = await report.dailyReport(role: Role.owner, day: day);
+      expect(r.billsByHour.length, 24);
+      expect(r.salesByHour.length, 24);
+      expect(r.billsByHour[10], 1);
+      expect(r.billsByHour[11], 1);
+      expect(r.billsByHour[12], 1);
+      expect(r.billsByHour.reduce((a, b) => a + b), 3);
+      expect(r.salesByHour[10], Money(179800));
+      expect(r.salesByHour[11], Money(44910));
+      expect(r.salesByHour[12], Money(103920));
+      expect(
+        r.salesByHour.fold<Money>(Money.zero, (a, b) => a + b),
+        r.salesTotal,
+      );
+    });
+
+    test('a bill just before India midnight is in hour 23, just after in hour 0 of the next day', () async {
+      await sell(
+        DateTime.utc(2026, 11, 20, 18, 29, 59),
+        [BillLineInput(kurta[0])],
+        [Payment(PaymentMode.cash, Money(49900))],
+      );
+      await sell(
+        DateTime.utc(2026, 11, 20, 18, 30),
+        [BillLineInput(kurta[1])],
+        [Payment(PaymentMode.cash, Money(49900))],
+      );
+      final a = await report.dailyReport(role: Role.owner, day: day);
+      final b = await report.dailyReport(role: Role.owner, day: nextDay);
+      expect(a.billsByHour[23], 1);
+      expect(a.billsByHour[0], 0);
+      expect(b.billsByHour[0], 1);
+      expect(b.billsByHour[23], 0);
+    });
+
     test('returns taken and the net sales', () async {
       await busyDay();
       final r = await report.dailyReport(role: Role.owner, day: day);
@@ -378,6 +415,8 @@ void main() {
       );
       expect(r.billCount, 0);
       expect(r.salesTotal, Money.zero);
+      expect(r.billsByHour, List<int>.filled(24, 0));
+      expect(r.salesByHour, List<Money>.filled(24, Money.zero));
       expect(r.moneyIn, isEmpty);
       expect(r.refundsByMode, isEmpty);
       expect(r.topStyles, isEmpty);
