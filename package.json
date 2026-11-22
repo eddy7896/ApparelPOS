@@ -7,7 +7,8 @@
     "check:project-rules": "node tools/checks/project-rules.mjs",
     "eval:hallucination": "node evals/grade-answers.mjs evals/hallucination-golden.json evals/ideal-answers.json",
     "check:branch": "node tools/checks/branch-policy.mjs --config tools/checks/branch-policy.json",
-    "test:checks": "node --test tools/checks/scripts.test.mjs tools/checks/project-rules.test.mjs tools/checks/branch-policy-simple.test.mjs tools/checks/data-location.test.mjs",
-    "check:data-location": "node tools/checks/data-location.mjs"
+    "test:checks": "node --test tools/checks/scripts.test.mjs tools/checks/project-rules.test.mjs tools/checks/branch-policy-simple.test.mjs tools/checks/data-location.test.mjs tools/release/changelog.test.mjs",
+    "check:data-location": "node tools/checks/data-location.mjs",
+    "check:changelog": "node tools/release/changelog.mjs --check"
   }
 }

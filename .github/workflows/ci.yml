@@ -28,6 +28,7 @@ jobs:
       - run: npm run check:drift
       - run: npm run check:project-rules
       - run: npm run check:data-location
+      - run: npm run check:changelog
       - run: npm run eval:hallucination
       - run: npm run test:checks
   dart-flutter-windows:
@@ -61,59 +62,20 @@ jobs:
       - name: pos_windows build (Windows release)
         working-directory: apps/pos_windows
         run: flutter build windows --release
-      - name: Installer - put the Visual C++ runtime next to the app
+      - name: Installer - build Setup.exe and the zip
         shell: pwsh
-        run: |
-          $rel = "apps/pos_windows/build/windows/x64/runner/Release"
-          foreach ($dll in 'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll') {
-            $src = Join-Path $env:SystemRoot "System32\$dll"
-            if (-not (Test-Path $src)) { throw "$dll was not found in System32" }
-            Copy-Item $src $rel
-          }
-          Get-ChildItem $rel -Filter *.dll | Select-Object Name, Length | Format-Table
-      - name: Installer - build Setup.exe with Inno Setup
+        run: ./tools/release/build-installer.ps1
+      - name: Installer - install, start the app, uninstall (smoke test)
         shell: pwsh
-        run: |
-          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
-          if (-not (Test-Path $iscc)) {
-            choco install innosetup -y --no-progress
-          }
-          if (-not (Test-Path $iscc)) { throw "Inno Setup is not installed" }
-          $match = Select-String -Path apps/pos_windows/pubspec.yaml -Pattern '^version:\s*([0-9]+\.[0-9]+\.[0-9]+)'
-          $version = $match.Matches[0].Groups[1].Value
-          & $iscc "/DAppVersion=$version" installer/apparel_pos.iss
-          if ($LASTEXITCODE -ne 0) { throw "ISCC failed with $LASTEXITCODE" }
-          Get-ChildItem build/installer | Select-Object Name, Length | Format-Table
-          Get-FileHash build/installer/*.exe -Algorithm SHA256 | Format-List Hash, Path
-      - name: Installer - install, check the files, start the app, uninstall
-        shell: pwsh
-        run: |
-          $setup = (Get-ChildItem build/installer/ApparelPoS-Setup-*.exe).FullName
-          $dir = Join-Path $env:RUNNER_TEMP 'ApparelPoS-test'
-          $p = Start-Process $setup -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', "/DIR=`"$dir`"", "/LOG=`"$env:RUNNER_TEMP\setup.log`"" -Wait -PassThru
-          if ($p.ExitCode -ne 0) { Get-Content "$env:RUNNER_TEMP\setup.log" -Tail 40; throw "Setup exited with $($p.ExitCode)" }
-          Get-ChildItem $dir | Select-Object Name, Length | Format-Table
-          # the SQLite library comes from the sqlite3 build hook (SQLCipher); list it, and require one
-          if (-not (Get-ChildItem $dir -Filter *.dll | Where-Object { $_.Name -match 'sqlite3|sqlcipher' })) { throw "no SQLite/SQLCipher library was installed" }
-          foreach ($f in 'pos_windows.exe', 'flutter_windows.dll', 'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll', 'unins000.exe') {
-            if (-not (Test-Path (Join-Path $dir $f))) {
-              Get-ChildItem $dir | Select-Object Name | Format-Table
-              throw "$f is missing after install"
-            }
-          }
-          if (-not (Test-Path (Join-Path $dir 'data\flutter_assets'))) { throw "the app data folder is missing after install" }
-          $app = Start-Process (Join-Path $dir 'pos_windows.exe') -PassThru
-          Start-Sleep -Seconds 10
-          if ($app.HasExited) { throw "the installed app stopped within 10 seconds (exit code $($app.ExitCode))" }
-          Stop-Process -Id $app.Id -Force
-          $u = Start-Process (Join-Path $dir 'unins000.exe') -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART' -Wait -PassThru
-          Start-Sleep -Seconds 3
-          if (Test-Path (Join-Path $dir 'pos_windows.exe')) { throw "the app is still there after uninstall" }
+        run: ./tools/release/smoke-test-installer.ps1
       - name: Installer - keep Setup.exe for download
         uses: actions/upload-artifact@v4
         with:
           name: ApparelPoS-Setup
-          path: build/installer/ApparelPoS-Setup-*.exe
+          path: |
+            build/installer/ApparelPoS-Setup-*.exe
+            build/installer/ApparelPoS-*-windows-x64.zip
+            build/installer/SHA256SUMS.txt
           retention-days: 14
       - name: pos_windows build (web, development preview)
         working-directory: apps/pos_windows
