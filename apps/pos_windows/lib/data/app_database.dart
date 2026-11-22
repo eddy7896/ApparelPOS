@@ -398,6 +398,31 @@ class ShiftCloses extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// A break inside a shift (the Pause button, UX-3): the shift stays open, the
+/// counter is locked. Never edited; the end of a break is a separate row in
+/// `shift_break_ends`, so a break with no end row is still going.
+@DataClassName('ShiftBreakRow')
+class ShiftBreaks extends Table {
+  TextColumn get id => text()();
+  TextColumn get shiftId => text().references(Shifts, #id)();
+  DateTimeColumn get startedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// The end of a break (one per break).
+@DataClassName('ShiftBreakEndRow')
+class ShiftBreakEnds extends Table {
+  TextColumn get id => text()();
+  TextColumn get breakId =>
+      text().customConstraint('NOT NULL UNIQUE REFERENCES shift_breaks (id)')();
+  DateTimeColumn get endedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// The money ledger. One row per payment mode of each bill (positive) and per
 /// refund (negative), written in the same transaction as the sale or return.
 /// Never edited; a mistake is reversed by a new row.
@@ -444,6 +469,8 @@ class Daybook extends Table {
     ReturnLines,
     Shifts,
     ShiftCloses,
+    ShiftBreaks,
+    ShiftBreakEnds,
     Daybook,
   ],
 )
@@ -451,7 +478,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -501,6 +528,11 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(returns, returns.shiftId);
         }
       }
+      if (from < 7 && to >= 7) {
+        // version 7: breaks inside a shift (UX-3)
+        await m.createTable(shiftBreaks);
+        await m.createTable(shiftBreakEnds);
+      }
     },
     beforeOpen: (details) async {
       final before = details.versionBefore;
@@ -531,6 +563,8 @@ class AppDatabase extends _$AppDatabase {
         'return_lines',
         'shifts',
         'shift_closes',
+        'shift_breaks',
+        'shift_break_ends',
         'daybook',
       ]) {
         if (!existing.contains(table)) {

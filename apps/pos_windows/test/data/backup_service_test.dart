@@ -288,7 +288,7 @@ void main() {
             backup: File('${usb.path}/${BackupName.format(now)}'),
             target: dbB,
             keys: MemoryKeyStore(),
-            appSchemaVersion: 6,
+            appSchemaVersion: 7,
           ),
           throwsA(isA<RestoreKeyRequired>()),
         );
@@ -323,7 +323,7 @@ void main() {
           target: File('${root.path}/b.db'),
           keys: MemoryKeyStore(),
           recoveryKey: newDatabaseKey(Random(1)),
-          appSchemaVersion: 6,
+          appSchemaVersion: 7,
         ),
         throwsA(anyOf(isA<WrongDatabaseKey>(), isA<BackupFailed>())),
       );
@@ -366,7 +366,7 @@ void main() {
         backup: backup,
         target: dbA,
         keys: keysA,
-        appSchemaVersion: 6,
+        appSchemaVersion: 7,
         now: DateTime.utc(2026, 11, 21, 12),
       );
       final aside = result.beforeRestoreCopy!;
@@ -399,7 +399,7 @@ void main() {
           backup: broken,
           target: dbA,
           keys: keysA,
-          appSchemaVersion: 6,
+          appSchemaVersion: 7,
         ),
         throwsA(isA<Object>()),
       );
@@ -422,7 +422,7 @@ void main() {
             backup: backup,
             target: dbA,
             keys: keysA,
-            appSchemaVersion: 6,
+            appSchemaVersion: 7,
             afterMovedAside: () async => throw StateError('disk full'),
           ),
           throwsA(isA<StateError>()),
@@ -453,7 +453,7 @@ void main() {
           target: dbA,
           keys: other,
           recoveryKey: typed,
-          appSchemaVersion: 6,
+          appSchemaVersion: 7,
         ),
         throwsA(isA<RestoreKeyMismatch>()),
       );

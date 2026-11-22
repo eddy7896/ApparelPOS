@@ -9669,6 +9669,533 @@ class ShiftClosesCompanion extends UpdateCompanion<ShiftCloseRow> {
   }
 }
 
+class $ShiftBreaksTable extends ShiftBreaks
+    with TableInfo<$ShiftBreaksTable, ShiftBreakRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ShiftBreaksTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _shiftIdMeta = const VerificationMeta(
+    'shiftId',
+  );
+  @override
+  late final GeneratedColumn<String> shiftId = GeneratedColumn<String>(
+    'shift_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES shifts (id)',
+    ),
+  );
+  static const VerificationMeta _startedAtMeta = const VerificationMeta(
+    'startedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startedAt = GeneratedColumn<DateTime>(
+    'started_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, shiftId, startedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'shift_breaks';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ShiftBreakRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('shift_id')) {
+      context.handle(
+        _shiftIdMeta,
+        shiftId.isAcceptableOrUnknown(data['shift_id']!, _shiftIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_shiftIdMeta);
+    }
+    if (data.containsKey('started_at')) {
+      context.handle(
+        _startedAtMeta,
+        startedAt.isAcceptableOrUnknown(data['started_at']!, _startedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ShiftBreakRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ShiftBreakRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      shiftId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}shift_id'],
+      )!,
+      startedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}started_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ShiftBreaksTable createAlias(String alias) {
+    return $ShiftBreaksTable(attachedDatabase, alias);
+  }
+}
+
+class ShiftBreakRow extends DataClass implements Insertable<ShiftBreakRow> {
+  final String id;
+  final String shiftId;
+  final DateTime startedAt;
+  const ShiftBreakRow({
+    required this.id,
+    required this.shiftId,
+    required this.startedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['shift_id'] = Variable<String>(shiftId);
+    map['started_at'] = Variable<DateTime>(startedAt);
+    return map;
+  }
+
+  ShiftBreaksCompanion toCompanion(bool nullToAbsent) {
+    return ShiftBreaksCompanion(
+      id: Value(id),
+      shiftId: Value(shiftId),
+      startedAt: Value(startedAt),
+    );
+  }
+
+  factory ShiftBreakRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ShiftBreakRow(
+      id: serializer.fromJson<String>(json['id']),
+      shiftId: serializer.fromJson<String>(json['shiftId']),
+      startedAt: serializer.fromJson<DateTime>(json['startedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'shiftId': serializer.toJson<String>(shiftId),
+      'startedAt': serializer.toJson<DateTime>(startedAt),
+    };
+  }
+
+  ShiftBreakRow copyWith({String? id, String? shiftId, DateTime? startedAt}) =>
+      ShiftBreakRow(
+        id: id ?? this.id,
+        shiftId: shiftId ?? this.shiftId,
+        startedAt: startedAt ?? this.startedAt,
+      );
+  ShiftBreakRow copyWithCompanion(ShiftBreaksCompanion data) {
+    return ShiftBreakRow(
+      id: data.id.present ? data.id.value : this.id,
+      shiftId: data.shiftId.present ? data.shiftId.value : this.shiftId,
+      startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShiftBreakRow(')
+          ..write('id: $id, ')
+          ..write('shiftId: $shiftId, ')
+          ..write('startedAt: $startedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, shiftId, startedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ShiftBreakRow &&
+          other.id == this.id &&
+          other.shiftId == this.shiftId &&
+          other.startedAt == this.startedAt);
+}
+
+class ShiftBreaksCompanion extends UpdateCompanion<ShiftBreakRow> {
+  final Value<String> id;
+  final Value<String> shiftId;
+  final Value<DateTime> startedAt;
+  final Value<int> rowid;
+  const ShiftBreaksCompanion({
+    this.id = const Value.absent(),
+    this.shiftId = const Value.absent(),
+    this.startedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ShiftBreaksCompanion.insert({
+    required String id,
+    required String shiftId,
+    required DateTime startedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       shiftId = Value(shiftId),
+       startedAt = Value(startedAt);
+  static Insertable<ShiftBreakRow> custom({
+    Expression<String>? id,
+    Expression<String>? shiftId,
+    Expression<DateTime>? startedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (shiftId != null) 'shift_id': shiftId,
+      if (startedAt != null) 'started_at': startedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ShiftBreaksCompanion copyWith({
+    Value<String>? id,
+    Value<String>? shiftId,
+    Value<DateTime>? startedAt,
+    Value<int>? rowid,
+  }) {
+    return ShiftBreaksCompanion(
+      id: id ?? this.id,
+      shiftId: shiftId ?? this.shiftId,
+      startedAt: startedAt ?? this.startedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (shiftId.present) {
+      map['shift_id'] = Variable<String>(shiftId.value);
+    }
+    if (startedAt.present) {
+      map['started_at'] = Variable<DateTime>(startedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShiftBreaksCompanion(')
+          ..write('id: $id, ')
+          ..write('shiftId: $shiftId, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ShiftBreakEndsTable extends ShiftBreakEnds
+    with TableInfo<$ShiftBreakEndsTable, ShiftBreakEndRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ShiftBreakEndsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _breakIdMeta = const VerificationMeta(
+    'breakId',
+  );
+  @override
+  late final GeneratedColumn<String> breakId = GeneratedColumn<String>(
+    'break_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL UNIQUE REFERENCES shift_breaks (id)',
+  );
+  static const VerificationMeta _endedAtMeta = const VerificationMeta(
+    'endedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> endedAt = GeneratedColumn<DateTime>(
+    'ended_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, breakId, endedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'shift_break_ends';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ShiftBreakEndRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('break_id')) {
+      context.handle(
+        _breakIdMeta,
+        breakId.isAcceptableOrUnknown(data['break_id']!, _breakIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_breakIdMeta);
+    }
+    if (data.containsKey('ended_at')) {
+      context.handle(
+        _endedAtMeta,
+        endedAt.isAcceptableOrUnknown(data['ended_at']!, _endedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_endedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ShiftBreakEndRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ShiftBreakEndRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      breakId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}break_id'],
+      )!,
+      endedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}ended_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ShiftBreakEndsTable createAlias(String alias) {
+    return $ShiftBreakEndsTable(attachedDatabase, alias);
+  }
+}
+
+class ShiftBreakEndRow extends DataClass
+    implements Insertable<ShiftBreakEndRow> {
+  final String id;
+  final String breakId;
+  final DateTime endedAt;
+  const ShiftBreakEndRow({
+    required this.id,
+    required this.breakId,
+    required this.endedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['break_id'] = Variable<String>(breakId);
+    map['ended_at'] = Variable<DateTime>(endedAt);
+    return map;
+  }
+
+  ShiftBreakEndsCompanion toCompanion(bool nullToAbsent) {
+    return ShiftBreakEndsCompanion(
+      id: Value(id),
+      breakId: Value(breakId),
+      endedAt: Value(endedAt),
+    );
+  }
+
+  factory ShiftBreakEndRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ShiftBreakEndRow(
+      id: serializer.fromJson<String>(json['id']),
+      breakId: serializer.fromJson<String>(json['breakId']),
+      endedAt: serializer.fromJson<DateTime>(json['endedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'breakId': serializer.toJson<String>(breakId),
+      'endedAt': serializer.toJson<DateTime>(endedAt),
+    };
+  }
+
+  ShiftBreakEndRow copyWith({String? id, String? breakId, DateTime? endedAt}) =>
+      ShiftBreakEndRow(
+        id: id ?? this.id,
+        breakId: breakId ?? this.breakId,
+        endedAt: endedAt ?? this.endedAt,
+      );
+  ShiftBreakEndRow copyWithCompanion(ShiftBreakEndsCompanion data) {
+    return ShiftBreakEndRow(
+      id: data.id.present ? data.id.value : this.id,
+      breakId: data.breakId.present ? data.breakId.value : this.breakId,
+      endedAt: data.endedAt.present ? data.endedAt.value : this.endedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShiftBreakEndRow(')
+          ..write('id: $id, ')
+          ..write('breakId: $breakId, ')
+          ..write('endedAt: $endedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, breakId, endedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ShiftBreakEndRow &&
+          other.id == this.id &&
+          other.breakId == this.breakId &&
+          other.endedAt == this.endedAt);
+}
+
+class ShiftBreakEndsCompanion extends UpdateCompanion<ShiftBreakEndRow> {
+  final Value<String> id;
+  final Value<String> breakId;
+  final Value<DateTime> endedAt;
+  final Value<int> rowid;
+  const ShiftBreakEndsCompanion({
+    this.id = const Value.absent(),
+    this.breakId = const Value.absent(),
+    this.endedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ShiftBreakEndsCompanion.insert({
+    required String id,
+    required String breakId,
+    required DateTime endedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       breakId = Value(breakId),
+       endedAt = Value(endedAt);
+  static Insertable<ShiftBreakEndRow> custom({
+    Expression<String>? id,
+    Expression<String>? breakId,
+    Expression<DateTime>? endedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (breakId != null) 'break_id': breakId,
+      if (endedAt != null) 'ended_at': endedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ShiftBreakEndsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? breakId,
+    Value<DateTime>? endedAt,
+    Value<int>? rowid,
+  }) {
+    return ShiftBreakEndsCompanion(
+      id: id ?? this.id,
+      breakId: breakId ?? this.breakId,
+      endedAt: endedAt ?? this.endedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (breakId.present) {
+      map['break_id'] = Variable<String>(breakId.value);
+    }
+    if (endedAt.present) {
+      map['ended_at'] = Variable<DateTime>(endedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShiftBreakEndsCompanion(')
+          ..write('id: $id, ')
+          ..write('breakId: $breakId, ')
+          ..write('endedAt: $endedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $DaybookTable extends Daybook with TableInfo<$DaybookTable, DaybookRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -10152,6 +10679,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ReturnsTable returns = $ReturnsTable(this);
   late final $ReturnLinesTable returnLines = $ReturnLinesTable(this);
   late final $ShiftClosesTable shiftCloses = $ShiftClosesTable(this);
+  late final $ShiftBreaksTable shiftBreaks = $ShiftBreaksTable(this);
+  late final $ShiftBreakEndsTable shiftBreakEnds = $ShiftBreakEndsTable(this);
   late final $DaybookTable daybook = $DaybookTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -10180,6 +10709,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     returns,
     returnLines,
     shiftCloses,
+    shiftBreaks,
+    shiftBreakEnds,
     daybook,
   ];
 }
@@ -14824,6 +15355,24 @@ final class $$ShiftsTableReferences
     );
   }
 
+  static MultiTypedResultKey<$ShiftBreaksTable, List<ShiftBreakRow>>
+  _shiftBreaksRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.shiftBreaks,
+    aliasName: 'shifts__id__shift_breaks__shift_id',
+  );
+
+  $$ShiftBreaksTableProcessedTableManager get shiftBreaksRefs {
+    final manager = $$ShiftBreaksTableTableManager(
+      $_db,
+      $_db.shiftBreaks,
+    ).filter((f) => f.shiftId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_shiftBreaksRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
   static MultiTypedResultKey<$DaybookTable, List<DaybookRow>> _daybookRefsTable(
     _$AppDatabase db,
   ) => MultiTypedResultKey.fromTable(
@@ -14985,6 +15534,31 @@ class $$ShiftsTableFilterComposer
           }) => $$ShiftClosesTableFilterComposer(
             $db: $db,
             $table: $db.shiftCloses,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> shiftBreaksRefs(
+    Expression<bool> Function($$ShiftBreaksTableFilterComposer f) f,
+  ) {
+    final $$ShiftBreaksTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.shiftBreaks,
+      getReferencedColumn: (t) => t.shiftId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShiftBreaksTableFilterComposer(
+            $db: $db,
+            $table: $db.shiftBreaks,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -15242,6 +15816,31 @@ class $$ShiftsTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> shiftBreaksRefs<T extends Object>(
+    Expression<T> Function($$ShiftBreaksTableAnnotationComposer a) f,
+  ) {
+    final $$ShiftBreaksTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.shiftBreaks,
+      getReferencedColumn: (t) => t.shiftId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShiftBreaksTableAnnotationComposer(
+            $db: $db,
+            $table: $db.shiftBreaks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<T> daybookRefs<T extends Object>(
     Expression<T> Function($$DaybookTableAnnotationComposer a) f,
   ) {
@@ -15287,6 +15886,7 @@ class $$ShiftsTableTableManager
             bool billsRefs,
             bool returnsRefs,
             bool shiftClosesRefs,
+            bool shiftBreaksRefs,
             bool daybookRefs,
           })
         > {
@@ -15352,6 +15952,7 @@ class $$ShiftsTableTableManager
                 billsRefs = false,
                 returnsRefs = false,
                 shiftClosesRefs = false,
+                shiftBreaksRefs = false,
                 daybookRefs = false,
               }) {
                 return PrefetchHooks(
@@ -15360,6 +15961,7 @@ class $$ShiftsTableTableManager
                     if (billsRefs) db.bills,
                     if (returnsRefs) db.returns,
                     if (shiftClosesRefs) db.shiftCloses,
+                    if (shiftBreaksRefs) db.shiftBreaks,
                     if (daybookRefs) db.daybook,
                   ],
                   addJoins:
@@ -15461,6 +16063,26 @@ class $$ShiftsTableTableManager
                           referencedColumn: 'shift_id',
                           typedResults: items,
                         ),
+                      if (shiftBreaksRefs)
+                        await $_getPrefetchedDataByColumns<
+                          ShiftRow,
+                          $ShiftsTable,
+                          ShiftBreakRow,
+                          $ShiftBreaksTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ShiftsTableReferences
+                              ._shiftBreaksRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ShiftsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).shiftBreaksRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'shift_id',
+                          typedResults: items,
+                        ),
                       if (daybookRefs)
                         await $_getPrefetchedDataByColumns<
                           ShiftRow,
@@ -15507,6 +16129,7 @@ typedef $$ShiftsTableProcessedTableManager =
         bool billsRefs,
         bool returnsRefs,
         bool shiftClosesRefs,
+        bool shiftBreaksRefs,
         bool daybookRefs,
       })
     >;
@@ -20259,6 +20882,659 @@ typedef $$ShiftClosesTableProcessedTableManager =
       ShiftCloseRow,
       PrefetchHooks Function({bool shiftId})
     >;
+typedef $$ShiftBreaksTableCreateCompanionBuilder =
+    ShiftBreaksCompanion Function({
+      required String id,
+      required String shiftId,
+      required DateTime startedAt,
+      Value<int> rowid,
+    });
+typedef $$ShiftBreaksTableUpdateCompanionBuilder =
+    ShiftBreaksCompanion Function({
+      Value<String> id,
+      Value<String> shiftId,
+      Value<DateTime> startedAt,
+      Value<int> rowid,
+    });
+
+final class $$ShiftBreaksTableReferences
+    extends BaseReferences<_$AppDatabase, $ShiftBreaksTable, ShiftBreakRow> {
+  $$ShiftBreaksTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $ShiftsTable _shiftIdTable(_$AppDatabase db) =>
+      db.shifts.createAlias('shift_breaks__shift_id__shifts__id');
+
+  $$ShiftsTableProcessedTableManager get shiftId {
+    final $_column = $_itemColumn<String>('shift_id')!;
+
+    final manager = $$ShiftsTableTableManager(
+      $_db,
+      $_db.shifts,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_shiftIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$ShiftBreakEndsTable, List<ShiftBreakEndRow>>
+  _shiftBreakEndsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.shiftBreakEnds,
+    aliasName: 'shift_breaks__id__shift_break_ends__break_id',
+  );
+
+  $$ShiftBreakEndsTableProcessedTableManager get shiftBreakEndsRefs {
+    final manager = $$ShiftBreakEndsTableTableManager(
+      $_db,
+      $_db.shiftBreakEnds,
+    ).filter((f) => f.breakId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_shiftBreakEndsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$ShiftBreaksTableFilterComposer
+    extends Composer<_$AppDatabase, $ShiftBreaksTable> {
+  $$ShiftBreaksTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ShiftsTableFilterComposer get shiftId {
+    final $$ShiftsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.shiftId,
+      referencedTable: $db.shifts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShiftsTableFilterComposer(
+            $db: $db,
+            $table: $db.shifts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> shiftBreakEndsRefs(
+    Expression<bool> Function($$ShiftBreakEndsTableFilterComposer f) f,
+  ) {
+    final $$ShiftBreakEndsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.shiftBreakEnds,
+      getReferencedColumn: (t) => t.breakId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShiftBreakEndsTableFilterComposer(
+            $db: $db,
+            $table: $db.shiftBreakEnds,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$ShiftBreaksTableOrderingComposer
+    extends Composer<_$AppDatabase, $ShiftBreaksTable> {
+  $$ShiftBreaksTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ShiftsTableOrderingComposer get shiftId {
+    final $$ShiftsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.shiftId,
+      referencedTable: $db.shifts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShiftsTableOrderingComposer(
+            $db: $db,
+            $table: $db.shifts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ShiftBreaksTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ShiftBreaksTable> {
+  $$ShiftBreaksTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => column);
+
+  $$ShiftsTableAnnotationComposer get shiftId {
+    final $$ShiftsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.shiftId,
+      referencedTable: $db.shifts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShiftsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.shifts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> shiftBreakEndsRefs<T extends Object>(
+    Expression<T> Function($$ShiftBreakEndsTableAnnotationComposer a) f,
+  ) {
+    final $$ShiftBreakEndsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.shiftBreakEnds,
+      getReferencedColumn: (t) => t.breakId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShiftBreakEndsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.shiftBreakEnds,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$ShiftBreaksTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ShiftBreaksTable,
+          ShiftBreakRow,
+          $$ShiftBreaksTableFilterComposer,
+          $$ShiftBreaksTableOrderingComposer,
+          $$ShiftBreaksTableAnnotationComposer,
+          $$ShiftBreaksTableCreateCompanionBuilder,
+          $$ShiftBreaksTableUpdateCompanionBuilder,
+          (ShiftBreakRow, $$ShiftBreaksTableReferences),
+          ShiftBreakRow,
+          PrefetchHooks Function({bool shiftId, bool shiftBreakEndsRefs})
+        > {
+  $$ShiftBreaksTableTableManager(_$AppDatabase db, $ShiftBreaksTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ShiftBreaksTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ShiftBreaksTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ShiftBreaksTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> shiftId = const Value.absent(),
+                Value<DateTime> startedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ShiftBreaksCompanion(
+                id: id,
+                shiftId: shiftId,
+                startedAt: startedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String shiftId,
+                required DateTime startedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => ShiftBreaksCompanion.insert(
+                id: id,
+                shiftId: shiftId,
+                startedAt: startedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ShiftBreaksTable, ShiftBreakRow>(table),
+                  $$ShiftBreaksTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({shiftId = false, shiftBreakEndsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (shiftBreakEndsRefs) db.shiftBreakEnds,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (shiftId) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.shiftId,
+                            referencedTable: $$ShiftBreaksTableReferences
+                                ._shiftIdTable(db),
+                            referencedColumn: $$ShiftBreaksTableReferences
+                                ._shiftIdTable(db)
+                                .id,
+                          ) as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (shiftBreakEndsRefs)
+                        await $_getPrefetchedDataByColumns<
+                          ShiftBreakRow,
+                          $ShiftBreaksTable,
+                          ShiftBreakEndRow,
+                          $ShiftBreakEndsTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ShiftBreaksTableReferences
+                              ._shiftBreakEndsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ShiftBreaksTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).shiftBreakEndsRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'break_id',
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$ShiftBreaksTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ShiftBreaksTable,
+      ShiftBreakRow,
+      $$ShiftBreaksTableFilterComposer,
+      $$ShiftBreaksTableOrderingComposer,
+      $$ShiftBreaksTableAnnotationComposer,
+      $$ShiftBreaksTableCreateCompanionBuilder,
+      $$ShiftBreaksTableUpdateCompanionBuilder,
+      (ShiftBreakRow, $$ShiftBreaksTableReferences),
+      ShiftBreakRow,
+      PrefetchHooks Function({bool shiftId, bool shiftBreakEndsRefs})
+    >;
+typedef $$ShiftBreakEndsTableCreateCompanionBuilder =
+    ShiftBreakEndsCompanion Function({
+      required String id,
+      required String breakId,
+      required DateTime endedAt,
+      Value<int> rowid,
+    });
+typedef $$ShiftBreakEndsTableUpdateCompanionBuilder =
+    ShiftBreakEndsCompanion Function({
+      Value<String> id,
+      Value<String> breakId,
+      Value<DateTime> endedAt,
+      Value<int> rowid,
+    });
+
+final class $$ShiftBreakEndsTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $ShiftBreakEndsTable, ShiftBreakEndRow> {
+  $$ShiftBreakEndsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ShiftBreaksTable _breakIdTable(_$AppDatabase db) => db.shiftBreaks
+      .createAlias('shift_break_ends__break_id__shift_breaks__id');
+
+  $$ShiftBreaksTableProcessedTableManager get breakId {
+    final $_column = $_itemColumn<String>('break_id')!;
+
+    final manager = $$ShiftBreaksTableTableManager(
+      $_db,
+      $_db.shiftBreaks,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_breakIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ShiftBreakEndsTableFilterComposer
+    extends Composer<_$AppDatabase, $ShiftBreakEndsTable> {
+  $$ShiftBreakEndsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get endedAt => $composableBuilder(
+    column: $table.endedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ShiftBreaksTableFilterComposer get breakId {
+    final $$ShiftBreaksTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.breakId,
+      referencedTable: $db.shiftBreaks,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShiftBreaksTableFilterComposer(
+            $db: $db,
+            $table: $db.shiftBreaks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ShiftBreakEndsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ShiftBreakEndsTable> {
+  $$ShiftBreakEndsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get endedAt => $composableBuilder(
+    column: $table.endedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ShiftBreaksTableOrderingComposer get breakId {
+    final $$ShiftBreaksTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.breakId,
+      referencedTable: $db.shiftBreaks,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShiftBreaksTableOrderingComposer(
+            $db: $db,
+            $table: $db.shiftBreaks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ShiftBreakEndsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ShiftBreakEndsTable> {
+  $$ShiftBreakEndsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get endedAt =>
+      $composableBuilder(column: $table.endedAt, builder: (column) => column);
+
+  $$ShiftBreaksTableAnnotationComposer get breakId {
+    final $$ShiftBreaksTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.breakId,
+      referencedTable: $db.shiftBreaks,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShiftBreaksTableAnnotationComposer(
+            $db: $db,
+            $table: $db.shiftBreaks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ShiftBreakEndsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ShiftBreakEndsTable,
+          ShiftBreakEndRow,
+          $$ShiftBreakEndsTableFilterComposer,
+          $$ShiftBreakEndsTableOrderingComposer,
+          $$ShiftBreakEndsTableAnnotationComposer,
+          $$ShiftBreakEndsTableCreateCompanionBuilder,
+          $$ShiftBreakEndsTableUpdateCompanionBuilder,
+          (ShiftBreakEndRow, $$ShiftBreakEndsTableReferences),
+          ShiftBreakEndRow,
+          PrefetchHooks Function({bool breakId})
+        > {
+  $$ShiftBreakEndsTableTableManager(
+    _$AppDatabase db,
+    $ShiftBreakEndsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ShiftBreakEndsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ShiftBreakEndsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ShiftBreakEndsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> breakId = const Value.absent(),
+                Value<DateTime> endedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ShiftBreakEndsCompanion(
+                id: id,
+                breakId: breakId,
+                endedAt: endedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String breakId,
+                required DateTime endedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => ShiftBreakEndsCompanion.insert(
+                id: id,
+                breakId: breakId,
+                endedAt: endedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ShiftBreakEndsTable, ShiftBreakEndRow>(table),
+                  $$ShiftBreakEndsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({breakId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (breakId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.breakId,
+                        referencedTable: $$ShiftBreakEndsTableReferences
+                            ._breakIdTable(db),
+                        referencedColumn: $$ShiftBreakEndsTableReferences
+                            ._breakIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ShiftBreakEndsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ShiftBreakEndsTable,
+      ShiftBreakEndRow,
+      $$ShiftBreakEndsTableFilterComposer,
+      $$ShiftBreakEndsTableOrderingComposer,
+      $$ShiftBreakEndsTableAnnotationComposer,
+      $$ShiftBreakEndsTableCreateCompanionBuilder,
+      $$ShiftBreakEndsTableUpdateCompanionBuilder,
+      (ShiftBreakEndRow, $$ShiftBreakEndsTableReferences),
+      ShiftBreakEndRow,
+      PrefetchHooks Function({bool breakId})
+    >;
 typedef $$DaybookTableCreateCompanionBuilder = DaybookCompanion Function({
   required String id,
   required DateTime at,
@@ -20661,6 +21937,10 @@ class $AppDatabaseManager {
       $$ReturnLinesTableTableManager(_db, _db.returnLines);
   $$ShiftClosesTableTableManager get shiftCloses =>
       $$ShiftClosesTableTableManager(_db, _db.shiftCloses);
+  $$ShiftBreaksTableTableManager get shiftBreaks =>
+      $$ShiftBreaksTableTableManager(_db, _db.shiftBreaks);
+  $$ShiftBreakEndsTableTableManager get shiftBreakEnds =>
+      $$ShiftBreakEndsTableTableManager(_db, _db.shiftBreakEnds);
   $$DaybookTableTableManager get daybook =>
       $$DaybookTableTableManager(_db, _db.daybook);
 }

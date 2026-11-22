@@ -116,6 +116,10 @@ class _ShiftClosesScreenState extends State<ShiftClosesScreen> {
               'Counted ${formatRupees(r.counted)}',
               key: Key('figures-${r.shiftId}'),
             ),
+            Text(
+              'Breaks ${breakMinutesText(r.breakTime)}',
+              key: Key('breaks-${r.shiftId}'),
+            ),
           ],
         ),
       ),

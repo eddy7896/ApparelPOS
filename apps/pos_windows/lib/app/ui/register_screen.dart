@@ -65,6 +65,8 @@ class RegisterPanel extends StatefulWidget {
     required this.session,
     required this.services,
     this.creditNoteCode,
+    this.billInProgress,
+    this.showCloseShift = true,
   });
 
   final SessionController session;
@@ -72,6 +74,13 @@ class RegisterPanel extends StatefulWidget {
 
   /// A credit note to apply as soon as the register opens (an exchange).
   final String? creditNoteCode;
+
+  /// Told whether a bill is being made, so the top bar can enable Pause and
+  /// Close shift only between bills.
+  final ValueNotifier<bool>? billInProgress;
+
+  /// False when the top bar carries the Close shift button (Sales Mode).
+  final bool showCloseShift;
 
   @override
   State<RegisterPanel> createState() => _RegisterPanelState();
@@ -439,6 +448,13 @@ class _RegisterPanelState extends State<RegisterPanel> {
   @override
   Widget build(BuildContext context) {
     final saved = _saved;
+    final active = _lines.isNotEmpty || _notes.isNotEmpty;
+    final progress = widget.billInProgress;
+    if (progress != null && progress.value != active) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        progress.value = active;
+      });
+    }
     // Bill done is a popup over the register (UX-2), not a new screen. The
     // register stays drawn behind but cannot be reached while it is open.
     return Stack(
@@ -508,29 +524,30 @@ class _RegisterPanelState extends State<RegisterPanel> {
                   children: [for (final l in _lines) _lineTile(l)],
                 ),
         ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Tooltip(
-            message: _lines.isEmpty && _notes.isEmpty
-                ? ''
-                : 'Finish or clear the bill first',
-            child: TextButton.icon(
-              key: const Key('close-shift-button'),
-              onPressed: _lines.isEmpty && _notes.isEmpty
-                  ? () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => CloseShiftScreen(
-                          session: widget.session,
-                          services: _s,
+        if (widget.showCloseShift)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Tooltip(
+              message: _lines.isEmpty && _notes.isEmpty
+                  ? ''
+                  : 'Finish or clear the bill first',
+              child: TextButton.icon(
+                key: const Key('close-shift-button'),
+                onPressed: _lines.isEmpty && _notes.isEmpty
+                    ? () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => CloseShiftScreen(
+                            session: widget.session,
+                            services: _s,
+                          ),
                         ),
-                      ),
-                    )
-                  : null,
-              icon: const Icon(Icons.lock_clock),
-              label: const Text('Close shift'),
+                      )
+                    : null,
+                icon: const Icon(Icons.lock_clock),
+                label: const Text('Close shift'),
+              ),
             ),
           ),
-        ),
       ],
     );
   }

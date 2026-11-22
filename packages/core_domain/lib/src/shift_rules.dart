@@ -113,3 +113,32 @@ final class ShiftCloseReceipt {
   @override
   String toString() => 'ShiftCloseReceipt($shiftId)';
 }
+
+/// One break inside a shift (the Pause button). [end] is null while it goes on.
+final class BreakSpan {
+  const BreakSpan({required this.start, this.end});
+  final DateTime start;
+  final DateTime? end;
+}
+
+/// All the break time in [spans]; a break still going counts up to [now]. A
+/// clock that went backwards never makes a break negative.
+Duration totalBreakTime(List<BreakSpan> spans, DateTime now) {
+  var total = Duration.zero;
+  for (final s in spans) {
+    final d = (s.end ?? now).difference(s.start);
+    if (!d.isNegative) {
+      total += d;
+    }
+  }
+  return total;
+}
+
+/// "12 min", or "2 h 15 min" from an hour up. Whole minutes, rounded down.
+String breakMinutesText(Duration d) {
+  final minutes = d.inMinutes;
+  if (minutes < 60) {
+    return '$minutes min';
+  }
+  return '${minutes ~/ 60} h ${minutes % 60} min';
+}
