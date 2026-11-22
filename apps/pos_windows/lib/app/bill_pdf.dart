@@ -32,7 +32,7 @@ final class BillSheet {
     required this.shopName,
     required this.billNo,
     required this.dateText,
-    required this.cashierName,
+    required this.operatorCode,
     required this.customer,
     required this.rows,
     required this.totalText,
@@ -44,7 +44,9 @@ final class BillSheet {
   final String? shopName;
   final String billNo;
   final String dateText;
-  final String cashierName;
+
+  /// The operator ID of whoever made the bill (never a name).
+  final String operatorCode;
 
   /// Name and phone as typed, or null.
   final String? customer;
@@ -72,10 +74,19 @@ const Map<PaymentMode, String> _modeNames = {
   PaymentMode.creditNote: 'Credit note',
 };
 
+/// The lines under the shop name: bill number, date, who served (by operator
+/// ID, never a name) and the customer if given. The PDF prints exactly these.
+List<String> billHeaderLines(BillSheet sheet) => [
+  'Bill no: ${sheet.billNo}',
+  'Date: ${sheet.dateText}',
+  billServedByLine(sheet.operatorCode),
+  if (sheet.customer != null) 'Customer: ${sheet.customer}',
+];
+
 BillSheet describeBill({
   required SavedBill bill,
   required String? shopName,
-  required String cashierName,
+  required String operatorCode,
   String? customerName,
   String? customerPhone,
 }) {
@@ -90,7 +101,7 @@ BillSheet describeBill({
     shopName: shopName,
     billNo: bill.billNumber.format(),
     dateText: billDateText(bill.billedAt),
-    cashierName: cashierName,
+    operatorCode: operatorCode,
     customer: who.isEmpty ? null : who.join(', '),
     rows: [
       for (final l in bill.lines)
@@ -154,10 +165,7 @@ Future<Uint8List> buildBillPdf(
             style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
           ),
         pw.SizedBox(height: 6),
-        pw.Text('Bill no: ${sheet.billNo}'),
-        pw.Text('Date: ${sheet.dateText}'),
-        pw.Text('Cashier: ${sheet.cashierName}'),
-        if (sheet.customer != null) pw.Text('Customer: ${sheet.customer}'),
+        for (final line in billHeaderLines(sheet)) pw.Text(line),
         pw.SizedBox(height: 14),
         pw.Table(
           border: const pw.TableBorder(

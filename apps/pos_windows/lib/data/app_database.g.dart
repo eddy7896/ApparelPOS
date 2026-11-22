@@ -790,6 +790,17 @@ class $UsersTable extends Users with TableInfo<$UsersTable, UserRow> {
     ),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _staffNumberMeta = const VerificationMeta(
+    'staffNumber',
+  );
+  @override
+  late final GeneratedColumn<int> staffNumber = GeneratedColumn<int>(
+    'staff_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _failuresMeta = const VerificationMeta(
     'failures',
   );
@@ -854,6 +865,7 @@ class $UsersTable extends Users with TableInfo<$UsersTable, UserRow> {
     role,
     credentialHash,
     active,
+    staffNumber,
     failures,
     lockCount,
     lockedUntil,
@@ -908,6 +920,15 @@ class $UsersTable extends Users with TableInfo<$UsersTable, UserRow> {
       context.handle(
         _activeMeta,
         active.isAcceptableOrUnknown(data['active']!, _activeMeta),
+      );
+    }
+    if (data.containsKey('staff_number')) {
+      context.handle(
+        _staffNumberMeta,
+        staffNumber.isAcceptableOrUnknown(
+          data['staff_number']!,
+          _staffNumberMeta,
+        ),
       );
     }
     if (data.containsKey('failures')) {
@@ -976,6 +997,10 @@ class $UsersTable extends Users with TableInfo<$UsersTable, UserRow> {
         DriftSqlType.bool,
         data['${effectivePrefix}active'],
       )!,
+      staffNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}staff_number'],
+      ),
       failures: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}failures'],
@@ -1011,6 +1036,10 @@ class UserRow extends DataClass implements Insertable<UserRow> {
   final String role;
   final String credentialHash;
   final bool active;
+
+  /// The number behind the operator ID printed on bills (OP001, OP002...).
+  /// Given in order when the person is added, never reused.
+  final int? staffNumber;
   final int failures;
   final int lockCount;
   final DateTime? lockedUntil;
@@ -1022,6 +1051,7 @@ class UserRow extends DataClass implements Insertable<UserRow> {
     required this.role,
     required this.credentialHash,
     required this.active,
+    this.staffNumber,
     required this.failures,
     required this.lockCount,
     this.lockedUntil,
@@ -1036,6 +1066,9 @@ class UserRow extends DataClass implements Insertable<UserRow> {
     map['role'] = Variable<String>(role);
     map['credential_hash'] = Variable<String>(credentialHash);
     map['active'] = Variable<bool>(active);
+    if (!nullToAbsent || staffNumber != null) {
+      map['staff_number'] = Variable<int>(staffNumber);
+    }
     map['failures'] = Variable<int>(failures);
     map['lock_count'] = Variable<int>(lockCount);
     if (!nullToAbsent || lockedUntil != null) {
@@ -1053,6 +1086,9 @@ class UserRow extends DataClass implements Insertable<UserRow> {
       role: Value(role),
       credentialHash: Value(credentialHash),
       active: Value(active),
+      staffNumber: staffNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(staffNumber),
       failures: Value(failures),
       lockCount: Value(lockCount),
       lockedUntil: lockedUntil == null && nullToAbsent
@@ -1074,6 +1110,7 @@ class UserRow extends DataClass implements Insertable<UserRow> {
       role: serializer.fromJson<String>(json['role']),
       credentialHash: serializer.fromJson<String>(json['credentialHash']),
       active: serializer.fromJson<bool>(json['active']),
+      staffNumber: serializer.fromJson<int?>(json['staffNumber']),
       failures: serializer.fromJson<int>(json['failures']),
       lockCount: serializer.fromJson<int>(json['lockCount']),
       lockedUntil: serializer.fromJson<DateTime?>(json['lockedUntil']),
@@ -1090,6 +1127,7 @@ class UserRow extends DataClass implements Insertable<UserRow> {
       'role': serializer.toJson<String>(role),
       'credentialHash': serializer.toJson<String>(credentialHash),
       'active': serializer.toJson<bool>(active),
+      'staffNumber': serializer.toJson<int?>(staffNumber),
       'failures': serializer.toJson<int>(failures),
       'lockCount': serializer.toJson<int>(lockCount),
       'lockedUntil': serializer.toJson<DateTime?>(lockedUntil),
@@ -1104,6 +1142,7 @@ class UserRow extends DataClass implements Insertable<UserRow> {
     String? role,
     String? credentialHash,
     bool? active,
+    Value<int?> staffNumber = const Value.absent(),
     int? failures,
     int? lockCount,
     Value<DateTime?> lockedUntil = const Value.absent(),
@@ -1115,6 +1154,7 @@ class UserRow extends DataClass implements Insertable<UserRow> {
     role: role ?? this.role,
     credentialHash: credentialHash ?? this.credentialHash,
     active: active ?? this.active,
+    staffNumber: staffNumber.present ? staffNumber.value : this.staffNumber,
     failures: failures ?? this.failures,
     lockCount: lockCount ?? this.lockCount,
     lockedUntil: lockedUntil.present ? lockedUntil.value : this.lockedUntil,
@@ -1130,6 +1170,9 @@ class UserRow extends DataClass implements Insertable<UserRow> {
           ? data.credentialHash.value
           : this.credentialHash,
       active: data.active.present ? data.active.value : this.active,
+      staffNumber: data.staffNumber.present
+          ? data.staffNumber.value
+          : this.staffNumber,
       failures: data.failures.present ? data.failures.value : this.failures,
       lockCount: data.lockCount.present ? data.lockCount.value : this.lockCount,
       lockedUntil: data.lockedUntil.present
@@ -1148,6 +1191,7 @@ class UserRow extends DataClass implements Insertable<UserRow> {
           ..write('role: $role, ')
           ..write('credentialHash: $credentialHash, ')
           ..write('active: $active, ')
+          ..write('staffNumber: $staffNumber, ')
           ..write('failures: $failures, ')
           ..write('lockCount: $lockCount, ')
           ..write('lockedUntil: $lockedUntil, ')
@@ -1164,6 +1208,7 @@ class UserRow extends DataClass implements Insertable<UserRow> {
     role,
     credentialHash,
     active,
+    staffNumber,
     failures,
     lockCount,
     lockedUntil,
@@ -1179,6 +1224,7 @@ class UserRow extends DataClass implements Insertable<UserRow> {
           other.role == this.role &&
           other.credentialHash == this.credentialHash &&
           other.active == this.active &&
+          other.staffNumber == this.staffNumber &&
           other.failures == this.failures &&
           other.lockCount == this.lockCount &&
           other.lockedUntil == this.lockedUntil &&
@@ -1192,6 +1238,7 @@ class UsersCompanion extends UpdateCompanion<UserRow> {
   final Value<String> role;
   final Value<String> credentialHash;
   final Value<bool> active;
+  final Value<int?> staffNumber;
   final Value<int> failures;
   final Value<int> lockCount;
   final Value<DateTime?> lockedUntil;
@@ -1204,6 +1251,7 @@ class UsersCompanion extends UpdateCompanion<UserRow> {
     this.role = const Value.absent(),
     this.credentialHash = const Value.absent(),
     this.active = const Value.absent(),
+    this.staffNumber = const Value.absent(),
     this.failures = const Value.absent(),
     this.lockCount = const Value.absent(),
     this.lockedUntil = const Value.absent(),
@@ -1217,6 +1265,7 @@ class UsersCompanion extends UpdateCompanion<UserRow> {
     required String role,
     required String credentialHash,
     this.active = const Value.absent(),
+    this.staffNumber = const Value.absent(),
     this.failures = const Value.absent(),
     this.lockCount = const Value.absent(),
     this.lockedUntil = const Value.absent(),
@@ -1235,6 +1284,7 @@ class UsersCompanion extends UpdateCompanion<UserRow> {
     Expression<String>? role,
     Expression<String>? credentialHash,
     Expression<bool>? active,
+    Expression<int>? staffNumber,
     Expression<int>? failures,
     Expression<int>? lockCount,
     Expression<DateTime>? lockedUntil,
@@ -1248,6 +1298,7 @@ class UsersCompanion extends UpdateCompanion<UserRow> {
       if (role != null) 'role': role,
       if (credentialHash != null) 'credential_hash': credentialHash,
       if (active != null) 'active': active,
+      if (staffNumber != null) 'staff_number': staffNumber,
       if (failures != null) 'failures': failures,
       if (lockCount != null) 'lock_count': lockCount,
       if (lockedUntil != null) 'locked_until': lockedUntil,
@@ -1263,6 +1314,7 @@ class UsersCompanion extends UpdateCompanion<UserRow> {
     Value<String>? role,
     Value<String>? credentialHash,
     Value<bool>? active,
+    Value<int?>? staffNumber,
     Value<int>? failures,
     Value<int>? lockCount,
     Value<DateTime?>? lockedUntil,
@@ -1276,6 +1328,7 @@ class UsersCompanion extends UpdateCompanion<UserRow> {
       role: role ?? this.role,
       credentialHash: credentialHash ?? this.credentialHash,
       active: active ?? this.active,
+      staffNumber: staffNumber ?? this.staffNumber,
       failures: failures ?? this.failures,
       lockCount: lockCount ?? this.lockCount,
       lockedUntil: lockedUntil ?? this.lockedUntil,
@@ -1302,6 +1355,9 @@ class UsersCompanion extends UpdateCompanion<UserRow> {
     }
     if (active.present) {
       map['active'] = Variable<bool>(active.value);
+    }
+    if (staffNumber.present) {
+      map['staff_number'] = Variable<int>(staffNumber.value);
     }
     if (failures.present) {
       map['failures'] = Variable<int>(failures.value);
@@ -1332,6 +1388,7 @@ class UsersCompanion extends UpdateCompanion<UserRow> {
           ..write('role: $role, ')
           ..write('credentialHash: $credentialHash, ')
           ..write('active: $active, ')
+          ..write('staffNumber: $staffNumber, ')
           ..write('failures: $failures, ')
           ..write('lockCount: $lockCount, ')
           ..write('lockedUntil: $lockedUntil, ')
@@ -10682,6 +10739,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ShiftBreaksTable shiftBreaks = $ShiftBreaksTable(this);
   late final $ShiftBreakEndsTable shiftBreakEnds = $ShiftBreakEndsTable(this);
   late final $DaybookTable daybook = $DaybookTable(this);
+  late final Index usersStaffNumber = Index(
+    'users_staff_number',
+    'CREATE UNIQUE INDEX users_staff_number ON users (staff_number)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -10712,6 +10773,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     shiftBreaks,
     shiftBreakEnds,
     daybook,
+    usersStaffNumber,
   ];
 }
 
@@ -11210,6 +11272,7 @@ typedef $$UsersTableCreateCompanionBuilder = UsersCompanion Function({
   required String role,
   required String credentialHash,
   Value<bool> active,
+  Value<int?> staffNumber,
   Value<int> failures,
   Value<int> lockCount,
   Value<DateTime?> lockedUntil,
@@ -11223,6 +11286,7 @@ typedef $$UsersTableUpdateCompanionBuilder = UsersCompanion Function({
   Value<String> role,
   Value<String> credentialHash,
   Value<bool> active,
+  Value<int?> staffNumber,
   Value<int> failures,
   Value<int> lockCount,
   Value<DateTime?> lockedUntil,
@@ -11322,6 +11386,11 @@ class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
 
   ColumnFilters<bool> get active => $composableBuilder(
     column: $table.active,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get staffNumber => $composableBuilder(
+    column: $table.staffNumber,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -11460,6 +11529,11 @@ class $$UsersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get staffNumber => $composableBuilder(
+    column: $table.staffNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get failures => $composableBuilder(
     column: $table.failures,
     builder: (column) => ColumnOrderings(column),
@@ -11511,6 +11585,11 @@ class $$UsersTableAnnotationComposer
 
   GeneratedColumn<bool> get active =>
       $composableBuilder(column: $table.active, builder: (column) => column);
+
+  GeneratedColumn<int> get staffNumber => $composableBuilder(
+    column: $table.staffNumber,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get failures =>
       $composableBuilder(column: $table.failures, builder: (column) => column);
@@ -11642,6 +11721,7 @@ class $$UsersTableTableManager
                 Value<String> role = const Value.absent(),
                 Value<String> credentialHash = const Value.absent(),
                 Value<bool> active = const Value.absent(),
+                Value<int?> staffNumber = const Value.absent(),
                 Value<int> failures = const Value.absent(),
                 Value<int> lockCount = const Value.absent(),
                 Value<DateTime?> lockedUntil = const Value.absent(),
@@ -11654,6 +11734,7 @@ class $$UsersTableTableManager
                 role: role,
                 credentialHash: credentialHash,
                 active: active,
+                staffNumber: staffNumber,
                 failures: failures,
                 lockCount: lockCount,
                 lockedUntil: lockedUntil,
@@ -11668,6 +11749,7 @@ class $$UsersTableTableManager
                 required String role,
                 required String credentialHash,
                 Value<bool> active = const Value.absent(),
+                Value<int?> staffNumber = const Value.absent(),
                 Value<int> failures = const Value.absent(),
                 Value<int> lockCount = const Value.absent(),
                 Value<DateTime?> lockedUntil = const Value.absent(),
@@ -11680,6 +11762,7 @@ class $$UsersTableTableManager
                 role: role,
                 credentialHash: credentialHash,
                 active: active,
+                staffNumber: staffNumber,
                 failures: failures,
                 lockCount: lockCount,
                 lockedUntil: lockedUntil,

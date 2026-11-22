@@ -1,7 +1,7 @@
 // P2-2 sign-in service: users table, Argon2id hashes, lockout saved per user,
 // audit of security events. E-AUTH-1 and E-AUTH-2.
 import 'package:core_domain/core_domain.dart';
-import 'package:drift/drift.dart' show driftRuntimeOptions;
+import 'package:drift/drift.dart' show Variable, driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pos_windows/data/app_database.dart';
@@ -24,6 +24,87 @@ void main() {
 
   Future<List<Map<String, Object?>>> rows(String sql) async =>
       (await db.customSelect(sql).get()).map((r) => r.data).toList();
+
+  group('operator IDs', () {
+    test('each person gets the next number: OP001, OP002...', () async {
+      final a = await auth.createUser(
+        name: 'Meera',
+        role: Role.owner,
+        secret: 'a long passphrase',
+      );
+      final b = await auth.createUser(
+        name: 'Asha',
+        role: Role.cashier,
+        secret: '482916',
+      );
+      final c = await auth.createUser(
+        name: 'Ravi',
+        role: Role.cashier,
+        secret: '135792',
+      );
+      Future<int> numberOf(String id) async =>
+          (await db
+                  .customSelect(
+                    'SELECT staff_number AS n FROM users WHERE id = ?',
+                    variables: [Variable<String>(id)],
+                  )
+                  .getSingle())
+              .read<int>('n');
+      expect(
+        [await numberOf(a), await numberOf(b), await numberOf(c)],
+        [1, 2, 3],
+      );
+    });
+
+    test(
+      'a turned-off person keeps their number and it is not given again',
+      () async {
+        final a = await auth.createUser(
+          name: 'Asha',
+          role: Role.cashier,
+          secret: '482916',
+        );
+        await auth.deactivate(userId: a, actor: a);
+        final b = await auth.createUser(
+          name: 'Ravi',
+          role: Role.cashier,
+          secret: '135792',
+        );
+        final n =
+            (await db
+                    .customSelect(
+                      'SELECT staff_number AS n FROM users WHERE id = ?',
+                      variables: [Variable<String>(b)],
+                    )
+                    .getSingle())
+                .read<int>('n');
+        expect(n, 2);
+      },
+    );
+
+    test(
+      'signing in returns the operator ID, never needing the name',
+      () async {
+        final a = await auth.createUser(
+          name: 'Asha',
+          role: Role.cashier,
+          secret: '482916',
+        );
+        final r = await auth.signIn(userId: a, secret: '482916') as SignedIn;
+        expect(r.staffCode, 'OP001');
+      },
+    );
+
+    test('the audit row for adding someone names the ID', () async {
+      await auth.createUser(name: 'Asha', role: Role.cashier, secret: '482916');
+      final row = await db
+          .customSelect(
+            "SELECT details FROM audit_log WHERE action = 'user.create'",
+          )
+          .getSingle();
+      expect(row.read<String>('details'), contains('OP001'));
+    });
+  });
 
   group('creating users', () {
     test('a cashier needs a PIN of exactly 6 digits', () async {

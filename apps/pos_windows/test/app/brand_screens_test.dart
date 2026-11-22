@@ -334,7 +334,7 @@ void main() {
         shopName: 'Corner Shop',
         billNo: '2026-27/C1/000001',
         dateText: '22-11-2026 10:00',
-        cashierName: 'Asha',
+        operatorCode: 'OP001',
         customer: null,
         rows: [],
         totalText: '₹0.00',

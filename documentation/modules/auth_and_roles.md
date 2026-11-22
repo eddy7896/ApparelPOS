@@ -33,3 +33,9 @@ Owner decisions, 2026-11-22: the owner and a manager add cashiers (name and a PI
 - Data: `apps/pos_windows/lib/data/staff_repository.dart` (list, add, new PIN or password, rename, turn off and on; audit rows never hold a secret). A name is unique whatever its capitals, also against people who are turned off. A person may change their own PIN or password; a manager cannot reset another manager or the owner.
 - Screen: `apps/pos_windows/lib/app/ui/staff_screen.dart`, "Staff" in the Manager Mode left menu. The sign-in names refresh after each change.
 - **Counters are not added here.** Each counter is a separate laptop with its own database until sync (Release 2), so a second counter, its lot range and shared staff and stock wait for Release 2 (owner, 2026-11-22). ADR-0006 point 14 (who assigns a second counter's lot range) stays open.
+
+## Operator IDs on the bill (built 2026-11-23)
+Owner request, 2026-11-23: a customer's bill must not carry a staff member's name. Every person who signs in (cashier, manager or owner) has an **operator ID**, `OP001`, `OP002` and so on. The bill prints "Served by: OP001" in place of "Cashier: <name>". (Assumption: "the name of the stall" in the request meant the staff member's name; if the shop's own name should also stay off the bill, say so.)
+- The number is given in order when the person is added (`users.staff_number`, schema v8, unique), is never reused, and stays with the person when they are turned off. People who existed before v8 get theirs in the order they were added.
+- Rules in `packages/core_domain/lib/src/staff_code.dart` (`formatStaffCode`, `parseStaffCode`, `nextStaffNumber`, `billServedByLine`). The Staff screen shows each person's ID.
+- The credit note slip never printed a staff name. Reports and the owner's lists inside the app still show names (they are not given to customers). Tests read the source to pin that the bill uses the ID.

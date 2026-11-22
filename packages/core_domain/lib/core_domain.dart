@@ -24,6 +24,7 @@ export 'src/recovery_key.dart';
 export 'src/report_rules.dart';
 export 'src/return_rules.dart';
 export 'src/shift_rules.dart';
+export 'src/staff_code.dart';
 export 'src/staff_rules.dart';
 export 'src/shop_time.dart';
 export 'src/stock_level.dart';

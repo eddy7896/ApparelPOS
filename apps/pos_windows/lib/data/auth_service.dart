@@ -28,10 +28,14 @@ final class SignedIn extends SignInResult {
     required this.userId,
     required this.name,
     required this.role,
+    this.staffCode = 'OP---',
   });
   final String userId;
   final String name;
   final Role role;
+
+  /// The operator ID printed on bills instead of the name ("OP001").
+  final String staffCode;
 }
 
 final class WrongSecret extends SignInResult {
@@ -89,6 +93,10 @@ class AuthService {
     }
   }
 
+  /// "OP001" for a staff number ("OP---" for a row that somehow has none).
+  static String codeOf(int? number) =>
+      number == null ? 'OP---' : formatStaffCode(number);
+
   /// Adds a user. Returns the new user's id. Throws [WeakSecret] if the PIN or
   /// password breaks the rules.
   Future<String> createUser({
@@ -105,12 +113,25 @@ class AuthService {
     final hash = _hasher.hash(secret);
     final id = _newId();
     final at = _now();
+    // The next operator number, taken inside the same transaction as the insert.
+    final highest =
+        (await _db
+                .customSelect(
+                  'SELECT COALESCE(MAX(staff_number), 0) AS m FROM users',
+                )
+                .getSingle())
+            .read<int>('m');
+    final number = highest + 1;
     await _writer.run<void>(
       action: 'user.create',
       entityType: 'user',
       entityId: id,
       actor: actor,
-      details: {'name': cleanName, 'role': role.dbValue},
+      details: {
+        'name': cleanName,
+        'role': role.dbValue,
+        'staffCode': formatStaffCode(number),
+      },
       body: () async {
         await _db
             .into(_db.users)
@@ -120,6 +141,7 @@ class AuthService {
                 name: cleanName,
                 role: role.dbValue,
                 credentialHash: hash,
+                staffNumber: Value(number),
                 createdAt: at,
                 updatedAt: at,
               ),
@@ -167,6 +189,7 @@ class AuthService {
         userId: user.id,
         name: user.name,
         role: Role.fromDb(user.role),
+        staffCode: codeOf(user.staffNumber),
       );
     }
 

@@ -39,6 +39,7 @@ class Counters extends Table {
 /// (manager, owner) is stored only as an Argon2id hash. Wrong-try state is kept
 /// here so a lock survives restarting the app (E-AUTH-2).
 @DataClassName('UserRow')
+@TableIndex(name: 'users_staff_number', unique: true, columns: {#staffNumber})
 class Users extends Table {
   TextColumn get id => text()();
   TextColumn get name =>
@@ -48,6 +49,10 @@ class Users extends Table {
   )();
   TextColumn get credentialHash => text()();
   BoolColumn get active => boolean().withDefault(const Constant(true))();
+
+  /// The number behind the operator ID printed on bills (OP001, OP002...).
+  /// Given in order when the person is added, never reused.
+  IntColumn get staffNumber => integer().nullable()();
   IntColumn get failures => integer().withDefault(const Constant(0))();
   IntColumn get lockCount => integer().withDefault(const Constant(0))();
   DateTimeColumn get lockedUntil => dateTime().nullable()();
@@ -478,7 +483,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -526,6 +531,36 @@ class AppDatabase extends _$AppDatabase {
         }
         if (!await has('returns')) {
           await m.addColumn(returns, returns.shiftId);
+        }
+      }
+      if (from < 8 && to >= 8) {
+        // version 8: every person gets an operator ID (UX, owner 2026-11-23);
+        // people added before get theirs in the order they were added.
+        Future<bool> hasCol() async => (await customSelect(
+          'PRAGMA table_info(users)',
+        ).get()).any((r) => r.read<String>('name') == 'staff_number');
+        if (!await hasCol()) {
+          await m.addColumn(users, users.staffNumber);
+        }
+        final waiting = await customSelect(
+          'SELECT id FROM users WHERE staff_number IS NULL ORDER BY created_at, rowid',
+        ).get();
+        var next =
+            ((await customSelect(
+              'SELECT COALESCE(MAX(staff_number), 0) AS m FROM users',
+            ).getSingle()).read<int>('m')) +
+            1;
+        for (final r in waiting) {
+          await customStatement(
+            'UPDATE users SET staff_number = ? WHERE id = ?',
+            [next++, r.read<String>('id')],
+          );
+        }
+        final has = await customSelect(
+          "SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = 'users_staff_number'",
+        ).get();
+        if (has.isEmpty) {
+          await m.createIndex(usersStaffNumber);
         }
       }
       if (from < 7 && to >= 7) {
