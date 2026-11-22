@@ -207,6 +207,31 @@ void main() {
       },
     );
 
+    test('runs the demo stock hook after making the practice users', () async {
+      var calls = 0;
+      final s = SessionController(
+        auth: auth,
+        onPracticeUsers: () async => calls++,
+      );
+      await s.start();
+      expect(await s.createPracticeUsers(), isTrue);
+      expect(calls, 1);
+      s.dispose();
+    });
+
+    test('does not run the hook when real users already exist', () async {
+      await auth.createUser(name: 'Asha', role: Role.cashier, secret: '482916');
+      var calls = 0;
+      final s = SessionController(
+        auth: auth,
+        onPracticeUsers: () async => calls++,
+      );
+      await s.start();
+      expect(await s.createPracticeUsers(), isFalse);
+      expect(calls, 0);
+      s.dispose();
+    });
+
     test('does nothing when real users already exist', () async {
       await auth.createUser(name: 'Asha', role: Role.cashier, secret: '482916');
       await session.start();

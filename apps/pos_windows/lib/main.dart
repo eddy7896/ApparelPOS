@@ -17,6 +17,7 @@ import 'data/report_repository.dart';
 import 'data/returns_repository.dart';
 import 'data/sales_repository.dart';
 import 'data/shift_repository.dart';
+import 'data/demo_stock.dart';
 import 'data/stock_lookup_repository.dart';
 import 'data/stock_repository.dart';
 
@@ -42,7 +43,10 @@ Future<void> _start() async {
   final brand = BrandController(BrandRepository(db, newId: newId));
   await stock.ensureCounter();
   await brand.reload();
-  final session = SessionController(auth: auth);
+  final session = SessionController(
+    auth: auth,
+    onPracticeUsers: () => seedDemoStock(db, stock),
+  );
   runApp(
     PosApp(
       session: session,

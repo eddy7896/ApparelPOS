@@ -21,10 +21,15 @@ class SessionController extends ChangeNotifier {
     required this.auth,
     DateTime Function()? now,
     IdleLockPolicy? idle,
+    this.onPracticeUsers,
   }) : _now = now ?? (() => DateTime.now().toUtc()),
        _idle = idle ?? IdleLockPolicy();
 
   final AuthService auth;
+
+  /// Run after the practice users are made (development builds): main uses it
+  /// to add demo stock.
+  final Future<void> Function()? onPracticeUsers;
   final DateTime Function() _now;
   final IdleLockPolicy _idle;
 
@@ -100,6 +105,7 @@ class SessionController extends ChangeNotifier {
       role: Role.cashier,
       secret: practiceCashierPin,
     );
+    await onPracticeUsers?.call();
     await start();
     return true;
   }
