@@ -15,6 +15,7 @@ import '../session_controller.dart';
 import 'approval_dialog.dart';
 import 'register_screen.dart';
 import 'shift_gate.dart';
+import 'status_colors.dart';
 
 /// How the customer is paid out. An exchange is a credit note that the
 /// register applies to the new bill at once.
@@ -250,7 +251,13 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
     body: ShiftGate(
       session: widget.session,
       services: _s,
-      child: _saved != null ? _savedView(context) : _form(context),
+      // Return saved is a popup over the form (UX-5), like the bill popup.
+      child: Stack(
+        children: [
+          ExcludeFocus(excluding: _saved != null, child: _form(context)),
+          if (_saved != null) _savedView(context),
+        ],
+      ),
     ),
   );
 
@@ -396,11 +403,30 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Refund', style: Theme.of(context).textTheme.titleMedium),
-        Text(
-          formatRupees(_total),
-          key: const Key('refund-total'),
-          style: Theme.of(context).textTheme.displaySmall,
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Refund',
+                style: Theme.of(context).textTheme.titleMedium
+                    ?.copyWith(color: Theme.of(context).colorScheme.onPrimary),
+              ),
+              Text(
+                formatRupees(_total),
+                key: const Key('refund-total'),
+                style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 12),
         const Text('Pay out as'),
@@ -448,75 +474,118 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
       RefundChoice.creditNote || RefundChoice.exchange =>
         'Credit note for ${formatRupees(saved.total)} issued.',
     };
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 560),
-        child: ListView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.all(24),
-          children: [
-            Text(
-              'Return saved',
-              style: t.headlineSmall,
-              key: const Key('return-saved-title'),
-            ),
-            const SizedBox(height: 12),
-            for (final l in saved.lines)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text('${l.productName} ${l.size} ${l.color}'),
+    return Stack(
+      children: [
+        const ModalBarrier(color: Colors.black54, dismissible: false),
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: Material(
+              key: const Key('return-done-popup'),
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(18),
+              elevation: 12,
+              child: ListView(
+                shrinkWrap: true,
+                padding: const EdgeInsets.all(24),
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.check_circle,
+                        color: successColor,
+                        size: 44,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Return saved',
+                        style: t.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                        key: const Key('return-saved-title'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  for (final l in saved.lines)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${l.productName} ${l.size} ${l.color}',
+                            ),
+                          ),
+                          Text(formatRupees(l.netPrice)),
+                        ],
+                      ),
                     ),
-                    Text(formatRupees(l.netPrice)),
+                  const Divider(),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: successColor,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Text(
+                      payout,
+                      key: const Key('payout-text'),
+                      style: t.headlineSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  if (note != null) ...[
+                    const SizedBox(height: 8),
+                    Text('Code ${note.code}', key: const Key('note-code')),
+                    Text(
+                      'Valid till ${note.lastDay.day.toString().padLeft(2, '0')}-${note.lastDay.month.toString().padLeft(2, '0')}-${note.lastDay.year}',
+                      key: const Key('note-valid-till'),
+                    ),
                   ],
-                ),
-              ),
-            const Divider(),
-            Text(payout, key: const Key('payout-text'), style: t.titleLarge),
-            if (note != null) ...[
-              const SizedBox(height: 8),
-              Text('Code ${note.code}', key: const Key('note-code')),
-              Text(
-                'Valid till ${note.lastDay.day.toString().padLeft(2, '0')}-${note.lastDay.month.toString().padLeft(2, '0')}-${note.lastDay.year}',
-                key: const Key('note-valid-till'),
-              ),
-            ],
-            if (_message != null)
-              Text(
-                _message!,
-                key: const Key('message-banner'),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 8,
-              children: [
-                if (note != null)
-                  OutlinedButton.icon(
-                    key: const Key('print-slip'),
-                    onPressed: _printSlip,
-                    icon: const Icon(Icons.print),
-                    label: const Text('Print credit note'),
+                  if (_message != null)
+                    Text(
+                      _message!,
+                      key: const Key('message-banner'),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
+                    children: [
+                      if (note != null)
+                        OutlinedButton.icon(
+                          key: const Key('print-slip'),
+                          onPressed: _printSlip,
+                          icon: const Icon(Icons.print),
+                          label: const Text('Print credit note'),
+                        ),
+                      if (choice == RefundChoice.exchange)
+                        FilledButton(
+                          key: const Key('start-exchange'),
+                          onPressed: _startExchange,
+                          child: const Text(
+                            'Start new bill with this credit note',
+                          ),
+                        ),
+                      FilledButton.tonal(
+                        key: const Key('new-return'),
+                        onPressed: _newReturn,
+                        child: const Text('New return'),
+                      ),
+                    ],
                   ),
-                if (choice == RefundChoice.exchange)
-                  FilledButton(
-                    key: const Key('start-exchange'),
-                    onPressed: _startExchange,
-                    child: const Text('Start new bill with this credit note'),
-                  ),
-                FilledButton.tonal(
-                  key: const Key('new-return'),
-                  onPressed: _newReturn,
-                  child: const Text('New return'),
-                ),
-              ],
+                ],
+              ),
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

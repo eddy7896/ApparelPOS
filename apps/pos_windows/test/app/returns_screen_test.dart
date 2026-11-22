@@ -421,6 +421,46 @@ void main() {
     });
   });
 
+  group('the look (UX-5)', () {
+    testWidgets('return saved is a popup over the form; New return closes it', (
+      tester,
+    ) async {
+      await tester.runAsync(() => sell([barcodes[0]]));
+      await open(tester);
+      await goToReturns(tester);
+      await scanReturn(tester, barcodes[0]);
+      await chooseMode(tester, 'cash');
+      expect(find.byKey(const Key('return-done-popup')), findsNothing);
+      await tester.tap(find.byKey(const Key('complete-return')));
+      await pump(tester);
+      expect(find.byKey(const Key('return-done-popup')), findsOneWidget);
+      expect(find.byKey(const Key('return-saved-title')), findsOneWidget);
+      // the form is still drawn behind it
+      expect(find.byKey(const Key('refund-total')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('new-return')));
+      await tester.pump();
+      expect(find.byKey(const Key('return-done-popup')), findsNothing);
+    });
+
+    testWidgets('the main buttons are at least 48 by 48 for touch', (
+      tester,
+    ) async {
+      await tester.runAsync(() => sell([barcodes[0]]));
+      await open(tester);
+      await goToReturns(tester);
+      await scanReturn(tester, barcodes[0]);
+      for (final key in [
+        'complete-return',
+        'refund-mode-cash',
+        'return-remove-${barcodes[0]}',
+      ]) {
+        final size = tester.getSize(find.byKey(Key(key)));
+        expect(size.height, greaterThanOrEqualTo(48), reason: key);
+        expect(size.width, greaterThanOrEqualTo(48), reason: key);
+      }
+    });
+  });
+
   group('credit notes', () {
     testWidgets(
       'a credit note refund shows the code and valid-till and prints a slip',
