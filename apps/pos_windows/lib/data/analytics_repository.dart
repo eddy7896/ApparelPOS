@@ -17,12 +17,16 @@ final class StyleThrough {
     required this.sold,
     required this.firstBought,
     required this.slow,
+    this.categoryId,
   });
   final String name;
   final int bought;
   final int sold;
   final DateTime firstBought;
   final bool slow;
+
+  /// The category of the style, or null.
+  final String? categoryId;
 
   int get percent => sellThroughPercent(bought: bought, sold: sold);
   int get unsold => bought - sold;
@@ -55,9 +59,18 @@ final class AnalyticsOverview {
     required this.returnCount,
     required this.profit,
     required this.insights,
+    this.categoryValue = const {},
+    this.categoryValuePrevious = const {},
+    this.categoryQuantity = const {},
   });
 
   final AnalyticsRange range;
+
+  /// Sales (paise) and garments by category id (null for none) in the range,
+  /// and the sales in the period before.
+  final Map<String?, int> categoryValue;
+  final Map<String?, int> categoryValuePrevious;
+  final Map<String?, int> categoryQuantity;
 
   /// The days of the range, oldest first, then the same number of days before.
   final List<DayTotal> current;
@@ -209,6 +222,30 @@ class AnalyticsRepository {
         ),
     ];
 
+    Future<(Map<String?, int>, Map<String?, int>)> byCategory(
+      DateTime a,
+      DateTime b,
+    ) async {
+      final rows = await _db
+          .customSelect(
+            'SELECT p.category_id AS c, COUNT(*) AS q, SUM(l.final_paise) AS v '
+            'FROM bill_lines l JOIN bills bl ON bl.id = l.bill_id '
+            'JOIN articles a ON a.id = l.article_id '
+            'JOIN variants vr ON vr.id = a.variant_id '
+            'JOIN products p ON p.id = vr.product_id '
+            'WHERE bl.billed_at >= ? AND bl.billed_at < ? GROUP BY p.category_id',
+            variables: [Variable<DateTime>(a), Variable<DateTime>(b)],
+          )
+          .get();
+      return (
+        {for (final r in rows) r.read<String?>('c'): r.read<int>('v')},
+        {for (final r in rows) r.read<String?>('c'): r.read<int>('q')},
+      );
+    }
+
+    final (catValue, catQty) = await byCategory(cutoff, until);
+    final (catValuePrev, _) = await byCategory(from, cutoff);
+
     final returnCount =
         (await _db
                 .customSelect(
@@ -224,7 +261,7 @@ class AnalyticsRepository {
     // Sell-through since each style came in (all time, not the range).
     final throughRows = await _db
         .customSelect(
-          'SELECT p.name AS name, COUNT(*) AS bought, '
+          'SELECT p.name AS name, p.category_id AS cat, COUNT(*) AS bought, '
           "SUM(CASE WHEN a.status = 'SOLD' THEN 1 ELSE 0 END) AS sold, "
           'MIN(b.purchased_at) AS first '
           'FROM articles a JOIN variants v ON v.id = a.variant_id '
@@ -244,6 +281,7 @@ class AnalyticsRepository {
             bought: bought,
             sold: sold,
             firstBought: first,
+            categoryId: r.read<String?>('cat'),
             slow: isSlowMover(
               bought: bought,
               sold: sold,
@@ -288,6 +326,9 @@ class AnalyticsRepository {
       returnCount: returnCount,
       profit: profit,
       insights: analyseTrend(current),
+      categoryValue: catValue,
+      categoryValuePrevious: catValuePrev,
+      categoryQuantity: catQty,
     );
   }
 

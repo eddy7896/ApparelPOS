@@ -31,6 +31,8 @@ final class DailyReport {
     required this.profit,
     required this.billsByHour,
     required this.salesByHour,
+    this.categoryValue = const {},
+    this.categoryQuantity = const {},
   });
 
   final ShopDay day;
@@ -59,6 +61,11 @@ final class DailyReport {
   /// Shifts closed during the day, with their variance.
   final List<ShiftCloseReport> shiftCloses;
   final List<StyleSales> topStyles;
+
+  /// What was sold in the day by category id (null for none): paise and
+  /// garments. They add up to the day's sales.
+  final Map<String?, int> categoryValue;
+  final Map<String?, int> categoryQuantity;
 
   /// Bills made and what they came to in each hour (0 to 23) of the day.
   final List<int> billsByHour;
@@ -213,6 +220,21 @@ class ReportRepository {
       salesByHour[r.read<int>('h')] = Money(r.read<int>('t'));
     }
 
+    final catRows = await _db
+        .customSelect(
+          'SELECT p.category_id AS c, COUNT(*) AS q, SUM(l.final_paise) AS v '
+          'FROM bill_lines l JOIN bills bl ON bl.id = l.bill_id '
+          'JOIN articles a ON a.id = l.article_id '
+          'JOIN variants vr ON vr.id = a.variant_id '
+          'JOIN products p ON p.id = vr.product_id '
+          'WHERE bl.billed_at >= ? AND bl.billed_at < ? GROUP BY p.category_id',
+          variables: [
+            Variable<DateTime>(day.startUtc),
+            Variable<DateTime>(day.endUtc),
+          ],
+        )
+        .get();
+
     final closes = await _closesOn(day);
     final net = netSales(sales: salesTotal, refunds: refundsTotal);
 
@@ -242,6 +264,12 @@ class ReportRepository {
       profit: profit,
       billsByHour: billsByHour,
       salesByHour: salesByHour,
+      categoryValue: {
+        for (final r in catRows) r.read<String?>('c'): r.read<int>('v'),
+      },
+      categoryQuantity: {
+        for (final r in catRows) r.read<String?>('c'): r.read<int>('q'),
+      },
     );
   }
 

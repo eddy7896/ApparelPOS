@@ -14,6 +14,7 @@ import 'package:pos_windows/app/session_controller.dart';
 import 'package:pos_windows/app/ui/ui_tokens.dart';
 import 'package:pos_windows/data/app_database.dart';
 import 'package:pos_windows/data/auth_service.dart';
+import 'package:pos_windows/data/category_repository.dart';
 import 'package:pos_windows/data/report_repository.dart';
 import 'package:pos_windows/data/returns_repository.dart';
 import 'package:pos_windows/data/sales_repository.dart';
@@ -117,6 +118,7 @@ void main() {
     WidgetTester tester, {
     bool owner = false,
     bool withLookup = true,
+    bool withCategories = false,
   }) async {
     tester.view.physicalSize = const Size(1500, 1400);
     tester.view.devicePixelRatio = 1;
@@ -145,6 +147,9 @@ void main() {
           reports: ReportRepository(db),
           auth: auth,
           stockLookup: withLookup ? StockLookupRepository(db) : null,
+          categories: withCategories
+              ? CategoryRepository(db, newId: newId)
+              : null,
           printer: const SystemLabelPrinter(),
           fonts: () async => LabelFonts(
             regular: File('assets/fonts/NotoSans-Regular.ttf')
@@ -449,5 +454,122 @@ void main() {
         findsOneWidget,
       );
     });
+  });
+
+  group('category chips', () {
+    // Men > Shirts (Cotton Kurta), Kids (no styles); Denim Jeans has none.
+    Future<void> setUpCategories() async {
+      final c = CategoryRepository(db, newId: newId);
+      final men = await c.add(role: Role.owner, actorId: 'o', name: 'Men');
+      final shirts = await c.add(
+        role: Role.owner,
+        actorId: 'o',
+        name: 'Shirts',
+        parentId: men,
+      );
+      await c.add(role: Role.owner, actorId: 'o', name: 'Kids');
+      final kurta = (await c.styles(role: Role.owner))
+          .singleWhere((s) => s.name == 'Cotton Kurta');
+      await c.assignStyle(
+        role: Role.owner,
+        actorId: 'o',
+        styleId: kurta.id,
+        categoryId: shirts,
+      );
+    }
+
+    testWidgets('no chips when the shop has no categories', (tester) async {
+      await open(tester, withCategories: true);
+      await goToLookup(tester);
+      expect(find.byKey(const Key('category-chips')), findsNothing);
+    });
+
+    testWidgets(
+      'a group chip narrows to its styles; All brings everything back',
+      (tester) async {
+        await setUpCategories();
+        await open(tester, withCategories: true);
+        await goToLookup(tester);
+        expect(find.byKey(const Key('category-chips')), findsOneWidget);
+        expect(find.byKey(const Key('style-Cotton Kurta')), findsOneWidget);
+        expect(find.byKey(const Key('style-Denim Jeans')), findsOneWidget);
+        await tester.tap(find.byKey(const Key('cat-Men')));
+        await tester.pump();
+        expect(find.byKey(const Key('style-Cotton Kurta')), findsOneWidget);
+        expect(find.byKey(const Key('style-Denim Jeans')), findsNothing);
+        await tester.tap(find.byKey(const Key('cat-all')));
+        await tester.pump();
+        expect(find.byKey(const Key('style-Denim Jeans')), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'choosing a group shows the categories inside it, and a category narrows further',
+      (tester) async {
+        await setUpCategories();
+        await open(tester, withCategories: true);
+        await goToLookup(tester);
+        expect(find.byKey(const Key('category-chips-inside')), findsNothing);
+        await tester.tap(find.byKey(const Key('cat-Men')));
+        await tester.pump();
+        expect(find.byKey(const Key('category-chips-inside')), findsOneWidget);
+        await tester.tap(find.byKey(const Key('cat-Men › Shirts')));
+        await tester.pump();
+        expect(find.byKey(const Key('style-Cotton Kurta')), findsOneWidget);
+        expect(find.byKey(const Key('style-Denim Jeans')), findsNothing);
+      },
+    );
+
+    testWidgets('No category lists the styles that are not in any', (
+      tester,
+    ) async {
+      await setUpCategories();
+      await open(tester, withCategories: true);
+      await goToLookup(tester);
+      await tester.tap(find.byKey(const Key('cat-none')));
+      await tester.pump();
+      expect(find.byKey(const Key('style-Denim Jeans')), findsOneWidget);
+      expect(find.byKey(const Key('style-Cotton Kurta')), findsNothing);
+    });
+
+    testWidgets(
+      'a group with no styles says so, and the out of stock counts follow the category',
+      (tester) async {
+        await setUpCategories();
+        await open(tester, withCategories: true);
+        await goToLookup(tester);
+        await tester.tap(find.byKey(const Key('cat-Kids')));
+        await tester.pump();
+        expect(find.byKey(const Key('filter-empty')), findsOneWidget);
+        await tester.tap(find.byKey(const Key('cat-Men')));
+        await tester.pump();
+        expect(
+          find.text('All (2)'),
+          findsOneWidget,
+        ); // Cotton Kurta: M Blue and L Blue
+      },
+    );
+
+    testWidgets(
+      'the category filter works together with the search and the stock filter',
+      (tester) async {
+        await setUpCategories();
+        await open(tester, withCategories: true);
+        await goToLookup(tester);
+        await tester.tap(find.byKey(const Key('cat-Men')));
+        await tester.tap(find.byKey(const Key('filter-out')));
+        await tester.pump();
+        expect(
+          find.byKey(const Key('variant-Cotton Kurta-L-Blue')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('variant-Cotton Kurta-M-Blue')),
+          findsNothing,
+        );
+        await type(tester, 'denim');
+        expect(find.byKey(const Key('filter-empty')), findsOneWidget);
+      },
+    );
   });
 }

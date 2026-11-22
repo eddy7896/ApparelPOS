@@ -233,6 +233,25 @@ void main() {
       expect(b.billsByHour[23], 0);
     });
 
+    test('sales and garments by category for the day', () async {
+      await db.customStatement(
+        "INSERT INTO categories (id, name, created_at, updated_at) VALUES ('men', 'Men', 1700000000, 1700000000)",
+      );
+      await db.customStatement(
+        "UPDATE products SET category_id = 'men' WHERE name = 'Cotton Kurta'",
+      );
+      await busyDay(); // kurta x2 and jeans x2 sold, jeans has no category
+      final r = await report.dailyReport(role: Role.owner, day: day);
+      expect(r.categoryValue['men'], 49900 + 44910);
+      expect(r.categoryQuantity['men'], 2);
+      expect(r.categoryValue[null], 129900 + 103920);
+      expect(r.categoryQuantity[null], 2);
+      expect(
+        r.categoryValue.values.fold(0, (a, b) => a + b),
+        r.salesTotal.paise,
+      );
+    });
+
     test('returns taken and the net sales', () async {
       await busyDay();
       final r = await report.dailyReport(role: Role.owner, day: day);
@@ -415,6 +434,7 @@ void main() {
       );
       expect(r.billCount, 0);
       expect(r.salesTotal, Money.zero);
+      expect(r.categoryValue, isEmpty);
       expect(r.billsByHour, List<int>.filled(24, 0));
       expect(r.salesByHour, List<Money>.filled(24, Money.zero));
       expect(r.moneyIn, isEmpty);

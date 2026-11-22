@@ -51,6 +51,7 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
   String? _error;
   int? _hoverHour;
   bool _asTable = false;
+  List<CategoryNode> _nodes = const [];
 
   ShopDay get _today => ShopDay.fromUtc(widget.session.now);
 
@@ -58,6 +59,22 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
   void initState() {
     super.initState();
     _load();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    final cats = widget.services.categories;
+    if (cats == null) {
+      return;
+    }
+    try {
+      final list = await cats.list(role: widget.session.user?.role);
+      if (mounted) {
+        setState(() => _nodes = [for (final e in list) e.node]);
+      }
+    } on PermissionDenied {
+      // no category card
+    }
   }
 
   Future<void> _load() async {
@@ -534,6 +551,50 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
             ),
     );
 
+    // Sales by category (owner, 2026-11-23): shown once the shop has set some up.
+    final catSums = sumByCategory(_nodes, r.categoryValue, byGroup: false);
+    final catQty = sumByCategory(_nodes, r.categoryQuantity, byGroup: false);
+    final catRows = catSums.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final catTotal = catSums.values.fold<int>(0, (a, b) => a + b);
+    String catLabel(String? id) =>
+        id == null ? 'No category' : categoryPath(_nodes, id);
+    final categoriesCard = _nodes.isEmpty
+        ? null
+        : _chartCard(
+            context,
+            title: 'Sales by category',
+            subtitle: 'What sold today, by the category of the style',
+            child: catRows.isEmpty
+                ? empty('No sales this day.', 'chart-no-category-sales')
+                : _asTable
+                ? ChartTable(
+                    key: const Key('table-categories'),
+                    headers: const ['Category', 'Sold', 'Sales', 'Share'],
+                    rows: [
+                      for (final e in catRows)
+                        [
+                          catLabel(e.key),
+                          '${catQty[e.key] ?? 0}',
+                          formatRupees(Money(e.value)),
+                          '${e.value * 100 ~/ catTotal}%',
+                        ],
+                    ],
+                  )
+                : Column(
+                    children: [
+                      for (final e in catRows)
+                        RankedBarRow(
+                          key: Key('chart-category-${catLabel(e.key)}'),
+                          label: catLabel(e.key),
+                          value: formatRupees(Money(e.value)),
+                          extra: '${e.value * 100 ~/ catTotal}%',
+                          fraction: e.value / catRows.first.value,
+                        ),
+                    ],
+                  ),
+          );
+
     final closes = r.shiftCloses;
     final closesCard = _chartCard(
       context,
@@ -589,7 +650,14 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
       Wrap(
         spacing: 16,
         runSpacing: 16,
-        children: [hoursCard, moneyCard, stylesCard, refundsCard, closesCard],
+        children: [
+          hoursCard,
+          moneyCard,
+          stylesCard,
+          ?categoriesCard,
+          refundsCard,
+          closesCard,
+        ],
       ),
       const SizedBox(height: 20),
     ];

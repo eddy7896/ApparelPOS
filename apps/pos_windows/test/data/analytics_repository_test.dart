@@ -369,6 +369,73 @@ void main() {
     });
   });
 
+  group('sales by category (owner, 2026-11-23)', () {
+    Future<void> categorise() async {
+      await db.customStatement(
+        "INSERT INTO categories (id, name, created_at, updated_at) VALUES ('men', 'Men', 1700000000, 1700000000)",
+      );
+      await db.customStatement(
+        "INSERT INTO categories (id, name, parent_id, created_at, updated_at) VALUES ('shirts', 'Shirts', 'men', 1700000000, 1700000000)",
+      );
+      await db.customStatement(
+        "UPDATE products SET category_id = 'shirts' WHERE name = 'Cotton Kurta'",
+      );
+    }
+
+    test(
+      'value and garments by category, this period and the one before',
+      () async {
+        await categorise();
+        await sell(DateTime.utc(2026, 11, 20, 5), [
+          kurta[0],
+          kurta[1],
+        ]); // this week, categorised
+        await sell(DateTime.utc(2026, 11, 20, 6), [
+          jeans[0],
+        ]); // this week, no category
+        await sell(DateTime.utc(2026, 11, 12, 5), [
+          kurta[2],
+        ]); // the week before
+        final o = await overview(AnalyticsRange.week);
+        expect(o.categoryValue['shirts'], 99800);
+        expect(o.categoryValue[null], 129900);
+        expect(o.categoryQuantity['shirts'], 2);
+        expect(o.categoryQuantity[null], 1);
+        expect(o.categoryValuePrevious['shirts'], 49900);
+        expect(o.categoryValuePrevious.containsKey(null), isFalse);
+      },
+    );
+
+    test('the category totals add up to the sales of the range', () async {
+      await categorise();
+      await sell(DateTime.utc(2026, 11, 20, 5), [kurta[0], jeans[0]]);
+      final o = await overview(AnalyticsRange.week);
+      expect(o.categoryValue.values.fold(0, (a, b) => a + b), 49900 + 129900);
+    });
+
+    test('a style put in a category later moves its sales with it', () async {
+      await sell(DateTime.utc(2026, 11, 20, 5), [kurta[0]]);
+      expect((await overview(AnalyticsRange.week)).categoryValue.keys, [null]);
+      await categorise();
+      expect((await overview(AnalyticsRange.week)).categoryValue.keys, [
+        'shirts',
+      ]);
+    });
+
+    test('sell-through rows carry the category of the style', () async {
+      await categorise();
+      final o = await overview(AnalyticsRange.week);
+      expect(
+        o.sellThrough.singleWhere((s) => s.name == 'Cotton Kurta').categoryId,
+        'shirts',
+      );
+      expect(
+        o.sellThrough.singleWhere((s) => s.name == 'Denim Jeans').categoryId,
+        isNull,
+      );
+    });
+  });
+
   group('cash over and short', () {
     test('the last 8 closes, oldest first, with who and how much', () async {
       for (var i = 0; i < 10; i++) {

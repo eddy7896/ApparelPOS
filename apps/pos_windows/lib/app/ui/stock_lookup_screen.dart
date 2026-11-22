@@ -7,6 +7,7 @@ import 'package:core_domain/core_domain.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/stock_lookup_repository.dart';
+import 'category_chips.dart';
 import '../services.dart';
 import '../session_controller.dart';
 import 'ui_tokens.dart';
@@ -29,12 +30,30 @@ class _StockLookupScreenState extends State<StockLookupScreen> {
   final _query = TextEditingController();
   List<StyleStock>? _results;
   StockFilter _filter = StockFilter.all;
+  List<CategoryNode> _categories = const [];
+  String? _categoryFilter; // null for all, a group or category id, or none
   String? _error;
 
   @override
   void initState() {
     super.initState();
+    _loadCategories();
     _search();
+  }
+
+  Future<void> _loadCategories() async {
+    final cats = widget.services.categories;
+    if (cats == null) {
+      return;
+    }
+    try {
+      final list = await cats.list(role: widget.session.user?.role);
+      if (mounted) {
+        setState(() => _categories = [for (final e in list) e.node]);
+      }
+    } on PermissionDenied {
+      // no chips
+    }
   }
 
   @override
@@ -103,15 +122,27 @@ class _StockLookupScreenState extends State<StockLookupScreen> {
                 key: Key('lookup-empty'),
               )
             else ...[
-              _summary(context, results),
+              CategoryChips(
+                nodes: _categories,
+                selected: _categoryFilter,
+                onChanged: (v) => setState(() => _categoryFilter = v),
+              ),
+              if (_categories.isNotEmpty) const SizedBox(height: 10),
+              _summary(context, _inCategory(results)),
               const SizedBox(height: 12),
-              Expanded(child: _list(context, results)),
+              Expanded(child: _list(context, _inCategory(results))),
             ],
           ],
         ),
       ),
     );
   }
+
+  /// Only the styles in the chosen category (or group).
+  List<StyleStock> _inCategory(List<StyleStock> all) => [
+    for (final s in all)
+      if (categoryMatches(_categories, _categoryFilter, s.categoryId)) s,
+  ];
 
   int _countWhere(List<StyleStock> all, StockFilter f) => [
     for (final s in all)

@@ -158,6 +158,22 @@ void main() {
     });
   });
 
+  group('the category of a style', () {
+    test('a style comes back with its category, or none', () async {
+      await buy('Cotton Kurta', [('M', 'Blue', 1, 499)]);
+      await buy('Denim Jeans', [('L', 'Black', 1, 1299)]);
+      await db.customStatement(
+        "INSERT INTO categories (id, name, created_at, updated_at) VALUES ('c1', 'Men', 1700000000, 1700000000)",
+      );
+      await db.customStatement(
+        "UPDATE products SET category_id = 'c1' WHERE name = 'Cotton Kurta'",
+      );
+      final r = await lookup.search(role: Role.cashier, query: '');
+      expect(r.singleWhere((s) => s.name == 'Cotton Kurta').categoryId, 'c1');
+      expect(r.singleWhere((s) => s.name == 'Denim Jeans').categoryId, isNull);
+    });
+  });
+
   group('finding it', () {
     setUp(() async {
       await buy('Cotton Kurta', [('M', 'Blue', 1, 499)]);

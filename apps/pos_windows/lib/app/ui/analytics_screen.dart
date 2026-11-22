@@ -87,11 +87,30 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   int? _hoverHour;
   bool _byQuantity = true;
   bool _table = false;
+  bool _catByGroup = true;
+  bool _throughByCategory = false;
+  List<CategoryNode> _nodes = const [];
 
   @override
   void initState() {
     super.initState();
     _load();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    final cats = widget.services.categories;
+    if (cats == null) {
+      return;
+    }
+    try {
+      final list = await cats.list(role: widget.session.user?.role);
+      if (mounted) {
+        setState(() => _nodes = [for (final e in list) e.node]);
+      }
+    } on PermissionDenied {
+      // no category cards
+    }
   }
 
   Future<void> _load() async {
@@ -157,6 +176,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     _sized(context, _modesCard(context, data)),
                     _sized(context, _sellersCard(context, data)),
                     _sized(context, _throughCard(context, data)),
+                    if (widget.services.categories != null)
+                      _sized(context, _categoriesCard(context, data)),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -517,6 +538,19 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           'Busiest time: ${hourText(peak)} to ${hourText((peak + 1) % 24)}.',
         ));
       }
+      final movers = _categoryMovers(d);
+      if (movers.rising != null) {
+        lines.add((
+          'insight-category-up',
+          'Growing fastest: ${movers.rising!.label} (${changeText(movers.rising!.bp).toLowerCase()}).',
+        ));
+      }
+      if (movers.falling != null) {
+        lines.add((
+          'insight-category-down',
+          'Falling most: ${movers.falling!.label} (${changeText(movers.falling!.bp).toLowerCase()}).',
+        ));
+      }
       final slow = d.sellThrough.where((s) => s.slow).toList();
       if (slow.isNotEmpty) {
         lines.add((
@@ -650,6 +684,267 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   // ---- how much of each style has sold ---------------------------------------
 
+  // ---- sales by category -------------------------------------------------------
+
+  String _catLabel(String? id) =>
+      id == null ? 'No category' : categoryPath(_nodes, id);
+
+  /// Each group (or category) with this period's sales and the period before.
+  List<({String? id, int value, int previous, int? bp})> _categoryRows(
+    AnalyticsOverview d,
+  ) {
+    final cur = sumByCategory(_nodes, d.categoryValue, byGroup: _catByGroup);
+    final prev = sumByCategory(
+      _nodes,
+      d.categoryValuePrevious,
+      byGroup: _catByGroup,
+    );
+    final ids = {...cur.keys, ...prev.keys};
+    final rows = [
+      for (final id in ids)
+        (
+          id: id,
+          value: cur[id] ?? 0,
+          previous: prev[id] ?? 0,
+          bp: changeBp(Money(cur[id] ?? 0), Money(prev[id] ?? 0)),
+        ),
+    ]..sort((a, b) => b.value.compareTo(a.value));
+    return rows;
+  }
+
+  /// The group that grew most and the one that fell most against the period
+  /// before (only those that had sales before, so a percent exists).
+  ({String label, int bp})? _bestOf(
+    List<({String? id, int value, int previous, int? bp})> rows, {
+    required bool rising,
+  }) {
+    ({String label, int bp})? best;
+    for (final r in rows) {
+      final bp = r.bp;
+      if (r.id == null || bp == null) {
+        continue;
+      }
+      if (rising ? bp > 0 : bp < 0) {
+        if (best == null || (rising ? bp > best.bp : bp < best.bp)) {
+          best = (label: _catLabel(r.id), bp: bp);
+        }
+      }
+    }
+    return best;
+  }
+
+  ({({String label, int bp})? rising, ({String label, int bp})? falling})
+  _categoryMovers(AnalyticsOverview d) {
+    if (widget.services.categories == null || _nodes.isEmpty) {
+      return (rising: null, falling: null);
+    }
+    final rows = _categoryRows(d);
+    return (
+      rising: _bestOf(rows, rising: true),
+      falling: _bestOf(rows, rising: false),
+    );
+  }
+
+  Widget _categoriesCard(BuildContext context, AnalyticsOverview d) {
+    if (_nodes.isEmpty) {
+      return _card(
+        context,
+        title: 'Sales by category',
+        child: const Text(
+          'Set up categories in Settings to see sales by category.',
+          key: Key('categories-hint'),
+        ),
+      );
+    }
+    final rows = _categoryRows(d);
+    final total = rows.fold<int>(0, (a, r) => a + r.value);
+    final top = rows.isEmpty ? 1 : math.max(rows.first.value, 1);
+    return _card(
+      context,
+      title: 'Sales by category',
+      subtitle: 'This period, with the change against the one before',
+      trailing: Wrap(
+        spacing: 6,
+        children: [
+          ChoiceChip(
+            key: const Key('cat-by-group'),
+            label: const Text('Groups'),
+            selected: _catByGroup,
+            onSelected: (_) => setState(() => _catByGroup = true),
+          ),
+          ChoiceChip(
+            key: const Key('cat-by-category'),
+            label: const Text('Categories'),
+            selected: !_catByGroup,
+            onSelected: (_) => setState(() => _catByGroup = false),
+          ),
+        ],
+      ),
+      child: rows.isEmpty
+          ? const Text('No sales yet.', key: Key('categories-empty'))
+          : Column(
+              children: [
+                for (final r in rows)
+                  Padding(
+                    key: Key('catrow-${_catLabel(r.id)}'),
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _catLabel(r.id),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              formatRupees(Money(r.value)),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              total == 0 ? '' : '${r.value * 100 ~/ total}%',
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        LayoutBuilder(
+                          builder: (context, c) => Container(
+                            width: c.maxWidth * (r.value / top).clamp(0.0, 1.0),
+                            height: 12,
+                            decoration: const BoxDecoration(
+                              color: ChartColors.series,
+                              borderRadius: BorderRadius.horizontal(
+                                right: Radius.circular(6),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              r.bp == null || r.bp == 0
+                                  ? Icons.remove
+                                  : r.bp! > 0
+                                  ? Icons.arrow_upward
+                                  : Icons.arrow_downward,
+                              size: 14,
+                              color: ChartColors.mutedText,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${changeText(r.bp)} (before: ${formatRupees(Money(r.previous))})',
+                              key: Key('catchange-${_catLabel(r.id)}'),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: ChartColors.mutedText,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+    );
+  }
+
+  /// Sell-through grouped by category: bought, sold and slow movers.
+  Widget _throughByCategoryRows(BuildContext context, AnalyticsOverview d) {
+    final bought = <String?, int>{};
+    final sold = <String?, int>{};
+    final slow = <String?, int>{};
+    for (final s in d.sellThrough) {
+      bought[s.categoryId] = (bought[s.categoryId] ?? 0) + s.bought;
+      sold[s.categoryId] = (sold[s.categoryId] ?? 0) + s.sold;
+      slow[s.categoryId] = (slow[s.categoryId] ?? 0) + (s.slow ? 1 : 0);
+    }
+    final b = sumByCategory(_nodes, bought, byGroup: _catByGroup);
+    final so = sumByCategory(_nodes, sold, byGroup: _catByGroup);
+    final sl = sumByCategory(_nodes, slow, byGroup: _catByGroup);
+    final ids = b.keys.toList()
+      ..sort((x, y) {
+        final px = sellThroughPercent(bought: b[x]!, sold: so[x] ?? 0);
+        final py = sellThroughPercent(bought: b[y]!, sold: so[y] ?? 0);
+        return px.compareTo(py);
+      });
+    return Column(
+      children: [
+        for (final id in ids)
+          Padding(
+            key: Key('throughcat-${_catLabel(id)}'),
+            padding: const EdgeInsets.only(bottom: 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _catLabel(id),
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    Text(
+                      '${sellThroughPercent(bought: b[id]!, sold: so[id] ?? 0)}%',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(width: 8),
+                    Text('${so[id] ?? 0} of ${b[id]}'),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: LinearProgressIndicator(
+                    value:
+                        sellThroughPercent(bought: b[id]!, sold: so[id] ?? 0) /
+                        100,
+                    minHeight: 10,
+                    color: ChartColors.series,
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest,
+                  ),
+                ),
+                if ((sl[id] ?? 0) > 0)
+                  Padding(
+                    key: Key('slowcat-${_catLabel(id)}'),
+                    padding: const EdgeInsets.only(top: 5),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.schedule,
+                          size: 16,
+                          color: ChartColors.caution,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${sl[id]} slow ${sl[id] == 1 ? 'mover' : 'movers'} in this category',
+                          style: const TextStyle(
+                            color: ChartColors.caution,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _throughCard(BuildContext context, AnalyticsOverview d) {
     final rows = [...d.sellThrough]
       ..sort((a, b) {
@@ -658,8 +953,28 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         }
         return b.percent.compareTo(a.percent);
       });
+    final canGroup = widget.services.categories != null && _nodes.isNotEmpty;
     return _card(
       context,
+      trailing: canGroup
+          ? Wrap(
+              spacing: 6,
+              children: [
+                ChoiceChip(
+                  key: const Key('through-by-style'),
+                  label: const Text('Styles'),
+                  selected: !_throughByCategory,
+                  onSelected: (_) => setState(() => _throughByCategory = false),
+                ),
+                ChoiceChip(
+                  key: const Key('through-by-category'),
+                  label: const Text('Categories'),
+                  selected: _throughByCategory,
+                  onSelected: (_) => setState(() => _throughByCategory = true),
+                ),
+              ],
+            )
+          : null,
       title: 'How much of each style has sold',
       subtitle:
           'Sold out of all bought, since it came in. Slow mover: '
@@ -667,6 +982,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           '$slowMoverBelowPercent% sold.',
       child: rows.isEmpty
           ? const Text('No stock yet.', key: Key('through-empty'))
+          : canGroup && _throughByCategory
+          ? _throughByCategoryRows(context, d)
           : Column(
               children: [
                 for (final s in rows)

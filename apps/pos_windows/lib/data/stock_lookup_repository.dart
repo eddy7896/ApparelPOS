@@ -31,8 +31,15 @@ const int maxListedBarcodes = 50;
 
 /// One style with all its sizes and colors.
 final class StyleStock {
-  const StyleStock({required this.name, required this.variants});
+  const StyleStock({
+    required this.name,
+    required this.variants,
+    this.categoryId,
+  });
   final String name;
+
+  /// The category this style is in, or null.
+  final String? categoryId;
   final List<VariantStock> variants;
 
   int get inStock => variants.fold(0, (a, v) => a + v.inStock);
@@ -69,7 +76,7 @@ class StockLookupRepository {
         : "p.name LIKE ? ESCAPE '\\'";
     final rows = await _db
         .customSelect(
-          'SELECT p.name AS name, v.id AS vid, v.size AS size, v.color AS color, '
+          'SELECT p.name AS name, p.category_id AS cat, v.id AS vid, v.size AS size, v.color AS color, '
           'v.mrp_paise AS mrp, '
           "(SELECT COUNT(*) FROM articles a WHERE a.variant_id = v.id AND a.status = 'IN_STOCK') AS n "
           'FROM products p JOIN variants v ON v.product_id = p.id '
@@ -102,7 +109,9 @@ class StockLookupRepository {
       }
     }
     final byName = <String, List<VariantStock>>{};
+    final categoryOf = <String, String?>{};
     for (final r in rows) {
+      categoryOf[r.read<String>('name')] = r.read<String?>('cat');
       byName
           .putIfAbsent(r.read<String>('name'), () => [])
           .add(
@@ -117,7 +126,11 @@ class StockLookupRepository {
     }
     return [
       for (final e in byName.entries)
-        StyleStock(name: e.key, variants: e.value),
+        StyleStock(
+          name: e.key,
+          variants: e.value,
+          categoryId: categoryOf[e.key],
+        ),
     ];
   }
 }
