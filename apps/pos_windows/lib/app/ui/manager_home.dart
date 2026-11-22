@@ -18,6 +18,7 @@ import 'register_screen.dart';
 import 'returns_screen.dart';
 import 'shift_closes_screen.dart';
 import 'stock_entry_screen.dart';
+import 'stock_lookup_screen.dart';
 
 class ManagerHome extends StatefulWidget {
   const ManagerHome({super.key, required this.session, required this.services});
@@ -96,6 +97,13 @@ class _ManagerHomeState extends State<ManagerHome> {
         'Returns',
         () => _open(ReturnsScreen(session: _session, services: _s)),
       ),
+      if (_s.stockLookup != null)
+        _NavItem(
+          'stock-lookup-button',
+          Icons.search,
+          'Stock lookup',
+          () => _open(StockLookupScreen(session: _session, services: _s)),
+        ),
       _NavItem(
         'stock-entry-button',
         Icons.inventory_2,

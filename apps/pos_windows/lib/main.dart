@@ -17,6 +17,7 @@ import 'data/report_repository.dart';
 import 'data/returns_repository.dart';
 import 'data/sales_repository.dart';
 import 'data/shift_repository.dart';
+import 'data/stock_lookup_repository.dart';
 import 'data/stock_repository.dart';
 
 Future<void> main() async {
@@ -51,6 +52,7 @@ Future<void> _start() async {
         returns: returns,
         shifts: shifts,
         reports: ReportRepository(db),
+        stockLookup: StockLookupRepository(db),
         recovery: appKeyStore == null
             ? null
             : RecoveryKeyRepository(db, appKeyStore!, newId: newId),
