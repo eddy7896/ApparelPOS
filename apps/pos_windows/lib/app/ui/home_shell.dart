@@ -4,17 +4,12 @@ import 'package:flutter/material.dart';
 import '../services.dart';
 import '../session_controller.dart';
 import 'close_shift_screen.dart';
+import 'manager_home.dart';
 import 'recovery_key_screen.dart';
 import 'register_screen.dart';
-import 'backup_banner.dart';
 import 'brand_mark.dart';
-import 'brand_preview_dialog.dart';
-import 'backup_screen.dart';
-import 'daily_report_screen.dart';
-import 'shift_closes_screen.dart';
 import 'shift_gate.dart';
 import 'returns_screen.dart';
-import 'stock_entry_screen.dart';
 
 /// What opens after sign-in: the register for a cashier; Billing and Stock
 /// entry buttons for a manager or owner. Reports are a later task.
@@ -177,123 +172,7 @@ class _HomeShellState extends State<HomeShell> {
           : RecoveryKeyGate(
               session: session,
               services: services,
-              child: Column(
-                children: [
-                  BackupBanner(session: session, services: services),
-                  Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          FilledButton.icon(
-                            key: const Key('billing-button'),
-                            onPressed: () => Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => RegisterScreen(
-                                  session: session,
-                                  services: services,
-                                ),
-                              ),
-                            ),
-                            icon: const Icon(Icons.point_of_sale),
-                            label: const Text('Billing'),
-                          ),
-                          const SizedBox(height: 12),
-                          FilledButton.icon(
-                            key: const Key('returns-button'),
-                            onPressed: () => Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => ReturnsScreen(
-                                  session: session,
-                                  services: services,
-                                ),
-                              ),
-                            ),
-                            icon: const Icon(Icons.assignment_return),
-                            label: const Text('Returns'),
-                          ),
-                          const SizedBox(height: 12),
-                          FilledButton.icon(
-                            key: const Key('backups-button'),
-                            onPressed: () => Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => BackupScreen(
-                                  session: session,
-                                  services: services,
-                                ),
-                              ),
-                            ),
-                            icon: const Icon(Icons.backup),
-                            label: const Text('Backups'),
-                          ),
-                          const SizedBox(height: 12),
-                          FilledButton.icon(
-                            key: const Key('daily-report-button'),
-                            onPressed: () => Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => DailyReportScreen(
-                                  session: session,
-                                  services: services,
-                                ),
-                              ),
-                            ),
-                            icon: const Icon(Icons.bar_chart),
-                            label: const Text('Daily report'),
-                          ),
-                          const SizedBox(height: 12),
-                          FilledButton.icon(
-                            key: const Key('shift-closes-button'),
-                            onPressed: () => Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => ShiftClosesScreen(
-                                  session: session,
-                                  services: services,
-                                ),
-                              ),
-                            ),
-                            icon: const Icon(Icons.fact_check),
-                            label: const Text('Shift closes'),
-                          ),
-                          const SizedBox(height: 12),
-                          FilledButton.icon(
-                            key: const Key('stock-entry-button'),
-                            onPressed: () => Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => StockEntryScreen(
-                                  session: session,
-                                  services: services,
-                                ),
-                              ),
-                            ),
-                            icon: const Icon(Icons.inventory_2),
-                            label: const Text('Stock entry'),
-                          ),
-                          const SizedBox(height: 12),
-                          if (services.brandPreview &&
-                              services.brand != null) ...[
-                            OutlinedButton.icon(
-                              key: const Key('brand-preview-button'),
-                              onPressed: () => showDialog<void>(
-                                context: context,
-                                builder: (_) => BrandPreviewDialog(
-                                  session: session,
-                                  services: services,
-                                ),
-                              ),
-                              icon: const Icon(Icons.palette),
-                              label: const Text(
-                                'Try a look (development only)',
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                          ],
-                          const Text('Settings are not built yet.'),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              child: ManagerHome(session: session, services: services),
             ),
     );
   }

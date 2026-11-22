@@ -10,3 +10,17 @@ const Duration shopUtcOffset = Duration(hours: 5, minutes: 30);
   final local = utc.toUtc().add(shopUtcOffset);
   return (local.year % 100, local.month);
 }
+
+/// "Good morning", "Good afternoon" or "Good evening" for the shop's clock:
+/// morning from 5:00 to 11:59, afternoon from 12:00 to 16:59, evening
+/// otherwise (including the small hours).
+String greetingFor(DateTime utc) {
+  final hour = utc.toUtc().add(shopUtcOffset).hour;
+  if (hour >= 5 && hour < 12) {
+    return 'Good morning';
+  }
+  if (hour >= 12 && hour < 17) {
+    return 'Good afternoon';
+  }
+  return 'Good evening';
+}
