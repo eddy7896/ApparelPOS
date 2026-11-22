@@ -26,7 +26,11 @@ void main() {
       (await db.customSelect(sql).get()).map((r) => r.data).toList();
 
   group('creating users', () {
-    test('a cashier needs a PIN of at least 6 digits', () async {
+    test('a cashier needs a PIN of exactly 6 digits', () async {
+      await expectLater(
+        auth.createUser(name: 'Asha', role: Role.cashier, secret: '1234567'),
+        throwsA(isA<WeakSecret>()),
+      );
       await expectLater(
         auth.createUser(name: 'Asha', role: Role.cashier, secret: '12345'),
         throwsA(isA<WeakSecret>()),

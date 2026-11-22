@@ -3,7 +3,7 @@ Status: Plan, nothing built (2026-11-17)
 
 Purpose: lock screen, PINs, passwords, roles and idle lock.
 
-- **Asked by owner:** cashier PIN of at least 6 digits with Argon2id; owner has full access.
+- **Asked by owner:** cashier PIN of exactly 6 digits (was at least 6; owner, 2026-11-22) with Argon2id; owner has full access.
 - **Rules:** SSOT 1-4; ADR-0002, ADR-0003; guardrails 3, 5, 6.
 - **Workflow:** the app opens on a lock screen; PIN opens Sales Mode, password opens Manager Mode; idle timeout locks; Ctrl+L locks manually.
 - **Permission matrix (built in `core_domain`, P1-4; deny by default):**
@@ -28,7 +28,7 @@ Purpose: lock screen, PINs, passwords, roles and idle lock.
 - **Open decisions:** none for the rules above (decided 2026-11-20); see Not built.
 
 ## Staff management in Manager Mode (built 2026-11-22)
-Owner decisions, 2026-11-22: the owner and a manager add cashiers (name and a 6 to 12 digit PIN); only the owner adds managers or owners (password of at least 10 characters). A manager manages cashiers only; the owner manages everyone. Turning someone off keeps all their history (bills, returns, shifts are never edited) and they can be turned on again.
+Owner decisions, 2026-11-22: the owner and a manager add cashiers (name and a PIN of exactly 6 digits); only the owner adds managers or owners (password of at least 10 characters). A manager manages cashiers only; the owner manages everyone. Turning someone off keeps all their history (bills, returns, shifts are never edited) and they can be turned on again.
 - Rules in `packages/core_domain/lib/src/staff_rules.dart`: who may manage whom, `cleanPersonName` (1 to 40 characters, no control characters), and `turnOffBlock`: nobody turns off themselves, the last active owner, or someone whose shift is still open.
 - Data: `apps/pos_windows/lib/data/staff_repository.dart` (list, add, new PIN or password, rename, turn off and on; audit rows never hold a secret). A name is unique whatever its capitals, also against people who are turned off. A person may change their own PIN or password; a manager cannot reset another manager or the owner.
 - Screen: `apps/pos_windows/lib/app/ui/staff_screen.dart`, "Staff" in the Manager Mode left menu. The sign-in names refresh after each change.

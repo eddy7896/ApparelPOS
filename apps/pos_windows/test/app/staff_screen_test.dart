@@ -241,7 +241,7 @@ void main() {
       (tester) async {
         await open(tester);
         await tapAndWait(tester, 'add-cashier-button');
-        expect(find.text('PIN: 6 to 12 digits'), findsOneWidget);
+        expect(find.text('PIN: exactly 6 digits'), findsOneWidget);
         await tester.runAsync(() async {});
         await fillAdd(tester, name: 'Ravi', secret: '135792');
         await pump(tester);
@@ -271,7 +271,17 @@ void main() {
       await open(tester);
       await tapAndWait(tester, 'add-cashier-button');
       await fillAdd(tester, name: 'Ravi', secret: '123');
-      expect(messageText(tester), 'The PIN needs at least 6 digits.');
+      expect(messageText(tester), 'The PIN must be exactly 6 digits.');
+      expect(find.byKey(const Key('staff-Ravi')), findsNothing);
+    });
+
+    testWidgets('a seven digit PIN is refused as not exactly 6', (
+      tester,
+    ) async {
+      await open(tester);
+      await tapAndWait(tester, 'add-cashier-button');
+      await fillAdd(tester, name: 'Ravi', secret: '1357924');
+      expect(messageText(tester), 'The PIN must be exactly 6 digits.');
       expect(find.byKey(const Key('staff-Ravi')), findsNothing);
     });
 

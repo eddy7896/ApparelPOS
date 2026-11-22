@@ -1,5 +1,5 @@
 // Sign-in rules (E-AUTH-1, E-AUTH-2). Owner decisions, 2026-11-20: a cashier
-// picks a name then types a PIN of 6 or more digits; manager and owner passwords
+// picks a name then types a PIN of exactly 6 digits (owner, 2026-11-22); manager and owner passwords
 // have at least 10 characters (length only, no other rules); 5 wrong tries lock
 // the account for 5 minutes, each later lockout doubles up to 1 hour, a correct
 // sign-in clears it; the screen locks after 5 idle minutes. Hashing is done by
@@ -8,7 +8,7 @@
 enum PinProblem { tooShort, tooLong, notDigits }
 
 const int minPinLength = 6;
-const int maxPinLength = 12;
+const int maxPinLength = 6;
 
 /// Returns null when [pin] is acceptable, otherwise what is wrong with it.
 PinProblem? checkPin(String pin) {

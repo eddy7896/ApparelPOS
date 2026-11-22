@@ -30,7 +30,7 @@ Lost sales data, a wrong cash count, a cashier seeing cost prices, downtime on a
 - **Verification:** E-OFFLINE-1 (planned).
 
 ## 5. Authentication
-- **Guardrail (ADR-0002):** PINs of at least 6 digits and passwords are hashed with Argon2id; repeated wrong PINs lock the account. No secret is ever logged or synced.
+- **Guardrail (ADR-0002):** PINs of exactly 6 digits and passwords are hashed with Argon2id; repeated wrong PINs lock the account. No secret is ever logged or synced.
 - **Verification:** E-AUTH-1, E-AUTH-2 (planned).
 
 ## 6. Authorization

@@ -1,5 +1,5 @@
 // P2-2 sign-in rules (E-AUTH-1, E-AUTH-2). Owner decisions, 2026-11-20: cashier
-// picks a name then types a PIN of 6+ digits; manager and owner password has at
+// picks a name then types a PIN of exactly 6 digits (owner, 2026-11-22); manager and owner password has at
 // least 10 characters; 5 wrong tries lock the account for 5 minutes, doubling
 // each later lockout up to 1 hour; the screen locks after 5 idle minutes.
 import 'package:core_domain/core_domain.dart';
@@ -9,8 +9,12 @@ final t0 = DateTime.utc(2026, 11, 20, 10);
 
 void main() {
   group('PIN rules (E-AUTH-1)', () {
-    test('6 or more digits is fine', () {
-      for (final pin in ['123456', '000000', '9876543210', '123456789012']) {
+    test('the length is exactly 6, no more and no less', () {
+      expect(minPinLength, 6);
+      expect(maxPinLength, 6);
+    });
+    test('exactly 6 digits is fine, leading zeros too', () {
+      for (final pin in ['123456', '000000', '012345', '999999']) {
         expect(checkPin(pin), isNull, reason: pin);
       }
     });
@@ -30,8 +34,10 @@ void main() {
         expect(checkPin(pin), PinProblem.notDigits, reason: pin);
       }
     });
-    test('more than 12 digits is too long', () {
-      expect(checkPin('1234567890123'), PinProblem.tooLong);
+    test('more than 6 digits is too long, even 7', () {
+      for (final pin in ['1234567', '12345678', '1234567890123']) {
+        expect(checkPin(pin), PinProblem.tooLong, reason: pin);
+      }
     });
   });
 

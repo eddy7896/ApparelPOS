@@ -4,7 +4,7 @@
   "G-03": "As integer paise, never floating point.",
   "G-04": "No, a cashier cannot see cost prices. Sales Mode queries never select cost columns, and the local database is encrypted.",
   "G-05": "With Argon2id, not SHA-256.",
-  "G-06": "At least 6 digits.",
+  "G-06": "6 digits: the PIN is exactly 6 digits (minimum and maximum are both 6).",
   "G-07": "No. A sold barcode cannot be sold again; only IN_STOCK articles can be added to a bill.",
   "G-08": "Each counter has its own reserved serial range, so counters never issue the same barcode.",
   "G-09": "12 digits: YYMM, then a 3-digit lot, then a 4-digit serial, then a check digit (Code 128 Subset C). Originally 11 digits; the owner approved adding the check digit on 2026-11-18.",

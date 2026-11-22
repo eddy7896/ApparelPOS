@@ -515,7 +515,7 @@ class _LockScreenState extends State<LockScreen> {
           ),
           const SizedBox(height: 6),
           const Text(
-            'At least 6 digits',
+            'Exactly 6 digits',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 14, color: UiColors.inkMuted),
           ),

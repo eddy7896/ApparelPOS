@@ -342,19 +342,22 @@ void main() {
       },
     );
 
-    testWidgets('the summary is amber, not red, when nothing is out but something is low', (tester) async {
-      await db.customStatement("UPDATE articles SET status = 'IN_STOCK'");
-      await db.customStatement(
-        "INSERT INTO articles (id, barcode_value, variant_id, batch_id, mrp_paise, status, created_at, updated_at) SELECT 'x1', '999900000001', variant_id, batch_id, mrp_paise, 'IN_STOCK', created_at, updated_at FROM articles LIMIT 1",
-      );
-      await open(tester);
-      await goToLookup(tester);
-      // Cotton Kurta L Blue is back to 1 (low) so the summary is the amber one, not red
-      final box = tester.widget<Container>(
-        find.byKey(const Key('lookup-summary')),
-      );
-      expect((box.decoration as BoxDecoration).color, UiColors.amberSoft);
-    });
+    testWidgets(
+      'the summary is amber, not red, when nothing is out but something is low',
+      (tester) async {
+        await db.customStatement("UPDATE articles SET status = 'IN_STOCK'");
+        await db.customStatement(
+          "INSERT INTO articles (id, barcode_value, variant_id, batch_id, mrp_paise, status, created_at, updated_at) SELECT 'x1', '999900000001', variant_id, batch_id, mrp_paise, 'IN_STOCK', created_at, updated_at FROM articles LIMIT 1",
+        );
+        await open(tester);
+        await goToLookup(tester);
+        // Cotton Kurta L Blue is back to 1 (low) so the summary is the amber one, not red
+        final box = tester.widget<Container>(
+          find.byKey(const Key('lookup-summary')),
+        );
+        expect((box.decoration as BoxDecoration).color, UiColors.amberSoft);
+      },
+    );
 
     testWidgets(
       'filter chips show counts: all, in stock, running low, out of stock',

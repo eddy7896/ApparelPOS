@@ -19,7 +19,7 @@ Purpose: which checks exist, when they run, and the rules for changing them. All
 |---|---|
 | E-MONEY-1 | No floating-point money; rounding function exact |
 | E-SERIAL-1 | Barcodes unique across counters; ranges never overlap |
-| E-AUTH-1 | PIN needs 6+ digits and is hashed with Argon2id |
+| E-AUTH-1 | PIN is exactly 6 digits and is hashed with Argon2id |
 | E-AUTH-2 | Lockout after repeated wrong PINs |
 | E-AUTHZ-1 | Cashier queries return no cost fields |
 | E-AUTHZ-2 | Permission matrix denies by default |

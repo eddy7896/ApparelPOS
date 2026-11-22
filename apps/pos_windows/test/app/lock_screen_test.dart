@@ -303,6 +303,49 @@ void main() {
     );
 
     testWidgets(
+      'the PIN stops at 6 digits: extra key presses do nothing, and exactly 6 dots show',
+      (tester) async {
+        await show(tester);
+        await tester.tap(find.byKey(Key('user-$asha')));
+        await tester.pump();
+        for (final d in ['1', '2', '3', '4', '5', '6', '7', '8']) {
+          await tester.tap(find.byKey(Key('key-$d')));
+        }
+        await tester.pump();
+        expect(
+          tester
+              .widget<TextField>(find.byKey(const Key('secret-field')))
+              .controller!
+              .text,
+          '123456',
+        );
+        expect(
+          find.descendant(
+            of: find.byKey(const Key('pin-dots')),
+            matching: find.byType(Container),
+          ),
+          findsNWidgets(6),
+        );
+        expect(find.text('Exactly 6 digits'), findsOneWidget);
+      },
+    );
+
+    testWidgets('typing on a keyboard also stops at 6 digits', (tester) async {
+      await show(tester);
+      await tester.tap(find.byKey(Key('user-$asha')));
+      await tester.pump();
+      await tester.enterText(find.byKey(const Key('secret-field')), '12345678');
+      await tester.pump();
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const Key('secret-field')))
+            .controller!
+            .text,
+        '123456',
+      );
+    });
+
+    testWidgets(
       'a cashier sees a dot filled for each digit typed, and Clear empties them',
       (tester) async {
         await show(tester);
