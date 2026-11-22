@@ -1,0 +1,10 @@
+{
+  "companyName": "Apparel PoS",
+  "productName": "Apparel PoS",
+  "windowTitle": "Apparel PoS",
+  "installerAppId": "{{6CBDBAEB-C0CC-41A8-A29E-12FAF018F721}",
+  "rc": "apps/pos_windows/windows/runner/Runner.rc",
+  "mainCpp": "apps/pos_windows/windows/runner/main.cpp",
+  "installerScript": "installer/apparel_pos.iss",
+  "note": "path_provider_windows 2.3.0 keeps the shop's data in %APPDATA%\\<CompanyName>\\<ProductName>. These values and the installer AppId must not change after go-live, or the app looks in a new empty folder and the shop seems to lose its data. To change one on purpose, change it here in the same pull request and write the data migration."
+}

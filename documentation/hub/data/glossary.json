@@ -11,6 +11,11 @@
       "group": "Apparel PoS"
     },
     {
+      "term": "Backup",
+      "definition": "A checked copy of the encrypted database kept in two places (a USB drive and a folder); the last 60 are kept in each.",
+      "group": "Apparel PoS"
+    },
+    {
       "term": "Basis points",
       "definition": "Percentage as an integer; 100 basis points = 1% (5% is 500). Used so percentages never need a float",
       "group": "Apparel PoS"
@@ -83,6 +88,11 @@
     {
       "term": "Permission matrix",
       "definition": "The single table in `core_domain` of which role may do which action; anything not listed is denied",
+      "group": "Apparel PoS"
+    },
+    {
+      "term": "Recovery key",
+      "definition": "The database key written as groups of hex digits and shown once to the owner. With a backup it opens the data on a new computer.",
       "group": "Apparel PoS"
     },
     {

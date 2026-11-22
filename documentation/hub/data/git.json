@@ -7,11 +7,11 @@
     },
     {
       "tone": "warn",
-      "text": "main is 1 commit behind and 55 commits behind develop: nothing has been released since PR #2; main has a merge commit that develop lacks (back-merge needed at the next release)."
+      "text": "main is 1 commit behind and 67 commits behind develop: nothing has been released since PR #2; main has a merge commit that develop lacks (back-merge needed at the next release)."
     },
     {
       "tone": "warn",
-      "text": "PR #28 (daily report screen) is open; branch-policy, build-lint-test and GitGuardian pass; the Windows job dart-flutter-windows was still pending at the read."
+      "text": "PR #33 (Windows installer) is open; branch-policy, build-lint-test and GitGuardian pass; the Windows job dart-flutter-windows, which builds and test-installs Setup for the first time, was still pending at the read."
     }
   ],
   "branches": [
@@ -24,12 +24,12 @@
       "note": "integration; last updated 2026-11-21"
     },
     {
-      "name": "feat/p2-7c-report-screen",
-      "note": "PR #28, open, based on develop"
+      "name": "feat/p3-3a-installer",
+      "note": "PR #33, open, based on develop"
     },
     {
       "name": "merged topic branches (still on GitHub, not deleted)",
-      "note": "chore/bootstrap-project, chore/ci-windows-flutter, feat/p0-5-skeletons, feat/p1-1-money to feat/p1-5b-hangtag-pdf, feat/p2-1-database, feat/p2-2-auth-rules, feat/p2-2-lock-screen, feat/p2-3a to feat/p2-3b, feat/p2-4a to feat/p2-4c, feat/p2-5a to feat/p2-5c, feat/p2-6a to feat/p2-6c, feat/p2-7a, feat/p2-7b, feat/web-dev-preview"
+      "note": "every feat/p* branch from feat/p0-5-skeletons to feat/p3-2c-backup-screens, plus chore/bootstrap-project, chore/ci-windows-flutter and feat/web-dev-preview"
     }
   ],
   "ledger": [
@@ -171,6 +171,31 @@
     {
       "pr": "#28",
       "title": "P2-7c: Owner's daily report screen",
+      "state": "merged"
+    },
+    {
+      "pr": "#29",
+      "title": "P3-1: Encrypt the database (SQLCipher), key in the Windows credential store, recovery key",
+      "state": "merged"
+    },
+    {
+      "pr": "#30",
+      "title": "P3-2a: Backup rules",
+      "state": "merged"
+    },
+    {
+      "pr": "#31",
+      "title": "P3-2b: Backup service and restore to a clean machine (E-BACKUP-1)",
+      "state": "merged"
+    },
+    {
+      "pr": "#32",
+      "title": "P3-2c: Backup and restore screens, first-launch restore, automatic backups",
+      "state": "merged"
+    },
+    {
+      "pr": "#33",
+      "title": "P3-3a: Windows installer (Inno Setup), pinned data location, CI install test",
       "state": "open"
     }
   ],
@@ -179,12 +204,14 @@
     "The owner merges and releases; the agent only opens pull requests."
   ],
   "ownerActions": [
-    "Review and merge PR #28 (daily report screen). Try the whole flow: flutter run -d chrome in apps/pos_windows, Add practice users, enter stock as the owner, open a shift and sell as the cashier, return, close the shift, then read Daily report and Shift closes as the owner.",
+    "PR #33 (Windows installer): when its Windows job is green, merge it, then download the ApparelPoS-Setup file from that CI run and try it on a spare Windows computer. Tell me what Windows shows.",
+    "Choose the real shop or company name and send an icon if you have one. The name decides the data folder on Windows and must never change after go-live (ADR-0018).",
+    "Try the app on a real Windows machine, end to end: install, owner set-up, recovery key (write it on paper), stock entry and hangtag print, billing, returns, shift open and close, daily report, backups to a USB drive and a folder, and a restore on a spare computer. Tell me what you see.",
+    "Print a hangtag sheet, a bill and a credit note slip on a real printer and scan the barcodes. Tell us the printer and scanner models.",
+    "Accept or reject the SQLCipher community licence (ADR-0003 point 7).",
     "Switch on branch protection for main and develop; require branch-policy, build-lint-test and dart-flutter-windows.",
-    "Look at the screens (sign-in, stock entry, register, returns, shifts, reports) and tell me how they look; print a hangtag sheet, a bill and a credit note slip on a real printer and scan the barcodes when you can.",
-    "Choose the next task: P3-1 encryption (recommended before any real use), P2-4d pay later (udhaar) or P2-4e markdown at the register.",
-    "Review ADR-0006, ADR-0013 and ADR-0014 (Proposed).",
-    "Confirm earlier assistant choices: Luhn check digit, rounding choices, fixed-amount discount rule, Indian digit grouping on tags, whole-purchase-per-lot rule, bill serial and counter limits, customer phone length, return and credit note choices (see module doc), shift choices, and the profit definition for the daily report.",
-    "Tell us the printer and scanner models when known."
+    "Review ADR-0006, ADR-0013, ADR-0014 and ADR-0018 (Proposed).",
+    "Confirm earlier assistant choices (see the module documents): return and credit note choices, shift choices, the daily report profit definition, backup labels and limits.",
+    "Choose what comes next: P3-3b the runbook (recommended), P3-4 GST setup, P2-4d pay later (udhaar) or P2-4e markdown at the register."
   ]
 }

@@ -33,8 +33,9 @@
     { "id": "P3-1", "name": "SQLCipher encryption spike and rollout", "phase": 3, "phaseName": "Go-live hardening", "milestone": "", "order": 30, "status": "done", "pct": 100, "pr": "#29" },
     { "id": "P3-2a", "name": "Backup rules: names, keep 60, when due", "phase": 3, "phaseName": "Go-live hardening", "milestone": "", "order": 31, "status": "done", "pct": 100, "pr": "#30" },
     { "id": "P3-2b", "name": "Backup service and restore to a clean machine", "phase": 3, "phaseName": "Go-live hardening", "milestone": "", "order": 31.1, "status": "done", "pct": 100, "pr": "#31" },
-    { "id": "P3-2c", "name": "Backup screens and automatic backup", "phase": 3, "phaseName": "Go-live hardening", "milestone": "", "order": 31.2, "status": "doing", "pct": 90, "pr": "" },
-    { "id": "P3-3", "name": "Installer and runbook", "phase": 3, "phaseName": "Go-live hardening", "milestone": "", "order": 32, "status": "todo", "pct": 0, "pr": "" },
+    { "id": "P3-2c", "name": "Backup screens and automatic backup", "phase": 3, "phaseName": "Go-live hardening", "milestone": "", "order": 31.2, "status": "done", "pct": 100, "pr": "#32" },
+    { "id": "P3-3a", "name": "Windows installer and pinned data location", "phase": 3, "phaseName": "Go-live hardening", "milestone": "", "order": 32, "status": "doing", "pct": 90, "pr": "#33" },
+    { "id": "P3-3b", "name": "Runbook for the owner", "phase": 3, "phaseName": "Go-live hardening", "milestone": "", "order": 32.1, "status": "todo", "pct": 0, "pr": "" },
     { "id": "P3-4", "name": "GST toggle scaffold (settings, tax fields)", "phase": 3, "phaseName": "Go-live hardening", "milestone": "", "order": 33, "status": "todo", "pct": 0, "pr": "" }
   ]
 }

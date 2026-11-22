@@ -59,8 +59,9 @@ Purpose: phases and task IDs. Size S <= 1 day, M <= 3 days, L <= 1 week. Phases 
 | P3-1 | SQLCipher encryption spike and rollout | M | E-ENC-1 | P2-1 | done |
 | P3-2a | Backup rules: file names, keep the last 60, when a backup is due | S | unit tests; mutation-checked | P3-1 | done |
 | P3-2b | Backup service (snapshot, two places, check, prune) and restore to a clean machine | L | E-BACKUP-1 | P3-2a | done |
-| P3-2c | Backup screens: folder pickers, Back up now, status, restore; automatic backup at shift close and start-up | L | screen tests | P3-2b | doing |
-| P3-3 | Installer and runbook | M | owner can install | P3-2 | todo |
+| P3-2c | Backup screens: folder pickers, Back up now, status, restore; automatic backup at shift close and start-up | L | screen tests | P3-2b | done |
+| P3-3a | Windows installer (Inno Setup, per-user, unsigned), pinned data location, CI install smoke test | M | Setup builds, installs, starts and uninstalls on the CI runner | P3-2c | doing |
+| P3-3b | Runbook for the owner: install, first day, laptop fails, database corrupt, restore, SmartScreen warning, go-live checklist | M | owner can follow it | P3-3a | todo |
 | P3-4 | GST toggle scaffold (settings, tax fields) | M | E-GST-1 | P2-4 | todo |
 
 ## P4 release 2
