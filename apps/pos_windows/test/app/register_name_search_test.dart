@@ -537,7 +537,14 @@ void main() {
       ); // only 2 M Blue exist
       await pump(tester);
       expect(find.textContaining('already on this bill'), findsOneWidget);
-      expect(find.byType(Card), findsNWidgets(2)); // the L Blue was not added
+      expect(
+        find.byWidgetPredicate(
+          (w) =>
+              w.key is ValueKey<String> &&
+              (w.key as ValueKey<String>).value.startsWith('line-'),
+        ),
+        findsNWidgets(2),
+      ); // the L Blue was not added
     });
 
     testWidgets('without the lookup service there is no add-another button', (

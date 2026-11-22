@@ -366,6 +366,18 @@ class ShiftRepository {
     return row.read<DateTime>('started_at').toUtc();
   }
 
+  /// When [userId]'s open shift started and how long its breaks have been so
+  /// far (a break still going counts up to now); null with no open shift.
+  Future<({DateTime openedAt, Duration breaks})?> currentShiftSummary(
+    String userId,
+  ) async {
+    final shift = await currentShift(userId);
+    if (shift == null) {
+      return null;
+    }
+    return (openedAt: shift.openedAt, breaks: await _breakTime(shift.id));
+  }
+
   /// The Pause button: starts a break, the shift stays open. Needs `sell`.
   /// Pausing while already paused keeps the one break. Throws
   /// [PermissionDenied] or [NoOpenShift].

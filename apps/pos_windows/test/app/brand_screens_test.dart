@@ -255,6 +255,7 @@ void main() {
           'stock_entry_screen.dart',
           'status_colors.dart',
           'chart_colors.dart',
+          'ui_tokens.dart',
         };
         for (final f in Directory('lib/app/ui').listSync().whereType<File>()) {
           final name = f.uri.pathSegments.last;

@@ -10,6 +10,7 @@ import '../../data/shift_repository.dart';
 import '../services.dart';
 import '../session_controller.dart';
 import 'cash_count_form.dart';
+import 'ui_tokens.dart';
 
 class CloseShiftScreen extends StatefulWidget {
   const CloseShiftScreen({
@@ -85,10 +86,23 @@ class _CloseShiftScreenState extends State<CloseShiftScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Close shift')),
+    appBar: AppBar(
+      title: Text(_closed ? 'Shift closed' : 'Close your shift'),
+      actions: [
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.only(right: 24),
+            child: Text(
+              widget.session.user?.name ?? '',
+              style: const TextStyle(fontSize: 14, color: UiColors.inkSoft),
+            ),
+          ),
+        ),
+      ],
+    ),
     body: Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
+        constraints: BoxConstraints(maxWidth: _closed ? 420 : 1100),
         child: ListView(
           shrinkWrap: true,
           padding: const EdgeInsets.all(24),
@@ -100,17 +114,24 @@ class _CloseShiftScreenState extends State<CloseShiftScreen> {
 
   List<Widget> _form(BuildContext context) => [
     Text(
-      'Count the drawer',
+      'Count all the cash in the drawer',
       key: const Key('close-shift-title'),
-      style: Theme.of(context).textTheme.headlineSmall,
+      style: Theme.of(context).textTheme.titleLarge
+          ?.copyWith(fontWeight: FontWeight.w700),
     ),
-    const SizedBox(height: 8),
+    const SizedBox(height: 4),
     const Text(
-      'Count all the cash in the drawer by notes and coins. Count it all, '
-      'including the money you opened with.',
+      'Include the money you opened with. Tap + for each note or coin.',
+      style: TextStyle(fontSize: 15, color: UiColors.inkSoft),
     ),
     const SizedBox(height: 16),
-    CashCountForm(buttonLabel: 'Close shift', busy: _busy, onSubmit: _close),
+    CashCountForm(
+      buttonLabel: 'Close shift and lock',
+      busy: _busy,
+      onSubmit: _close,
+      layout: CountLayout.beside,
+      blindNote: true,
+    ),
     if (_message != null)
       Padding(
         padding: const EdgeInsets.only(top: 12),

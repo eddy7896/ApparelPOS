@@ -284,14 +284,50 @@ void main() {
       expect(find.text('Manager Mode'), findsOneWidget);
     });
 
-    testWidgets('"choose another name" goes back to the list', (tester) async {
-      await show(tester);
-      await tester.tap(find.byKey(Key('user-$asha')));
-      await tester.pump();
-      await tester.tap(find.byKey(const Key('back')));
-      await tester.pump();
-      expect(find.byKey(Key('user-$boss')), findsOneWidget);
-    });
+    testWidgets(
+      'every name stays on screen; tapping another switches the entry',
+      (tester) async {
+        await show(tester);
+        await tester.tap(find.byKey(Key('user-$asha')));
+        await tester.pump();
+        expect(find.text('Hello Asha, type your PIN'), findsOneWidget);
+        expect(find.byKey(Key('user-$boss')), findsOneWidget); // still listed
+        await tester.tap(find.byKey(Key('user-$boss')));
+        await tester.pump();
+        expect(find.text('Hello Boss, type your password'), findsOneWidget);
+        expect(find.byKey(const Key('key-1')), findsNothing);
+        await tester.tap(find.byKey(Key('user-$asha')));
+        await tester.pump();
+        expect(find.byKey(const Key('key-1')), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'a cashier sees a dot filled for each digit typed, and Clear empties them',
+      (tester) async {
+        await show(tester);
+        await tester.tap(find.byKey(Key('user-$asha')));
+        await tester.pump();
+        int filled() => tester
+            .widgetList<Container>(
+              find.descendant(
+                of: find.byKey(const Key('pin-dots')),
+                matching: find.byType(Container),
+              ),
+            )
+            .where((c) => (c.decoration as BoxDecoration).color != Colors.white)
+            .length;
+        expect(filled(), 0);
+        await tester.tap(find.byKey(const Key('key-1')));
+        await tester.tap(find.byKey(const Key('key-2')));
+        await tester.tap(find.byKey(const Key('key-3')));
+        await tester.pump();
+        expect(filled(), 3);
+        await tester.tap(find.byKey(const Key('key-clear')));
+        await tester.pump();
+        expect(filled(), 0);
+      },
+    );
   });
 
   group('locking again', () {
