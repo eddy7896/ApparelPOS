@@ -19,6 +19,7 @@ import 'data/returns_repository.dart';
 import 'data/sales_repository.dart';
 import 'data/shift_repository.dart';
 import 'data/demo_stock.dart';
+import 'data/staff_repository.dart';
 import 'data/stock_lookup_repository.dart';
 import 'data/stock_repository.dart';
 
@@ -59,6 +60,7 @@ Future<void> _start() async {
         reports: ReportRepository(db),
         stockLookup: StockLookupRepository(db),
         analytics: AnalyticsRepository(db),
+        staff: StaffRepository(db, auth, newId: newId),
         recovery: appKeyStore == null
             ? null
             : RecoveryKeyRepository(db, appKeyStore!, newId: newId),
