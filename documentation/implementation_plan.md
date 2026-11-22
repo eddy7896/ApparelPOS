@@ -69,8 +69,8 @@ Purpose: phases and task IDs. Size S <= 1 day, M <= 3 days, L <= 1 week. Phases 
 | ID | Task | Size | Acceptance | Depends on | Status |
 |---|---|---|---|---|---|
 | UX-1 | Branding as data: rules, settings with placeholder defaults, theme and name and logo from settings | M | tests; the Windows data folder does not change with the name | P3-3a | todo |
-| UX-2 | Register redesign (scan first, big total, quick cash, 48 dp targets) | L | screen tests; before and after screenshots | owner approves the mock-up | todo |
-| UX-3 | Sign-in, shifts and blind close for touch | M | screen tests | UX-2 | todo |
+| UX-2 | Register redesign (scan first, big total, quick cash, 48 dp targets, bill done as a popup) | L | screen tests; before and after screenshots | owner approves the mock-up | todo |
+| UX-3 | Sign-in with the shift opening at sign-in, Pause (break) with a break record, three top-bar buttons (Pause, Close shift, Lock), blind close for touch | L | screen tests; permission and migration tests | UX-2 | todo |
 | UX-4 | Manager navigation and home; reports and backups polish | L | screen tests | UX-2 | todo |
 | UX-5 | Returns and stock entry restyle | M | screen tests | UX-2 | todo |
 
