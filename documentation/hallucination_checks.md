@@ -10,7 +10,7 @@ Purpose: the ground truth an AI agent is graded against. Golden set and grader a
 | Can an app talk to Firestore directly? | No; only `sync_engine` | ADR-0004 |
 | Does anything exist yet in the repository? | No code exists; everything is Planned | `AGENTS.md` |
 | Is the cashier's cost-price hiding only a UI feature? | No; queries omit cost columns and the database is encrypted | ADR-0003 |
-| How are PINs hashed? | Argon2id, 6 digits minimum | ADR-0002 |
+| How are PINs hashed? | Argon2id, exactly 6 digits (min and max are both 6, owner 2026-11-22) | ADR-0002 |
 | Is there a backend server? | No; Firebase only | ADR-0004 |
 | Is GST on by default? | No | ADR-0007 |
 

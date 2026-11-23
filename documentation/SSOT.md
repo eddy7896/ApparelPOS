@@ -5,7 +5,7 @@ Purpose: the single home of product behaviour. Tags: [ASSUMED] owner has not con
 
 ## Accounts and roles
 1. Roles are CASHIER, MANAGER, OWNER. [ADR-0003]
-2. Cashiers pick their name and sign in with a PIN of at least 6 digits; manager and owner use a password of at least 10 characters. Hashes use Argon2id. 5 wrong tries lock the account for 5 minutes (doubling to 1 hour); the screen locks after 5 idle minutes. [ADR-0002]
+2. Cashiers pick their name and sign in with a PIN of exactly 6 digits; manager and owner use a password of at least 10 characters. Hashes use Argon2id. 5 wrong tries lock the account for 5 minutes (doubling to 1 hour); the screen locks after 5 idle minutes. [ADR-0002]
 3. The owner and manager are the same person today. [owner]
 4. A cashier discount above their limit (10% of the item price by default) needs the manager's password. [ADR-0003]
 

@@ -1,5 +1,5 @@
 // Sign-in for the counter: users, Argon2id hashes, lockout saved per user.
-// E-AUTH-1 (PIN of 6+ digits, Argon2id), E-AUTH-2 (lockout). Rules are in
+// E-AUTH-1 (PIN of exactly 6 digits, Argon2id), E-AUTH-2 (lockout). Rules are in
 // core_domain; this file connects them to the database. No secret, hash or
 // wrong guess is ever written to the audit log or the outbox.
 import 'package:core_domain/core_domain.dart';

@@ -21,8 +21,8 @@ String _weakText(WeakSecret e) {
   final p = e.problem;
   if (e.role.usesPin) {
     return switch (p) {
-      PinProblem.tooShort => 'The PIN needs at least $minPinLength digits.',
-      PinProblem.tooLong => 'The PIN can have at most $maxPinLength digits.',
+      PinProblem.tooShort ||
+      PinProblem.tooLong => 'The PIN must be exactly $minPinLength digits.',
       _ => 'The PIN must be digits only.',
     };
   }
@@ -36,7 +36,7 @@ String _weakText(WeakSecret e) {
 }
 
 String _secretHelp(Role r) => r.usesPin
-    ? 'PIN: $minPinLength to $maxPinLength digits'
+    ? 'PIN: exactly $minPinLength digits'
     : 'Password: at least $minPasswordLength characters';
 
 class StaffScreen extends StatefulWidget {

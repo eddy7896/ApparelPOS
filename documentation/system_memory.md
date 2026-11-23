@@ -38,6 +38,7 @@ Purpose: decisions in brief and lessons learned, newest first.
 - 2026-11-18: Markdown is a percent or a fixed amount (owner picks each time); a marked-down garment takes no cashier discount (owner). A percent cut is rounded half up then subtracted (assistant's choice: favours the customer by at most half a paisa; unconfirmed).
 - 2026-11-18: CI gained a `dart-flutter-windows` job (windows-latest, Flutter 3.47.5 pinned, `subosito/flutter-action@v2`) that analyzes, tests and builds the app. It is a new check to add as a required status check once it has passed.
 - 2026-11-18: Gate 5 passed; bootstrap complete. Owner chose separate Dart/Flutter folders (no pub workspace); ADR-0004 allows Melos or workspace, so this is a small deviation to confirm in the ADR. Flutter and Dart are installed on the Mac; Windows build unverified.
+- 2026-11-22: Cashier PIN is exactly 6 digits (min and max both 6; the owner asked, it was 6 to 12). A PIN set longer under the old rule must be reset by a manager or the owner. ADR-0002 updated.
 - 2026-11-17: Gate 2 passed. Counters keep their own databases and sync through the cloud (ADR-0008). Cashier PIN is 6+ digits with Argon2id (ADR-0002). Database is encrypted (ADR-0003). GST is off by default; the owner chooses inclusive/exclusive, rate and rounding at setup (ADR-0007). Backups go to USB and a folder (ADR-0015).
 - 2026-11-17: Gate 1 passed. Project Brief confirmed (`project_brief.md`).
 - 2026-11-17: The gate guard rejected a state update when the owner's message was not a plain "proceed"; always wait for the explicit word.
