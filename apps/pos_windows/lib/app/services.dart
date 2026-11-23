@@ -7,6 +7,7 @@ import '../data/auth_service.dart';
 import '../data/brand.dart';
 import '../data/category_repository.dart';
 import '../data/dues_repository.dart';
+import '../data/gst_report_repository.dart';
 import '../data/gst_repository.dart';
 import '../data/markdown_repository.dart';
 import '../data/backup/backup_models.dart';
@@ -40,6 +41,7 @@ class AppServices {
     this.markdowns,
     this.dues,
     this.gst,
+    this.gstReports,
     this.brand,
     this.brandPreview = kDebugMode,
     this.backup,
@@ -75,6 +77,10 @@ class AppServices {
   /// The GST settings (null in tests that do not need it: the GST card in
   /// Settings is then hidden).
   final GstRepository? gst;
+
+  /// The GST reports for the CA (null in tests that do not need them: the
+  /// menu item is then hidden).
+  final GstReportRepository? gstReports;
 
   /// Adding and managing staff (null in tests that do not need it: the menu
   /// item that opens it is then hidden).

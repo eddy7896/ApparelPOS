@@ -12,6 +12,7 @@ import 'app/startup_failed.dart';
 import 'data/analytics_repository.dart';
 import 'data/category_repository.dart';
 import 'data/dues_repository.dart';
+import 'data/gst_report_repository.dart';
 import 'data/gst_repository.dart';
 import 'data/markdown_repository.dart';
 import 'data/auth_service.dart';
@@ -69,6 +70,7 @@ Future<void> _start() async {
         markdowns: MarkdownRepository(db, newId: newId),
         dues: DuesRepository(db, newId: newId),
         gst: GstRepository(db, newId: newId),
+        gstReports: GstReportRepository(db),
         recovery: appKeyStore == null
             ? null
             : RecoveryKeyRepository(db, appKeyStore!, newId: newId),
