@@ -112,7 +112,9 @@ class _HomeShellState extends State<HomeShell> {
     ValueListenableBuilder<bool>(
       valueListenable: _billInProgress,
       builder: (context, busy, _) => Tooltip(
-        message: busy ? 'Finish or clear the bill first' : '',
+        message: busy
+            ? 'Finish or clear the bill, and any held bills, first'
+            : '',
         child: Row(
           children: [
             _barButton(

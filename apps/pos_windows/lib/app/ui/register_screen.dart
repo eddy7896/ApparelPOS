@@ -66,6 +66,32 @@ class _Line {
   }
 }
 
+/// A bill put aside with F4 while the cashier serves someone else. It lives
+/// only in memory: nothing is saved, no garment is reserved, and it is gone
+/// when the counter locks or the app closes.
+class _Held {
+  _Held({
+    required this.lines,
+    required this.notes,
+    required this.customerName,
+    required this.customerPhone,
+    required this.approver,
+    required this.method,
+  });
+
+  final List<_Line> lines;
+  final List<CreditNoteInfo> notes;
+  final String customerName;
+  final String customerPhone;
+  final Approver? approver;
+  final _PayMethod method;
+
+  Money get total => lines.fold<Money>(
+    Money.zero,
+    (sum, l) => sum + (l.priced?.finalPrice ?? l.item.mrp),
+  );
+}
+
 class RegisterPanel extends StatefulWidget {
   const RegisterPanel({
     super.key,
@@ -103,6 +129,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
   final _customerPhone = TextEditingController();
   final _lines = <_Line>[];
   final _notes = <CreditNoteInfo>[];
+  final _held = <_Held>[];
   Approver? _approver;
   String? _message;
   bool _busy = false;
@@ -294,6 +321,11 @@ class _RegisterPanelState extends State<RegisterPanel> {
     }
     if (_lines.any((l) => l.item.barcode == code)) {
       _say('$code is already on this bill.');
+      _barcodeFocus.requestFocus();
+      return;
+    }
+    if (_held.any((h) => h.lines.any((l) => l.item.barcode == code))) {
+      _say('$code is on a held bill. Resume that bill to sell it.');
       _barcodeFocus.requestFocus();
       return;
     }
@@ -586,6 +618,64 @@ class _RegisterPanelState extends State<RegisterPanel> {
     }
   }
 
+  /// F4: put the bill aside to serve someone else; Resume brings it back.
+  void _hold() {
+    if (_saved != null || _busy || (_lines.isEmpty && _notes.isEmpty)) {
+      return;
+    }
+    final held = _Held(
+      lines: List.of(_lines),
+      notes: List.of(_notes),
+      customerName: _customerName.text,
+      customerPhone: _customerPhone.text,
+      approver: _approver,
+      method: _method,
+    );
+    _newBill();
+    setState(() => _held.add(held));
+  }
+
+  void _resume(_Held h) {
+    if (_saved != null) {
+      return;
+    }
+    if (_lines.isNotEmpty || _notes.isNotEmpty) {
+      _say(
+        'Finish or hold the bill on screen before bringing back a held one.',
+      );
+      return;
+    }
+    setState(() {
+      _held.remove(h);
+      _lines.addAll(h.lines);
+      _notes.addAll(h.notes);
+      _customerName.text = h.customerName;
+      _customerPhone.text = h.customerPhone;
+      _approver = h.approver;
+      _method = h.method;
+      _message = null;
+    });
+    _barcodeFocus.requestFocus();
+  }
+
+  void _dropHeld(_Held h) {
+    setState(() => _held.remove(h));
+    _barcodeFocus.requestFocus();
+  }
+
+  /// Esc: close the bill-done popup, or else the name results.
+  void _escape() {
+    if (_saved != null) {
+      _newBill();
+    } else if (_nameResults != null) {
+      setState(() {
+        _nameResults = null;
+        _barcode.clear();
+      });
+      _barcodeFocus.requestFocus();
+    }
+  }
+
   void _newBill() {
     setState(() {
       _lines.clear();
@@ -613,7 +703,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
   @override
   Widget build(BuildContext context) {
     final saved = _saved;
-    final active = _lines.isNotEmpty || _notes.isNotEmpty;
+    final active = _lines.isNotEmpty || _notes.isNotEmpty || _held.isNotEmpty;
     final progress = widget.billInProgress;
     if (progress != null && progress.value != active) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -635,6 +725,16 @@ class _RegisterPanelState extends State<RegisterPanel> {
             _complete();
           }
         },
+        // F4 hold the bill, F6 start a fresh search, Esc close the popup.
+        const SingleActivator(LogicalKeyboardKey.f4): _hold,
+        const SingleActivator(LogicalKeyboardKey.f6): () {
+          if (_saved == null) {
+            _barcode.clear();
+            setState(() => _nameResults = null);
+            _barcodeFocus.requestFocus();
+          }
+        },
+        const SingleActivator(LogicalKeyboardKey.escape): _escape,
       },
       child: Stack(
         children: [
@@ -701,6 +801,49 @@ class _RegisterPanelState extends State<RegisterPanel> {
             onSubmitted: _submit,
           ),
         ),
+        const Padding(
+          padding: EdgeInsets.only(top: 8, left: 4),
+          child: Wrap(
+            key: Key('shortcut-hints'),
+            spacing: 16,
+            children: [
+              Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'F4',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    TextSpan(text: ' Hold bill'),
+                  ],
+                ),
+              ),
+              Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'F6',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    TextSpan(text: ' New search'),
+                  ],
+                ),
+              ),
+              Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'Esc',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    TextSpan(text: ' Close popup'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (_held.isNotEmpty) _heldStrip(),
         if (_nameResults != null) _nameResultsPanel(context),
         if (_message != null)
           Container(
@@ -755,6 +898,15 @@ class _RegisterPanelState extends State<RegisterPanel> {
                           ),
                         ),
                       ),
+                      TextButton.icon(
+                        key: const Key('hold-bill'),
+                        onPressed: _lines.isEmpty && _notes.isEmpty || _busy
+                            ? null
+                            : _hold,
+                        icon: const Icon(Icons.pause_circle_outline),
+                        label: const Text('Hold bill  F4'),
+                      ),
+                      const SizedBox(width: 12),
                       const Text(
                         'Price',
                         style: TextStyle(
@@ -790,12 +942,12 @@ class _RegisterPanelState extends State<RegisterPanel> {
           Align(
             alignment: Alignment.centerLeft,
             child: Tooltip(
-              message: _lines.isEmpty && _notes.isEmpty
+              message: _lines.isEmpty && _notes.isEmpty && _held.isEmpty
                   ? ''
                   : 'Finish or clear the bill first',
               child: TextButton.icon(
                 key: const Key('close-shift-button'),
-                onPressed: _lines.isEmpty && _notes.isEmpty
+                onPressed: _lines.isEmpty && _notes.isEmpty && _held.isEmpty
                     ? () => Navigator.of(context).push(
                         MaterialPageRoute<void>(
                           builder: (_) => CloseShiftScreen(
@@ -811,6 +963,56 @@ class _RegisterPanelState extends State<RegisterPanel> {
             ),
           ),
       ],
+    );
+  }
+
+  /// The bills put aside, each with Resume and a drop button.
+  Widget _heldStrip() {
+    return Container(
+      key: const Key('held-bills'),
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 8),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (var i = 0; i < _held.length; i++)
+            Container(
+              padding: const EdgeInsets.only(left: 12),
+              decoration: BoxDecoration(
+                color: UiColors.amberSoft,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Held ${i + 1}: '
+                    '${_held[i].lines.length} '
+                    '${_held[i].lines.length == 1 ? 'garment' : 'garments'}, '
+                    '${formatRupees(_held[i].total)}',
+                    key: Key('held-label-$i'),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: UiColors.amberInk,
+                    ),
+                  ),
+                  TextButton(
+                    key: Key('held-resume-$i'),
+                    onPressed: () => _resume(_held[i]),
+                    child: const Text('Resume'),
+                  ),
+                  IconButton(
+                    key: Key('held-drop-$i'),
+                    tooltip: 'Drop this held bill',
+                    icon: const Icon(Icons.close),
+                    onPressed: () => _dropHeld(_held[i]),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -1493,6 +1695,7 @@ class _SavedPopup extends StatelessWidget {
             const SingleActivator(LogicalKeyboardKey.enter): onNew,
             const SingleActivator(LogicalKeyboardKey.numpadEnter): onNew,
             const SingleActivator(LogicalKeyboardKey.keyP): onPrint,
+            const SingleActivator(LogicalKeyboardKey.escape): onNew,
           },
           child: Focus(
             autofocus: true,

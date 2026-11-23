@@ -26,3 +26,10 @@ Owner request, 2026-11-22. In the billing box, **digits** are still a barcode or
 - Each garment keeps its own barcode and is sold once (E-SALE-1), so "several of one article" means several different garments of the same size and color. A **How many** box (1 to 50) in the list adds that many at once; if fewer are available it adds what there is and says so. Each bill line also has a **+** button that adds one more of the same size and color.
 - Assistant's choice, to be confirmed: when picked by name the system chooses which garment of that size and color (lowest barcode). If tags of one size and color carry different MRPs, the price follows the garment chosen, not the tag in the cashier's hand; scanning the tag is exact.
 - Rules: `pickGarments` and `clampGarmentCount` in `packages/core_domain/lib/src/pick_garments.dart`; the garment list comes from `StockLookupRepository` (up to 50 barcodes per size and color).
+
+## Register shortcuts and Hold bill (owner, 2026-11-23)
+- **F2** scan box, **F9** complete bill (existing). New: **F4** hold the bill, **F6** start a fresh search (clears the box and the name list), **Esc** close the bill-done popup, or the name list. Esc never clears a bill in progress.
+- **Hold bill** parks the garments, credit notes, customer name and phone, manager approval and way of paying, and starts an empty bill. Held bills show as chips (Resume, drop) under the scan box. Resume is refused while a bill is on screen.
+- A held bill is **kept only in memory**: nothing is saved, no garment is reserved, and it is forgotten when the counter locks or the app closes (the same as a bill in progress). A garment on a held bill cannot be scanned onto another bill. A bill with a held bill beside it cannot Pause or Close shift. When a held bill is completed, the usual save rules apply (a garment sold meanwhile is refused, E-SALE-1).
+- Not decided: a held bill that lasts across a lock or restart (would need a table and a rule for stale holds).
+

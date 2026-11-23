@@ -4,6 +4,9 @@ All notable changes to Apparel PoS. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Added
+- Register: F4 puts a bill aside (Hold bill) so another customer can be served, with Resume or drop for each held bill; F6 starts a fresh search; Esc closes the bill-done popup or the name list. A held bill is kept only in memory.
+
 ### Changed
 - The app's text uses the Inter font, bundled with the app so every laptop looks the same; the bill and hangtag PDFs still use Noto Sans.
 
