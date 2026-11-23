@@ -2332,6 +2332,24 @@ class $ProductsTable extends Products
       'REFERENCES categories (id)',
     ),
   );
+  static const VerificationMeta _hsnMeta = const VerificationMeta('hsn');
+  @override
+  late final GeneratedColumn<String> hsn = GeneratedColumn<String>(
+    'hsn',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _gstBpMeta = const VerificationMeta('gstBp');
+  @override
+  late final GeneratedColumn<int> gstBp = GeneratedColumn<int>(
+    'gst_bp',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -2360,6 +2378,8 @@ class $ProductsTable extends Products
     name,
     createdBy,
     categoryId,
+    hsn,
+    gstBp,
     createdAt,
     updatedAt,
   ];
@@ -2398,6 +2418,18 @@ class $ProductsTable extends Products
       context.handle(
         _categoryIdMeta,
         categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
+    }
+    if (data.containsKey('hsn')) {
+      context.handle(
+        _hsnMeta,
+        hsn.isAcceptableOrUnknown(data['hsn']!, _hsnMeta),
+      );
+    }
+    if (data.containsKey('gst_bp')) {
+      context.handle(
+        _gstBpMeta,
+        gstBp.isAcceptableOrUnknown(data['gst_bp']!, _gstBpMeta),
       );
     }
     if (data.containsKey('created_at')) {
@@ -2441,6 +2473,14 @@ class $ProductsTable extends Products
         DriftSqlType.string,
         data['${effectivePrefix}category_id'],
       ),
+      hsn: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}hsn'],
+      ),
+      gstBp: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}gst_bp'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -2465,6 +2505,11 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
 
   /// The category this style is in (none until the shop sets it).
   final String? categoryId;
+
+  /// GST (P3-4, unverified until the CA confirms): the style's HSN code, and a
+  /// GST rate of its own in basis points when it differs from the shop's.
+  final String? hsn;
+  final int? gstBp;
   final DateTime createdAt;
   final DateTime updatedAt;
   const ProductRow({
@@ -2472,6 +2517,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     required this.name,
     this.createdBy,
     this.categoryId,
+    this.hsn,
+    this.gstBp,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -2485,6 +2532,12 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     }
     if (!nullToAbsent || categoryId != null) {
       map['category_id'] = Variable<String>(categoryId);
+    }
+    if (!nullToAbsent || hsn != null) {
+      map['hsn'] = Variable<String>(hsn);
+    }
+    if (!nullToAbsent || gstBp != null) {
+      map['gst_bp'] = Variable<int>(gstBp);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -2501,6 +2554,10 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       categoryId: categoryId == null && nullToAbsent
           ? const Value.absent()
           : Value(categoryId),
+      hsn: hsn == null && nullToAbsent ? const Value.absent() : Value(hsn),
+      gstBp: gstBp == null && nullToAbsent
+          ? const Value.absent()
+          : Value(gstBp),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -2516,6 +2573,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       name: serializer.fromJson<String>(json['name']),
       createdBy: serializer.fromJson<String?>(json['createdBy']),
       categoryId: serializer.fromJson<String?>(json['categoryId']),
+      hsn: serializer.fromJson<String?>(json['hsn']),
+      gstBp: serializer.fromJson<int?>(json['gstBp']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -2528,6 +2587,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       'name': serializer.toJson<String>(name),
       'createdBy': serializer.toJson<String?>(createdBy),
       'categoryId': serializer.toJson<String?>(categoryId),
+      'hsn': serializer.toJson<String?>(hsn),
+      'gstBp': serializer.toJson<int?>(gstBp),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -2538,6 +2599,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     String? name,
     Value<String?> createdBy = const Value.absent(),
     Value<String?> categoryId = const Value.absent(),
+    Value<String?> hsn = const Value.absent(),
+    Value<int?> gstBp = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => ProductRow(
@@ -2545,6 +2608,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     name: name ?? this.name,
     createdBy: createdBy.present ? createdBy.value : this.createdBy,
     categoryId: categoryId.present ? categoryId.value : this.categoryId,
+    hsn: hsn.present ? hsn.value : this.hsn,
+    gstBp: gstBp.present ? gstBp.value : this.gstBp,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -2556,6 +2621,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       categoryId: data.categoryId.present
           ? data.categoryId.value
           : this.categoryId,
+      hsn: data.hsn.present ? data.hsn.value : this.hsn,
+      gstBp: data.gstBp.present ? data.gstBp.value : this.gstBp,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -2568,6 +2635,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
           ..write('name: $name, ')
           ..write('createdBy: $createdBy, ')
           ..write('categoryId: $categoryId, ')
+          ..write('hsn: $hsn, ')
+          ..write('gstBp: $gstBp, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -2575,8 +2644,16 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, createdBy, categoryId, createdAt, updatedAt);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    createdBy,
+    categoryId,
+    hsn,
+    gstBp,
+    createdAt,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2585,6 +2662,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
           other.name == this.name &&
           other.createdBy == this.createdBy &&
           other.categoryId == this.categoryId &&
+          other.hsn == this.hsn &&
+          other.gstBp == this.gstBp &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -2594,6 +2673,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
   final Value<String> name;
   final Value<String?> createdBy;
   final Value<String?> categoryId;
+  final Value<String?> hsn;
+  final Value<int?> gstBp;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -2602,6 +2683,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     this.name = const Value.absent(),
     this.createdBy = const Value.absent(),
     this.categoryId = const Value.absent(),
+    this.hsn = const Value.absent(),
+    this.gstBp = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -2611,6 +2694,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     required String name,
     this.createdBy = const Value.absent(),
     this.categoryId = const Value.absent(),
+    this.hsn = const Value.absent(),
+    this.gstBp = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -2623,6 +2708,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     Expression<String>? name,
     Expression<String>? createdBy,
     Expression<String>? categoryId,
+    Expression<String>? hsn,
+    Expression<int>? gstBp,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -2632,6 +2719,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
       if (name != null) 'name': name,
       if (createdBy != null) 'created_by': createdBy,
       if (categoryId != null) 'category_id': categoryId,
+      if (hsn != null) 'hsn': hsn,
+      if (gstBp != null) 'gst_bp': gstBp,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -2643,6 +2732,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     Value<String>? name,
     Value<String?>? createdBy,
     Value<String?>? categoryId,
+    Value<String?>? hsn,
+    Value<int?>? gstBp,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -2652,6 +2743,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
       name: name ?? this.name,
       createdBy: createdBy ?? this.createdBy,
       categoryId: categoryId ?? this.categoryId,
+      hsn: hsn ?? this.hsn,
+      gstBp: gstBp ?? this.gstBp,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -2673,6 +2766,12 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     if (categoryId.present) {
       map['category_id'] = Variable<String>(categoryId.value);
     }
+    if (hsn.present) {
+      map['hsn'] = Variable<String>(hsn.value);
+    }
+    if (gstBp.present) {
+      map['gst_bp'] = Variable<int>(gstBp.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -2692,6 +2791,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
           ..write('name: $name, ')
           ..write('createdBy: $createdBy, ')
           ..write('categoryId: $categoryId, ')
+          ..write('hsn: $hsn, ')
+          ..write('gstBp: $gstBp, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -4646,6 +4747,17 @@ class $BillsTable extends Bills with TableInfo<$BillsTable, BillRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _customerGstinMeta = const VerificationMeta(
+    'customerGstin',
+  );
+  @override
+  late final GeneratedColumn<String> customerGstin = GeneratedColumn<String>(
+    'customer_gstin',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _totalPaiseMeta = const VerificationMeta(
     'totalPaise',
   );
@@ -4701,6 +4813,7 @@ class $BillsTable extends Bills with TableInfo<$BillsTable, BillRow> {
     shiftId,
     customerName,
     customerPhone,
+    customerGstin,
     totalPaise,
     changePaise,
     billedAt,
@@ -4768,6 +4881,15 @@ class $BillsTable extends Bills with TableInfo<$BillsTable, BillRow> {
         customerPhone.isAcceptableOrUnknown(
           data['customer_phone']!,
           _customerPhoneMeta,
+        ),
+      );
+    }
+    if (data.containsKey('customer_gstin')) {
+      context.handle(
+        _customerGstinMeta,
+        customerGstin.isAcceptableOrUnknown(
+          data['customer_gstin']!,
+          _customerGstinMeta,
         ),
       );
     }
@@ -4843,6 +4965,10 @@ class $BillsTable extends Bills with TableInfo<$BillsTable, BillRow> {
         DriftSqlType.string,
         data['${effectivePrefix}customer_phone'],
       ),
+      customerGstin: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}customer_gstin'],
+      ),
       totalPaise: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}total_paise'],
@@ -4876,6 +5002,9 @@ class BillRow extends DataClass implements Insertable<BillRow> {
   final String? shiftId;
   final String? customerName;
   final String? customerPhone;
+
+  /// A business customer's GSTIN, kept only while GST is on (P3-4).
+  final String? customerGstin;
   final int totalPaise;
   final int changePaise;
   final DateTime billedAt;
@@ -4888,6 +5017,7 @@ class BillRow extends DataClass implements Insertable<BillRow> {
     this.shiftId,
     this.customerName,
     this.customerPhone,
+    this.customerGstin,
     required this.totalPaise,
     required this.changePaise,
     required this.billedAt,
@@ -4908,6 +5038,9 @@ class BillRow extends DataClass implements Insertable<BillRow> {
     }
     if (!nullToAbsent || customerPhone != null) {
       map['customer_phone'] = Variable<String>(customerPhone);
+    }
+    if (!nullToAbsent || customerGstin != null) {
+      map['customer_gstin'] = Variable<String>(customerGstin);
     }
     map['total_paise'] = Variable<int>(totalPaise);
     map['change_paise'] = Variable<int>(changePaise);
@@ -4931,6 +5064,9 @@ class BillRow extends DataClass implements Insertable<BillRow> {
       customerPhone: customerPhone == null && nullToAbsent
           ? const Value.absent()
           : Value(customerPhone),
+      customerGstin: customerGstin == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customerGstin),
       totalPaise: Value(totalPaise),
       changePaise: Value(changePaise),
       billedAt: Value(billedAt),
@@ -4951,6 +5087,7 @@ class BillRow extends DataClass implements Insertable<BillRow> {
       shiftId: serializer.fromJson<String?>(json['shiftId']),
       customerName: serializer.fromJson<String?>(json['customerName']),
       customerPhone: serializer.fromJson<String?>(json['customerPhone']),
+      customerGstin: serializer.fromJson<String?>(json['customerGstin']),
       totalPaise: serializer.fromJson<int>(json['totalPaise']),
       changePaise: serializer.fromJson<int>(json['changePaise']),
       billedAt: serializer.fromJson<DateTime>(json['billedAt']),
@@ -4968,6 +5105,7 @@ class BillRow extends DataClass implements Insertable<BillRow> {
       'shiftId': serializer.toJson<String?>(shiftId),
       'customerName': serializer.toJson<String?>(customerName),
       'customerPhone': serializer.toJson<String?>(customerPhone),
+      'customerGstin': serializer.toJson<String?>(customerGstin),
       'totalPaise': serializer.toJson<int>(totalPaise),
       'changePaise': serializer.toJson<int>(changePaise),
       'billedAt': serializer.toJson<DateTime>(billedAt),
@@ -4983,6 +5121,7 @@ class BillRow extends DataClass implements Insertable<BillRow> {
     Value<String?> shiftId = const Value.absent(),
     Value<String?> customerName = const Value.absent(),
     Value<String?> customerPhone = const Value.absent(),
+    Value<String?> customerGstin = const Value.absent(),
     int? totalPaise,
     int? changePaise,
     DateTime? billedAt,
@@ -4997,6 +5136,9 @@ class BillRow extends DataClass implements Insertable<BillRow> {
     customerPhone: customerPhone.present
         ? customerPhone.value
         : this.customerPhone,
+    customerGstin: customerGstin.present
+        ? customerGstin.value
+        : this.customerGstin,
     totalPaise: totalPaise ?? this.totalPaise,
     changePaise: changePaise ?? this.changePaise,
     billedAt: billedAt ?? this.billedAt,
@@ -5015,6 +5157,9 @@ class BillRow extends DataClass implements Insertable<BillRow> {
       customerPhone: data.customerPhone.present
           ? data.customerPhone.value
           : this.customerPhone,
+      customerGstin: data.customerGstin.present
+          ? data.customerGstin.value
+          : this.customerGstin,
       totalPaise: data.totalPaise.present
           ? data.totalPaise.value
           : this.totalPaise,
@@ -5036,6 +5181,7 @@ class BillRow extends DataClass implements Insertable<BillRow> {
           ..write('shiftId: $shiftId, ')
           ..write('customerName: $customerName, ')
           ..write('customerPhone: $customerPhone, ')
+          ..write('customerGstin: $customerGstin, ')
           ..write('totalPaise: $totalPaise, ')
           ..write('changePaise: $changePaise, ')
           ..write('billedAt: $billedAt, ')
@@ -5053,6 +5199,7 @@ class BillRow extends DataClass implements Insertable<BillRow> {
     shiftId,
     customerName,
     customerPhone,
+    customerGstin,
     totalPaise,
     changePaise,
     billedAt,
@@ -5069,6 +5216,7 @@ class BillRow extends DataClass implements Insertable<BillRow> {
           other.shiftId == this.shiftId &&
           other.customerName == this.customerName &&
           other.customerPhone == this.customerPhone &&
+          other.customerGstin == this.customerGstin &&
           other.totalPaise == this.totalPaise &&
           other.changePaise == this.changePaise &&
           other.billedAt == this.billedAt &&
@@ -5083,6 +5231,7 @@ class BillsCompanion extends UpdateCompanion<BillRow> {
   final Value<String?> shiftId;
   final Value<String?> customerName;
   final Value<String?> customerPhone;
+  final Value<String?> customerGstin;
   final Value<int> totalPaise;
   final Value<int> changePaise;
   final Value<DateTime> billedAt;
@@ -5096,6 +5245,7 @@ class BillsCompanion extends UpdateCompanion<BillRow> {
     this.shiftId = const Value.absent(),
     this.customerName = const Value.absent(),
     this.customerPhone = const Value.absent(),
+    this.customerGstin = const Value.absent(),
     this.totalPaise = const Value.absent(),
     this.changePaise = const Value.absent(),
     this.billedAt = const Value.absent(),
@@ -5110,6 +5260,7 @@ class BillsCompanion extends UpdateCompanion<BillRow> {
     this.shiftId = const Value.absent(),
     this.customerName = const Value.absent(),
     this.customerPhone = const Value.absent(),
+    this.customerGstin = const Value.absent(),
     required int totalPaise,
     required int changePaise,
     required DateTime billedAt,
@@ -5131,6 +5282,7 @@ class BillsCompanion extends UpdateCompanion<BillRow> {
     Expression<String>? shiftId,
     Expression<String>? customerName,
     Expression<String>? customerPhone,
+    Expression<String>? customerGstin,
     Expression<int>? totalPaise,
     Expression<int>? changePaise,
     Expression<DateTime>? billedAt,
@@ -5145,6 +5297,7 @@ class BillsCompanion extends UpdateCompanion<BillRow> {
       if (shiftId != null) 'shift_id': shiftId,
       if (customerName != null) 'customer_name': customerName,
       if (customerPhone != null) 'customer_phone': customerPhone,
+      if (customerGstin != null) 'customer_gstin': customerGstin,
       if (totalPaise != null) 'total_paise': totalPaise,
       if (changePaise != null) 'change_paise': changePaise,
       if (billedAt != null) 'billed_at': billedAt,
@@ -5161,6 +5314,7 @@ class BillsCompanion extends UpdateCompanion<BillRow> {
     Value<String?>? shiftId,
     Value<String?>? customerName,
     Value<String?>? customerPhone,
+    Value<String?>? customerGstin,
     Value<int>? totalPaise,
     Value<int>? changePaise,
     Value<DateTime>? billedAt,
@@ -5175,6 +5329,7 @@ class BillsCompanion extends UpdateCompanion<BillRow> {
       shiftId: shiftId ?? this.shiftId,
       customerName: customerName ?? this.customerName,
       customerPhone: customerPhone ?? this.customerPhone,
+      customerGstin: customerGstin ?? this.customerGstin,
       totalPaise: totalPaise ?? this.totalPaise,
       changePaise: changePaise ?? this.changePaise,
       billedAt: billedAt ?? this.billedAt,
@@ -5207,6 +5362,9 @@ class BillsCompanion extends UpdateCompanion<BillRow> {
     if (customerPhone.present) {
       map['customer_phone'] = Variable<String>(customerPhone.value);
     }
+    if (customerGstin.present) {
+      map['customer_gstin'] = Variable<String>(customerGstin.value);
+    }
     if (totalPaise.present) {
       map['total_paise'] = Variable<int>(totalPaise.value);
     }
@@ -5235,6 +5393,7 @@ class BillsCompanion extends UpdateCompanion<BillRow> {
           ..write('shiftId: $shiftId, ')
           ..write('customerName: $customerName, ')
           ..write('customerPhone: $customerPhone, ')
+          ..write('customerGstin: $customerGstin, ')
           ..write('totalPaise: $totalPaise, ')
           ..write('changePaise: $changePaise, ')
           ..write('billedAt: $billedAt, ')
@@ -7419,6 +7578,40 @@ class $BatchesTable extends Batches with TableInfo<$BatchesTable, BatchRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _supplierGstinMeta = const VerificationMeta(
+    'supplierGstin',
+  );
+  @override
+  late final GeneratedColumn<String> supplierGstin = GeneratedColumn<String>(
+    'supplier_gstin',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _invoiceNoMeta = const VerificationMeta(
+    'invoiceNo',
+  );
+  @override
+  late final GeneratedColumn<String> invoiceNo = GeneratedColumn<String>(
+    'invoice_no',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _inputTaxPaiseMeta = const VerificationMeta(
+    'inputTaxPaise',
+  );
+  @override
+  late final GeneratedColumn<int> inputTaxPaise = GeneratedColumn<int>(
+    'input_tax_paise',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _lotMeta = const VerificationMeta('lot');
   @override
   late final GeneratedColumn<int> lot = GeneratedColumn<int>(
@@ -7477,6 +7670,9 @@ class $BatchesTable extends Batches with TableInfo<$BatchesTable, BatchRow> {
   List<GeneratedColumn> get $columns => [
     id,
     supplier,
+    supplierGstin,
+    invoiceNo,
+    inputTaxPaise,
     lot,
     purchasedAt,
     createdBy,
@@ -7507,6 +7703,30 @@ class $BatchesTable extends Batches with TableInfo<$BatchesTable, BatchRow> {
       );
     } else if (isInserting) {
       context.missing(_supplierMeta);
+    }
+    if (data.containsKey('supplier_gstin')) {
+      context.handle(
+        _supplierGstinMeta,
+        supplierGstin.isAcceptableOrUnknown(
+          data['supplier_gstin']!,
+          _supplierGstinMeta,
+        ),
+      );
+    }
+    if (data.containsKey('invoice_no')) {
+      context.handle(
+        _invoiceNoMeta,
+        invoiceNo.isAcceptableOrUnknown(data['invoice_no']!, _invoiceNoMeta),
+      );
+    }
+    if (data.containsKey('input_tax_paise')) {
+      context.handle(
+        _inputTaxPaiseMeta,
+        inputTaxPaise.isAcceptableOrUnknown(
+          data['input_tax_paise']!,
+          _inputTaxPaiseMeta,
+        ),
+      );
     }
     if (data.containsKey('lot')) {
       context.handle(
@@ -7566,6 +7786,18 @@ class $BatchesTable extends Batches with TableInfo<$BatchesTable, BatchRow> {
         DriftSqlType.string,
         data['${effectivePrefix}supplier'],
       )!,
+      supplierGstin: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}supplier_gstin'],
+      ),
+      invoiceNo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}invoice_no'],
+      ),
+      inputTaxPaise: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}input_tax_paise'],
+      )!,
       lot: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}lot'],
@@ -7598,6 +7830,12 @@ class $BatchesTable extends Batches with TableInfo<$BatchesTable, BatchRow> {
 class BatchRow extends DataClass implements Insertable<BatchRow> {
   final String id;
   final String supplier;
+
+  /// The supplier's GSTIN and invoice number, and the tax paid on this
+  /// purchase (for the input tax report; unverified until the CA confirms).
+  final String? supplierGstin;
+  final String? invoiceNo;
+  final int inputTaxPaise;
   final int lot;
   final DateTime purchasedAt;
   final String? createdBy;
@@ -7606,6 +7844,9 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
   const BatchRow({
     required this.id,
     required this.supplier,
+    this.supplierGstin,
+    this.invoiceNo,
+    required this.inputTaxPaise,
     required this.lot,
     required this.purchasedAt,
     this.createdBy,
@@ -7617,6 +7858,13 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
     map['supplier'] = Variable<String>(supplier);
+    if (!nullToAbsent || supplierGstin != null) {
+      map['supplier_gstin'] = Variable<String>(supplierGstin);
+    }
+    if (!nullToAbsent || invoiceNo != null) {
+      map['invoice_no'] = Variable<String>(invoiceNo);
+    }
+    map['input_tax_paise'] = Variable<int>(inputTaxPaise);
     map['lot'] = Variable<int>(lot);
     map['purchased_at'] = Variable<DateTime>(purchasedAt);
     if (!nullToAbsent || createdBy != null) {
@@ -7631,6 +7879,13 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
     return BatchesCompanion(
       id: Value(id),
       supplier: Value(supplier),
+      supplierGstin: supplierGstin == null && nullToAbsent
+          ? const Value.absent()
+          : Value(supplierGstin),
+      invoiceNo: invoiceNo == null && nullToAbsent
+          ? const Value.absent()
+          : Value(invoiceNo),
+      inputTaxPaise: Value(inputTaxPaise),
       lot: Value(lot),
       purchasedAt: Value(purchasedAt),
       createdBy: createdBy == null && nullToAbsent
@@ -7649,6 +7904,9 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
     return BatchRow(
       id: serializer.fromJson<String>(json['id']),
       supplier: serializer.fromJson<String>(json['supplier']),
+      supplierGstin: serializer.fromJson<String?>(json['supplierGstin']),
+      invoiceNo: serializer.fromJson<String?>(json['invoiceNo']),
+      inputTaxPaise: serializer.fromJson<int>(json['inputTaxPaise']),
       lot: serializer.fromJson<int>(json['lot']),
       purchasedAt: serializer.fromJson<DateTime>(json['purchasedAt']),
       createdBy: serializer.fromJson<String?>(json['createdBy']),
@@ -7662,6 +7920,9 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'supplier': serializer.toJson<String>(supplier),
+      'supplierGstin': serializer.toJson<String?>(supplierGstin),
+      'invoiceNo': serializer.toJson<String?>(invoiceNo),
+      'inputTaxPaise': serializer.toJson<int>(inputTaxPaise),
       'lot': serializer.toJson<int>(lot),
       'purchasedAt': serializer.toJson<DateTime>(purchasedAt),
       'createdBy': serializer.toJson<String?>(createdBy),
@@ -7673,6 +7934,9 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
   BatchRow copyWith({
     String? id,
     String? supplier,
+    Value<String?> supplierGstin = const Value.absent(),
+    Value<String?> invoiceNo = const Value.absent(),
+    int? inputTaxPaise,
     int? lot,
     DateTime? purchasedAt,
     Value<String?> createdBy = const Value.absent(),
@@ -7681,6 +7945,11 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
   }) => BatchRow(
     id: id ?? this.id,
     supplier: supplier ?? this.supplier,
+    supplierGstin: supplierGstin.present
+        ? supplierGstin.value
+        : this.supplierGstin,
+    invoiceNo: invoiceNo.present ? invoiceNo.value : this.invoiceNo,
+    inputTaxPaise: inputTaxPaise ?? this.inputTaxPaise,
     lot: lot ?? this.lot,
     purchasedAt: purchasedAt ?? this.purchasedAt,
     createdBy: createdBy.present ? createdBy.value : this.createdBy,
@@ -7691,6 +7960,13 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
     return BatchRow(
       id: data.id.present ? data.id.value : this.id,
       supplier: data.supplier.present ? data.supplier.value : this.supplier,
+      supplierGstin: data.supplierGstin.present
+          ? data.supplierGstin.value
+          : this.supplierGstin,
+      invoiceNo: data.invoiceNo.present ? data.invoiceNo.value : this.invoiceNo,
+      inputTaxPaise: data.inputTaxPaise.present
+          ? data.inputTaxPaise.value
+          : this.inputTaxPaise,
       lot: data.lot.present ? data.lot.value : this.lot,
       purchasedAt: data.purchasedAt.present
           ? data.purchasedAt.value
@@ -7706,6 +7982,9 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
     return (StringBuffer('BatchRow(')
           ..write('id: $id, ')
           ..write('supplier: $supplier, ')
+          ..write('supplierGstin: $supplierGstin, ')
+          ..write('invoiceNo: $invoiceNo, ')
+          ..write('inputTaxPaise: $inputTaxPaise, ')
           ..write('lot: $lot, ')
           ..write('purchasedAt: $purchasedAt, ')
           ..write('createdBy: $createdBy, ')
@@ -7719,6 +7998,9 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
   int get hashCode => Object.hash(
     id,
     supplier,
+    supplierGstin,
+    invoiceNo,
+    inputTaxPaise,
     lot,
     purchasedAt,
     createdBy,
@@ -7731,6 +8013,9 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
       (other is BatchRow &&
           other.id == this.id &&
           other.supplier == this.supplier &&
+          other.supplierGstin == this.supplierGstin &&
+          other.invoiceNo == this.invoiceNo &&
+          other.inputTaxPaise == this.inputTaxPaise &&
           other.lot == this.lot &&
           other.purchasedAt == this.purchasedAt &&
           other.createdBy == this.createdBy &&
@@ -7741,6 +8026,9 @@ class BatchRow extends DataClass implements Insertable<BatchRow> {
 class BatchesCompanion extends UpdateCompanion<BatchRow> {
   final Value<String> id;
   final Value<String> supplier;
+  final Value<String?> supplierGstin;
+  final Value<String?> invoiceNo;
+  final Value<int> inputTaxPaise;
   final Value<int> lot;
   final Value<DateTime> purchasedAt;
   final Value<String?> createdBy;
@@ -7750,6 +8038,9 @@ class BatchesCompanion extends UpdateCompanion<BatchRow> {
   const BatchesCompanion({
     this.id = const Value.absent(),
     this.supplier = const Value.absent(),
+    this.supplierGstin = const Value.absent(),
+    this.invoiceNo = const Value.absent(),
+    this.inputTaxPaise = const Value.absent(),
     this.lot = const Value.absent(),
     this.purchasedAt = const Value.absent(),
     this.createdBy = const Value.absent(),
@@ -7760,6 +8051,9 @@ class BatchesCompanion extends UpdateCompanion<BatchRow> {
   BatchesCompanion.insert({
     required String id,
     required String supplier,
+    this.supplierGstin = const Value.absent(),
+    this.invoiceNo = const Value.absent(),
+    this.inputTaxPaise = const Value.absent(),
     required int lot,
     required DateTime purchasedAt,
     this.createdBy = const Value.absent(),
@@ -7775,6 +8069,9 @@ class BatchesCompanion extends UpdateCompanion<BatchRow> {
   static Insertable<BatchRow> custom({
     Expression<String>? id,
     Expression<String>? supplier,
+    Expression<String>? supplierGstin,
+    Expression<String>? invoiceNo,
+    Expression<int>? inputTaxPaise,
     Expression<int>? lot,
     Expression<DateTime>? purchasedAt,
     Expression<String>? createdBy,
@@ -7785,6 +8082,9 @@ class BatchesCompanion extends UpdateCompanion<BatchRow> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (supplier != null) 'supplier': supplier,
+      if (supplierGstin != null) 'supplier_gstin': supplierGstin,
+      if (invoiceNo != null) 'invoice_no': invoiceNo,
+      if (inputTaxPaise != null) 'input_tax_paise': inputTaxPaise,
       if (lot != null) 'lot': lot,
       if (purchasedAt != null) 'purchased_at': purchasedAt,
       if (createdBy != null) 'created_by': createdBy,
@@ -7797,6 +8097,9 @@ class BatchesCompanion extends UpdateCompanion<BatchRow> {
   BatchesCompanion copyWith({
     Value<String>? id,
     Value<String>? supplier,
+    Value<String?>? supplierGstin,
+    Value<String?>? invoiceNo,
+    Value<int>? inputTaxPaise,
     Value<int>? lot,
     Value<DateTime>? purchasedAt,
     Value<String?>? createdBy,
@@ -7807,6 +8110,9 @@ class BatchesCompanion extends UpdateCompanion<BatchRow> {
     return BatchesCompanion(
       id: id ?? this.id,
       supplier: supplier ?? this.supplier,
+      supplierGstin: supplierGstin ?? this.supplierGstin,
+      invoiceNo: invoiceNo ?? this.invoiceNo,
+      inputTaxPaise: inputTaxPaise ?? this.inputTaxPaise,
       lot: lot ?? this.lot,
       purchasedAt: purchasedAt ?? this.purchasedAt,
       createdBy: createdBy ?? this.createdBy,
@@ -7824,6 +8130,15 @@ class BatchesCompanion extends UpdateCompanion<BatchRow> {
     }
     if (supplier.present) {
       map['supplier'] = Variable<String>(supplier.value);
+    }
+    if (supplierGstin.present) {
+      map['supplier_gstin'] = Variable<String>(supplierGstin.value);
+    }
+    if (invoiceNo.present) {
+      map['invoice_no'] = Variable<String>(invoiceNo.value);
+    }
+    if (inputTaxPaise.present) {
+      map['input_tax_paise'] = Variable<int>(inputTaxPaise.value);
     }
     if (lot.present) {
       map['lot'] = Variable<int>(lot.value);
@@ -7851,6 +8166,9 @@ class BatchesCompanion extends UpdateCompanion<BatchRow> {
     return (StringBuffer('BatchesCompanion(')
           ..write('id: $id, ')
           ..write('supplier: $supplier, ')
+          ..write('supplierGstin: $supplierGstin, ')
+          ..write('invoiceNo: $invoiceNo, ')
+          ..write('inputTaxPaise: $inputTaxPaise, ')
           ..write('lot: $lot, ')
           ..write('purchasedAt: $purchasedAt, ')
           ..write('createdBy: $createdBy, ')
@@ -9809,6 +10127,16 @@ class $BillLinesTable extends BillLines
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _hsnMeta = const VerificationMeta('hsn');
+  @override
+  late final GeneratedColumn<String> hsn = GeneratedColumn<String>(
+    'hsn',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   static const VerificationMeta _gstBpMeta = const VerificationMeta('gstBp');
   @override
   late final GeneratedColumn<int> gstBp = GeneratedColumn<int>(
@@ -9868,6 +10196,7 @@ class $BillLinesTable extends BillLines
     markdownPaise,
     discountPaise,
     finalPaise,
+    hsn,
     gstBp,
     taxablePaise,
     taxPaise,
@@ -9982,6 +10311,12 @@ class $BillLinesTable extends BillLines
     } else if (isInserting) {
       context.missing(_finalPaiseMeta);
     }
+    if (data.containsKey('hsn')) {
+      context.handle(
+        _hsnMeta,
+        hsn.isAcceptableOrUnknown(data['hsn']!, _hsnMeta),
+      );
+    }
     if (data.containsKey('gst_bp')) {
       context.handle(
         _gstBpMeta,
@@ -10065,6 +10400,10 @@ class $BillLinesTable extends BillLines
         DriftSqlType.int,
         data['${effectivePrefix}final_paise'],
       )!,
+      hsn: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}hsn'],
+      )!,
       gstBp: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}gst_bp'],
@@ -10103,6 +10442,9 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
   final int discountPaise;
   final int finalPaise;
 
+  /// The style's HSN code on the day of the bill ('' when it had none).
+  final String hsn;
+
   /// The rate used, in basis points (500 is 5%); 0 when GST was off.
   final int gstBp;
 
@@ -10127,6 +10469,7 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
     required this.markdownPaise,
     required this.discountPaise,
     required this.finalPaise,
+    required this.hsn,
     required this.gstBp,
     required this.taxablePaise,
     required this.taxPaise,
@@ -10146,6 +10489,7 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
     map['markdown_paise'] = Variable<int>(markdownPaise);
     map['discount_paise'] = Variable<int>(discountPaise);
     map['final_paise'] = Variable<int>(finalPaise);
+    map['hsn'] = Variable<String>(hsn);
     map['gst_bp'] = Variable<int>(gstBp);
     map['taxable_paise'] = Variable<int>(taxablePaise);
     map['tax_paise'] = Variable<int>(taxPaise);
@@ -10166,6 +10510,7 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
       markdownPaise: Value(markdownPaise),
       discountPaise: Value(discountPaise),
       finalPaise: Value(finalPaise),
+      hsn: Value(hsn),
       gstBp: Value(gstBp),
       taxablePaise: Value(taxablePaise),
       taxPaise: Value(taxPaise),
@@ -10190,6 +10535,7 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
       markdownPaise: serializer.fromJson<int>(json['markdownPaise']),
       discountPaise: serializer.fromJson<int>(json['discountPaise']),
       finalPaise: serializer.fromJson<int>(json['finalPaise']),
+      hsn: serializer.fromJson<String>(json['hsn']),
       gstBp: serializer.fromJson<int>(json['gstBp']),
       taxablePaise: serializer.fromJson<int>(json['taxablePaise']),
       taxPaise: serializer.fromJson<int>(json['taxPaise']),
@@ -10211,6 +10557,7 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
       'markdownPaise': serializer.toJson<int>(markdownPaise),
       'discountPaise': serializer.toJson<int>(discountPaise),
       'finalPaise': serializer.toJson<int>(finalPaise),
+      'hsn': serializer.toJson<String>(hsn),
       'gstBp': serializer.toJson<int>(gstBp),
       'taxablePaise': serializer.toJson<int>(taxablePaise),
       'taxPaise': serializer.toJson<int>(taxPaise),
@@ -10230,6 +10577,7 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
     int? markdownPaise,
     int? discountPaise,
     int? finalPaise,
+    String? hsn,
     int? gstBp,
     int? taxablePaise,
     int? taxPaise,
@@ -10246,6 +10594,7 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
     markdownPaise: markdownPaise ?? this.markdownPaise,
     discountPaise: discountPaise ?? this.discountPaise,
     finalPaise: finalPaise ?? this.finalPaise,
+    hsn: hsn ?? this.hsn,
     gstBp: gstBp ?? this.gstBp,
     taxablePaise: taxablePaise ?? this.taxablePaise,
     taxPaise: taxPaise ?? this.taxPaise,
@@ -10274,6 +10623,7 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
       finalPaise: data.finalPaise.present
           ? data.finalPaise.value
           : this.finalPaise,
+      hsn: data.hsn.present ? data.hsn.value : this.hsn,
       gstBp: data.gstBp.present ? data.gstBp.value : this.gstBp,
       taxablePaise: data.taxablePaise.present
           ? data.taxablePaise.value
@@ -10299,6 +10649,7 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
           ..write('markdownPaise: $markdownPaise, ')
           ..write('discountPaise: $discountPaise, ')
           ..write('finalPaise: $finalPaise, ')
+          ..write('hsn: $hsn, ')
           ..write('gstBp: $gstBp, ')
           ..write('taxablePaise: $taxablePaise, ')
           ..write('taxPaise: $taxPaise, ')
@@ -10320,6 +10671,7 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
     markdownPaise,
     discountPaise,
     finalPaise,
+    hsn,
     gstBp,
     taxablePaise,
     taxPaise,
@@ -10340,6 +10692,7 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
           other.markdownPaise == this.markdownPaise &&
           other.discountPaise == this.discountPaise &&
           other.finalPaise == this.finalPaise &&
+          other.hsn == this.hsn &&
           other.gstBp == this.gstBp &&
           other.taxablePaise == this.taxablePaise &&
           other.taxPaise == this.taxPaise &&
@@ -10358,6 +10711,7 @@ class BillLinesCompanion extends UpdateCompanion<BillLineRow> {
   final Value<int> markdownPaise;
   final Value<int> discountPaise;
   final Value<int> finalPaise;
+  final Value<String> hsn;
   final Value<int> gstBp;
   final Value<int> taxablePaise;
   final Value<int> taxPaise;
@@ -10375,6 +10729,7 @@ class BillLinesCompanion extends UpdateCompanion<BillLineRow> {
     this.markdownPaise = const Value.absent(),
     this.discountPaise = const Value.absent(),
     this.finalPaise = const Value.absent(),
+    this.hsn = const Value.absent(),
     this.gstBp = const Value.absent(),
     this.taxablePaise = const Value.absent(),
     this.taxPaise = const Value.absent(),
@@ -10393,6 +10748,7 @@ class BillLinesCompanion extends UpdateCompanion<BillLineRow> {
     required int markdownPaise,
     required int discountPaise,
     required int finalPaise,
+    this.hsn = const Value.absent(),
     this.gstBp = const Value.absent(),
     this.taxablePaise = const Value.absent(),
     this.taxPaise = const Value.absent(),
@@ -10421,6 +10777,7 @@ class BillLinesCompanion extends UpdateCompanion<BillLineRow> {
     Expression<int>? markdownPaise,
     Expression<int>? discountPaise,
     Expression<int>? finalPaise,
+    Expression<String>? hsn,
     Expression<int>? gstBp,
     Expression<int>? taxablePaise,
     Expression<int>? taxPaise,
@@ -10439,6 +10796,7 @@ class BillLinesCompanion extends UpdateCompanion<BillLineRow> {
       if (markdownPaise != null) 'markdown_paise': markdownPaise,
       if (discountPaise != null) 'discount_paise': discountPaise,
       if (finalPaise != null) 'final_paise': finalPaise,
+      if (hsn != null) 'hsn': hsn,
       if (gstBp != null) 'gst_bp': gstBp,
       if (taxablePaise != null) 'taxable_paise': taxablePaise,
       if (taxPaise != null) 'tax_paise': taxPaise,
@@ -10459,6 +10817,7 @@ class BillLinesCompanion extends UpdateCompanion<BillLineRow> {
     Value<int>? markdownPaise,
     Value<int>? discountPaise,
     Value<int>? finalPaise,
+    Value<String>? hsn,
     Value<int>? gstBp,
     Value<int>? taxablePaise,
     Value<int>? taxPaise,
@@ -10477,6 +10836,7 @@ class BillLinesCompanion extends UpdateCompanion<BillLineRow> {
       markdownPaise: markdownPaise ?? this.markdownPaise,
       discountPaise: discountPaise ?? this.discountPaise,
       finalPaise: finalPaise ?? this.finalPaise,
+      hsn: hsn ?? this.hsn,
       gstBp: gstBp ?? this.gstBp,
       taxablePaise: taxablePaise ?? this.taxablePaise,
       taxPaise: taxPaise ?? this.taxPaise,
@@ -10521,6 +10881,9 @@ class BillLinesCompanion extends UpdateCompanion<BillLineRow> {
     if (finalPaise.present) {
       map['final_paise'] = Variable<int>(finalPaise.value);
     }
+    if (hsn.present) {
+      map['hsn'] = Variable<String>(hsn.value);
+    }
     if (gstBp.present) {
       map['gst_bp'] = Variable<int>(gstBp.value);
     }
@@ -10553,6 +10916,7 @@ class BillLinesCompanion extends UpdateCompanion<BillLineRow> {
           ..write('markdownPaise: $markdownPaise, ')
           ..write('discountPaise: $discountPaise, ')
           ..write('finalPaise: $finalPaise, ')
+          ..write('hsn: $hsn, ')
           ..write('gstBp: $gstBp, ')
           ..write('taxablePaise: $taxablePaise, ')
           ..write('taxPaise: $taxPaise, ')
@@ -15661,6 +16025,8 @@ typedef $$ProductsTableCreateCompanionBuilder = ProductsCompanion Function({
   required String name,
   Value<String?> createdBy,
   Value<String?> categoryId,
+  Value<String?> hsn,
+  Value<int?> gstBp,
   required DateTime createdAt,
   required DateTime updatedAt,
   Value<int> rowid,
@@ -15670,6 +16036,8 @@ typedef $$ProductsTableUpdateCompanionBuilder = ProductsCompanion Function({
   Value<String> name,
   Value<String?> createdBy,
   Value<String?> categoryId,
+  Value<String?> hsn,
+  Value<int?> gstBp,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<int> rowid,
@@ -15754,6 +16122,16 @@ class $$ProductsTableFilterComposer
 
   ColumnFilters<String> get createdBy => $composableBuilder(
     column: $table.createdBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get hsn => $composableBuilder(
+    column: $table.hsn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get gstBp => $composableBuilder(
+    column: $table.gstBp,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -15865,6 +16243,16 @@ class $$ProductsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get hsn => $composableBuilder(
+    column: $table.hsn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get gstBp => $composableBuilder(
+    column: $table.gstBp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -15916,6 +16304,12 @@ class $$ProductsTableAnnotationComposer
 
   GeneratedColumn<String> get createdBy =>
       $composableBuilder(column: $table.createdBy, builder: (column) => column);
+
+  GeneratedColumn<String> get hsn =>
+      $composableBuilder(column: $table.hsn, builder: (column) => column);
+
+  GeneratedColumn<int> get gstBp =>
+      $composableBuilder(column: $table.gstBp, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -16033,6 +16427,8 @@ class $$ProductsTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<String?> createdBy = const Value.absent(),
                 Value<String?> categoryId = const Value.absent(),
+                Value<String?> hsn = const Value.absent(),
+                Value<int?> gstBp = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -16041,6 +16437,8 @@ class $$ProductsTableTableManager
                 name: name,
                 createdBy: createdBy,
                 categoryId: categoryId,
+                hsn: hsn,
+                gstBp: gstBp,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -16051,6 +16449,8 @@ class $$ProductsTableTableManager
                 required String name,
                 Value<String?> createdBy = const Value.absent(),
                 Value<String?> categoryId = const Value.absent(),
+                Value<String?> hsn = const Value.absent(),
+                Value<int?> gstBp = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -16059,6 +16459,8 @@ class $$ProductsTableTableManager
                 name: name,
                 createdBy: createdBy,
                 categoryId: categoryId,
+                hsn: hsn,
+                gstBp: gstBp,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -18507,6 +18909,7 @@ typedef $$BillsTableCreateCompanionBuilder = BillsCompanion Function({
   Value<String?> shiftId,
   Value<String?> customerName,
   Value<String?> customerPhone,
+  Value<String?> customerGstin,
   required int totalPaise,
   required int changePaise,
   required DateTime billedAt,
@@ -18521,6 +18924,7 @@ typedef $$BillsTableUpdateCompanionBuilder = BillsCompanion Function({
   Value<String?> shiftId,
   Value<String?> customerName,
   Value<String?> customerPhone,
+  Value<String?> customerGstin,
   Value<int> totalPaise,
   Value<int> changePaise,
   Value<DateTime> billedAt,
@@ -18681,6 +19085,11 @@ class $$BillsTableFilterComposer extends Composer<_$AppDatabase, $BillsTable> {
 
   ColumnFilters<String> get customerPhone => $composableBuilder(
     column: $table.customerPhone,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customerGstin => $composableBuilder(
+    column: $table.customerGstin,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -18903,6 +19312,11 @@ class $$BillsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get customerGstin => $composableBuilder(
+    column: $table.customerGstin,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get totalPaise => $composableBuilder(
     column: $table.totalPaise,
     builder: (column) => ColumnOrderings(column),
@@ -19015,6 +19429,11 @@ class $$BillsTableAnnotationComposer
 
   GeneratedColumn<String> get customerPhone => $composableBuilder(
     column: $table.customerPhone,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get customerGstin => $composableBuilder(
+    column: $table.customerGstin,
     builder: (column) => column,
   );
 
@@ -19247,6 +19666,7 @@ class $$BillsTableTableManager
                 Value<String?> shiftId = const Value.absent(),
                 Value<String?> customerName = const Value.absent(),
                 Value<String?> customerPhone = const Value.absent(),
+                Value<String?> customerGstin = const Value.absent(),
                 Value<int> totalPaise = const Value.absent(),
                 Value<int> changePaise = const Value.absent(),
                 Value<DateTime> billedAt = const Value.absent(),
@@ -19260,6 +19680,7 @@ class $$BillsTableTableManager
                 shiftId: shiftId,
                 customerName: customerName,
                 customerPhone: customerPhone,
+                customerGstin: customerGstin,
                 totalPaise: totalPaise,
                 changePaise: changePaise,
                 billedAt: billedAt,
@@ -19275,6 +19696,7 @@ class $$BillsTableTableManager
                 Value<String?> shiftId = const Value.absent(),
                 Value<String?> customerName = const Value.absent(),
                 Value<String?> customerPhone = const Value.absent(),
+                Value<String?> customerGstin = const Value.absent(),
                 required int totalPaise,
                 required int changePaise,
                 required DateTime billedAt,
@@ -19288,6 +19710,7 @@ class $$BillsTableTableManager
                 shiftId: shiftId,
                 customerName: customerName,
                 customerPhone: customerPhone,
+                customerGstin: customerGstin,
                 totalPaise: totalPaise,
                 changePaise: changePaise,
                 billedAt: billedAt,
@@ -22196,6 +22619,9 @@ typedef $$VariantsTableProcessedTableManager =
 typedef $$BatchesTableCreateCompanionBuilder = BatchesCompanion Function({
   required String id,
   required String supplier,
+  Value<String?> supplierGstin,
+  Value<String?> invoiceNo,
+  Value<int> inputTaxPaise,
   required int lot,
   required DateTime purchasedAt,
   Value<String?> createdBy,
@@ -22206,6 +22632,9 @@ typedef $$BatchesTableCreateCompanionBuilder = BatchesCompanion Function({
 typedef $$BatchesTableUpdateCompanionBuilder = BatchesCompanion Function({
   Value<String> id,
   Value<String> supplier,
+  Value<String?> supplierGstin,
+  Value<String?> invoiceNo,
+  Value<int> inputTaxPaise,
   Value<int> lot,
   Value<DateTime> purchasedAt,
   Value<String?> createdBy,
@@ -22271,6 +22700,21 @@ class $$BatchesTableFilterComposer
 
   ColumnFilters<String> get supplier => $composableBuilder(
     column: $table.supplier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get supplierGstin => $composableBuilder(
+    column: $table.supplierGstin,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get invoiceNo => $composableBuilder(
+    column: $table.invoiceNo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get inputTaxPaise => $composableBuilder(
+    column: $table.inputTaxPaise,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -22369,6 +22813,21 @@ class $$BatchesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get supplierGstin => $composableBuilder(
+    column: $table.supplierGstin,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get invoiceNo => $composableBuilder(
+    column: $table.invoiceNo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get inputTaxPaise => $composableBuilder(
+    column: $table.inputTaxPaise,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get lot => $composableBuilder(
     column: $table.lot,
     builder: (column) => ColumnOrderings(column),
@@ -22409,6 +22868,19 @@ class $$BatchesTableAnnotationComposer
 
   GeneratedColumn<String> get supplier =>
       $composableBuilder(column: $table.supplier, builder: (column) => column);
+
+  GeneratedColumn<String> get supplierGstin => $composableBuilder(
+    column: $table.supplierGstin,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get invoiceNo =>
+      $composableBuilder(column: $table.invoiceNo, builder: (column) => column);
+
+  GeneratedColumn<int> get inputTaxPaise => $composableBuilder(
+    column: $table.inputTaxPaise,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get lot =>
       $composableBuilder(column: $table.lot, builder: (column) => column);
@@ -22508,6 +22980,9 @@ class $$BatchesTableTableManager
               ({
                 Value<String> id = const Value.absent(),
                 Value<String> supplier = const Value.absent(),
+                Value<String?> supplierGstin = const Value.absent(),
+                Value<String?> invoiceNo = const Value.absent(),
+                Value<int> inputTaxPaise = const Value.absent(),
                 Value<int> lot = const Value.absent(),
                 Value<DateTime> purchasedAt = const Value.absent(),
                 Value<String?> createdBy = const Value.absent(),
@@ -22517,6 +22992,9 @@ class $$BatchesTableTableManager
               }) => BatchesCompanion(
                 id: id,
                 supplier: supplier,
+                supplierGstin: supplierGstin,
+                invoiceNo: invoiceNo,
+                inputTaxPaise: inputTaxPaise,
                 lot: lot,
                 purchasedAt: purchasedAt,
                 createdBy: createdBy,
@@ -22528,6 +23006,9 @@ class $$BatchesTableTableManager
               ({
                 required String id,
                 required String supplier,
+                Value<String?> supplierGstin = const Value.absent(),
+                Value<String?> invoiceNo = const Value.absent(),
+                Value<int> inputTaxPaise = const Value.absent(),
                 required int lot,
                 required DateTime purchasedAt,
                 Value<String?> createdBy = const Value.absent(),
@@ -22537,6 +23018,9 @@ class $$BatchesTableTableManager
               }) => BatchesCompanion.insert(
                 id: id,
                 supplier: supplier,
+                supplierGstin: supplierGstin,
+                invoiceNo: invoiceNo,
+                inputTaxPaise: inputTaxPaise,
                 lot: lot,
                 purchasedAt: purchasedAt,
                 createdBy: createdBy,
@@ -24170,6 +24654,7 @@ typedef $$BillLinesTableCreateCompanionBuilder = BillLinesCompanion Function({
   required int markdownPaise,
   required int discountPaise,
   required int finalPaise,
+  Value<String> hsn,
   Value<int> gstBp,
   Value<int> taxablePaise,
   Value<int> taxPaise,
@@ -24188,6 +24673,7 @@ typedef $$BillLinesTableUpdateCompanionBuilder = BillLinesCompanion Function({
   Value<int> markdownPaise,
   Value<int> discountPaise,
   Value<int> finalPaise,
+  Value<String> hsn,
   Value<int> gstBp,
   Value<int> taxablePaise,
   Value<int> taxPaise,
@@ -24303,6 +24789,11 @@ class $$BillLinesTableFilterComposer
 
   ColumnFilters<int> get finalPaise => $composableBuilder(
     column: $table.finalPaise,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get hsn => $composableBuilder(
+    column: $table.hsn,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -24452,6 +24943,11 @@ class $$BillLinesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get hsn => $composableBuilder(
+    column: $table.hsn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get gstBp => $composableBuilder(
     column: $table.gstBp,
     builder: (column) => ColumnOrderings(column),
@@ -24564,6 +25060,9 @@ class $$BillLinesTableAnnotationComposer
     column: $table.finalPaise,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get hsn =>
+      $composableBuilder(column: $table.hsn, builder: (column) => column);
 
   GeneratedColumn<int> get gstBp =>
       $composableBuilder(column: $table.gstBp, builder: (column) => column);
@@ -24696,6 +25195,7 @@ class $$BillLinesTableTableManager
                 Value<int> markdownPaise = const Value.absent(),
                 Value<int> discountPaise = const Value.absent(),
                 Value<int> finalPaise = const Value.absent(),
+                Value<String> hsn = const Value.absent(),
                 Value<int> gstBp = const Value.absent(),
                 Value<int> taxablePaise = const Value.absent(),
                 Value<int> taxPaise = const Value.absent(),
@@ -24713,6 +25213,7 @@ class $$BillLinesTableTableManager
                 markdownPaise: markdownPaise,
                 discountPaise: discountPaise,
                 finalPaise: finalPaise,
+                hsn: hsn,
                 gstBp: gstBp,
                 taxablePaise: taxablePaise,
                 taxPaise: taxPaise,
@@ -24732,6 +25233,7 @@ class $$BillLinesTableTableManager
                 required int markdownPaise,
                 required int discountPaise,
                 required int finalPaise,
+                Value<String> hsn = const Value.absent(),
                 Value<int> gstBp = const Value.absent(),
                 Value<int> taxablePaise = const Value.absent(),
                 Value<int> taxPaise = const Value.absent(),
@@ -24749,6 +25251,7 @@ class $$BillLinesTableTableManager
                 markdownPaise: markdownPaise,
                 discountPaise: discountPaise,
                 finalPaise: finalPaise,
+                hsn: hsn,
                 gstBp: gstBp,
                 taxablePaise: taxablePaise,
                 taxPaise: taxPaise,

@@ -354,6 +354,93 @@ void main() {
     });
   });
 
+  group('HSN code and own rate of each style', () {
+    Future<void> buy(String style) async {
+      await stock.ensureCounter();
+      await stock.receivePurchase(
+        role: Role.owner,
+        draft: PurchaseDraft(
+          supplier: 'S',
+          style: style,
+          lines: [
+            PurchaseLine(
+              size: 'M',
+              color: 'Blue',
+              quantity: 1,
+              cost: Money(1),
+              mrp: Money(2),
+            ),
+          ],
+        ),
+      );
+    }
+
+    testWidgets('each style is listed; one with no code says No HSN', (
+      tester,
+    ) async {
+      await tester.runAsync(() => buy('Cotton Kurta'));
+      await open(tester);
+      expect(textOf(tester, 'style-gst-text-Cotton Kurta'), 'No HSN');
+    });
+
+    testWidgets('the owner saves a code and an own rate', (tester) async {
+      await tester.runAsync(() => buy('Cotton Kurta'));
+      await open(tester);
+      await tapKey(tester, 'style-gst-edit-Cotton Kurta');
+      await fill(tester, 'style-hsn', '6109');
+      await fill(tester, 'style-rate', '12');
+      await tapKey(tester, 'style-gst-save');
+      expect(
+        textOf(tester, 'style-gst-text-Cotton Kurta'),
+        'HSN 6109, own rate 12%',
+      );
+    });
+
+    testWidgets('a manager can set the code but has no rate box', (
+      tester,
+    ) async {
+      await tester.runAsync(() => buy('Cotton Kurta'));
+      await open(tester, manager: true);
+      await tapKey(tester, 'style-gst-edit-Cotton Kurta');
+      expect(find.byKey(const Key('style-rate')), findsNothing);
+      await fill(tester, 'style-hsn', '610910');
+      await tapKey(tester, 'style-gst-save');
+      expect(textOf(tester, 'style-gst-text-Cotton Kurta'), 'HSN 610910');
+    });
+
+    testWidgets('a bad code or rate is refused in the box', (tester) async {
+      await tester.runAsync(() => buy('Cotton Kurta'));
+      await open(tester);
+      await tapKey(tester, 'style-gst-edit-Cotton Kurta');
+      await fill(tester, 'style-hsn', '12');
+      await tapKey(tester, 'style-gst-save');
+      expect(
+        textOf(tester, 'style-gst-error'),
+        'The HSN code must be 4 to 8 digits.',
+      );
+      await fill(tester, 'style-hsn', '6109');
+      await fill(tester, 'style-rate', '80');
+      await tapKey(tester, 'style-gst-save');
+      expect(textOf(tester, 'style-gst-error'), contains('between 0 and 50'));
+    });
+
+    testWidgets('clearing the code and the rate puts the style back', (
+      tester,
+    ) async {
+      await tester.runAsync(() => buy('Cotton Kurta'));
+      await open(tester);
+      await tapKey(tester, 'style-gst-edit-Cotton Kurta');
+      await fill(tester, 'style-hsn', '6109');
+      await fill(tester, 'style-rate', '12');
+      await tapKey(tester, 'style-gst-save');
+      await tapKey(tester, 'style-gst-edit-Cotton Kurta');
+      await fill(tester, 'style-hsn', '');
+      await fill(tester, 'style-rate', '');
+      await tapKey(tester, 'style-gst-save');
+      expect(textOf(tester, 'style-gst-text-Cotton Kurta'), 'No HSN');
+    });
+  });
+
   group('switching it off', () {
     testWidgets('the owner turns it off; the other choices are kept', (
       tester,

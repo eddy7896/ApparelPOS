@@ -388,7 +388,7 @@
     },
     {
       "id": "P3-3b",
-      "name": "Runbook for the owner (written, not yet followed on a real laptop)",
+      "name": "Runbook for the owner (written and checked against the code; the owner must follow it once on a real laptop)",
       "phase": 3,
       "phaseName": "Go-live hardening",
       "milestone": "",
@@ -399,14 +399,14 @@
     },
     {
       "id": "P3-4",
-      "name": "GST, switched off: owner-only setup, tax on bills and invoice, GST reports and CSV export (HSN and business-customer reports need data)",
+      "name": "GST, switched off: owner-only setup, tax, invoice, HSN, customer GSTIN, purchase tax, reports and CSV export (the CA must confirm every rule)",
       "phase": 3,
       "phaseName": "Go-live hardening",
       "milestone": "",
       "order": 33,
-      "status": "doing",
-      "pct": 90,
-      "pr": "#59, #61"
+      "status": "done",
+      "pct": 100,
+      "pr": "#59, #61, #68"
     },
     {
       "id": "UX-0",

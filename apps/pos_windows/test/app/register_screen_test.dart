@@ -1322,6 +1322,64 @@ void main() {
       expect(find.byKey(const Key('saved-title')), findsOneWidget);
     });
 
+    testWidgets('the customer GSTIN box appears only while GST is on', (
+      tester,
+    ) async {
+      await open(tester);
+      await scan(tester, barcodes[0]);
+      expect(find.byKey(const Key('customer-gstin')), findsNothing);
+    });
+
+    testWidgets('a business customer GSTIN is kept on the bill', (
+      tester,
+    ) async {
+      await tester.runAsync(setGst);
+      await open(tester);
+      await scan(tester, barcodes[0]);
+      await type(tester, 'customer-gstin', '29abcde1234f1z5');
+      await tester.ensureVisible(find.byKey(const Key('exact-cash')));
+      await tester.tap(find.byKey(const Key('exact-cash')));
+      await tester.pump();
+      await tapRunAsync(tester, 'complete-bill');
+      expect(find.byKey(const Key('saved-title')), findsOneWidget);
+      final b = await tester.runAsync(
+        () => db.customSelect('SELECT customer_gstin FROM bills').getSingle(),
+      );
+      expect(b!.read<String>('customer_gstin'), '29ABCDE1234F1Z5');
+    });
+
+    testWidgets(
+      'a GSTIN that is not the right shape stops the bill with a message',
+      (tester) async {
+        await tester.runAsync(setGst);
+        await open(tester);
+        await scan(tester, barcodes[0]);
+        await type(tester, 'customer-gstin', 'nope');
+        await tester.ensureVisible(find.byKey(const Key('exact-cash')));
+        await tester.tap(find.byKey(const Key('exact-cash')));
+        await tester.pump();
+        await tapRunAsync(tester, 'complete-bill');
+        expect(find.byKey(const Key('saved-title')), findsNothing);
+        expect(
+          find.textContaining('customer GSTIN is not in the usual shape'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'a style with its own rate is taxed at that rate on the screen',
+      (tester) async {
+        await tester.runAsync(() async {
+          await setGst(mode: GstMode.exclusive);
+          await db.customStatement('UPDATE products SET gst_bp = 1200');
+        });
+        await open(tester);
+        await scan(tester, barcodes[0]);
+        expect(textOf(tester, 'total-text'), '₹558.88'); // 499.00 + 12% = 59.88
+      },
+    );
+
     testWidgets(
       'a return of a taxed garment refunds what was paid, tax included',
       (tester) async {

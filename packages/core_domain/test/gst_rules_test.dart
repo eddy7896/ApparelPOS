@@ -4,6 +4,7 @@ import 'package:core_domain/core_domain.dart';
 import 'package:test/test.dart';
 
 void main() {
+  gstOwnRateTests();
   GstSettings on({
     GstMode mode = GstMode.inclusive,
     GstRounding rounding = GstRounding.perItem,
@@ -294,6 +295,103 @@ void main() {
       for (final p in GstSettingsProblem.values) {
         expect(gstSettingsProblemText(p), isNotEmpty);
       }
+    });
+  });
+}
+
+void gstOwnRateTests() {
+  GstSettings on({
+    GstMode mode = GstMode.inclusive,
+    GstRounding rounding = GstRounding.perItem,
+  }) => GstSettings(enabled: true, mode: mode, rounding: rounding);
+
+  group('a style with its own rate', () {
+    test('uses its own rate; others use the shop rate', () {
+      final t = billTax(
+        [Money(112000), Money(105000)],
+        on(),
+        ownRatesBp: [1200, null],
+      );
+      expect(t.lines[0].rateBp, 1200);
+      expect(t.lines[0].tax, Money(12000)); // 1,120.00 / 1.12 = 1,000.00
+      expect(t.lines[1].rateBp, 500);
+      expect(t.lines[1].tax, Money(5000));
+    });
+
+    test('a null list is the shop rate for all', () {
+      final t = billTax([Money(105000)], on());
+      expect(t.lines.single.rateBp, 500);
+    });
+
+    test('an own rate of zero means that style carries no tax', () {
+      final t = billTax(
+        [Money(49900), Money(105000)],
+        on(),
+        ownRatesBp: [0, null],
+      );
+      expect(t.lines[0].tax, Money.zero);
+      expect(t.lines[0].rateBp, 0);
+      expect(t.lines[0].taxable, Money.zero);
+      expect(t.lines[1].tax, Money(5000));
+    });
+
+    test('per bill: the tax is shared inside each rate, and adds up', () {
+      final prices = [Money(10), Money(10), Money(10), Money(10), Money(10)];
+      final t = billTax(
+        prices,
+        on(mode: GstMode.exclusive, rounding: GstRounding.perBill),
+        ownRatesBp: [500, 500, 500, 1200, 1200],
+      );
+      // 30 paise at 5% = 1.5 -> 2; 20 paise at 12% = 2.4 -> 2
+      expect(t.lines.sublist(0, 3).fold<int>(0, (a, l) => a + l.tax.paise), 2);
+      expect(t.lines.sublist(3).fold<int>(0, (a, l) => a + l.tax.paise), 2);
+      expect(t.lines.map((l) => l.rateBp), [500, 500, 500, 1200, 1200]);
+    });
+
+    test('lines keep their order whatever their rates', () {
+      final t = billTax(
+        [Money(100), Money(200), Money(300)],
+        on(mode: GstMode.exclusive),
+        ownRatesBp: [1200, 500, 1200],
+      );
+      expect(t.lines.map((l) => l.price.paise), [100, 200, 300]);
+      expect(t.lines.map((l) => l.rateBp), [1200, 500, 1200]);
+    });
+
+    test('a list of the wrong length is refused', () {
+      expect(
+        () => billTax([Money(1)], on(), ownRatesBp: [500, 500]),
+        throwsArgumentError,
+      );
+    });
+
+    test('GST off ignores own rates', () {
+      final t = billTax(
+        [Money(105000)],
+        const GstSettings(),
+        ownRatesBp: [1200],
+      );
+      expect(t.totalTax, Money.zero);
+    });
+  });
+
+  group('HSN and customer GSTIN', () {
+    test('cleanHsn takes 4 to 8 digits', () {
+      expect(cleanHsn('6109'), '6109');
+      expect(cleanHsn(' 61091000 '), '61091000');
+      for (final bad in ['', '610', '123456789', '61a9', null]) {
+        expect(cleanHsn(bad), isNull, reason: '$bad');
+      }
+    });
+    test('cleanGstin makes capitals or refuses', () {
+      expect(cleanGstin(' 27abcde1234f1z5 '), '27ABCDE1234F1Z5');
+      expect(cleanGstin('nope'), isNull);
+      expect(cleanGstin(null), isNull);
+    });
+    test('the HSN and customer GSTIN fields are on to begin with', () {
+      const s = GstSettings();
+      expect(s.prints(GstInvoiceField.hsnCode), isTrue);
+      expect(s.prints(GstInvoiceField.customerGstin), isTrue);
     });
   });
 }
