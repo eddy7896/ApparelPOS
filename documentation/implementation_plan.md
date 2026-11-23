@@ -62,7 +62,7 @@ Purpose: phases and task IDs. Size S <= 1 day, M <= 3 days, L <= 1 week. Phases 
 | P3-2c | Backup screens: folder pickers, Back up now, status, restore; automatic backup at shift close and start-up | L | screen tests | P3-2b | done |
 | P3-3a | Windows installer (Inno Setup, per-user, unsigned), pinned data location, CI install smoke test | M | Setup builds, installs, starts and uninstalls on the CI runner | P3-2c | doing |
 | P3-3c | Release process: changelog, feature log, release workflow that attaches the installer to a GitHub Release | M | check:changelog passes; workflow files parse; first real run is the 0.9.0 tag | P3-3a | doing |
-| P3-3b | Runbook for the owner: install, first day, laptop fails, database corrupt, restore, SmartScreen warning, go-live checklist | M | owner can follow it | P3-3a | todo |
+| P3-3b | Runbook for the owner: install, first day, laptop fails, database corrupt, restore, SmartScreen warning, go-live checklist | M | owner can follow it (written 2026-11-23 as `documentation/owner_runbook.md`; the owner must follow it once on the real laptop and fix what is wrong) | P3-3a | written, unverified |
 | P3-4 | GST toggle scaffold (settings, tax fields); first step also tax on bills, the printed invoice, returns and the daily report (owner, 2026-11-23); GST reports later | L | E-GST-1; rules, database v12, screens, bill and report tests | P2-4 | first step done |
 
 ## P4 release 2
