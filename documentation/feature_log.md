@@ -1,5 +1,5 @@
 # Feature log
-Status: current to 2026-11-22 (release 0.9.0)
+Status: current to 2026-11-23 (release 0.9.0)
 
 Purpose: every feature, task by task, with the pull request that built it, so the owner can see what exists and when it arrived. The release notes are in [CHANGELOG.md](../CHANGELOG.md); the plan is [implementation_plan.md](implementation_plan.md).
 
@@ -36,14 +36,20 @@ Pull request `#12` is https://github.com/eddy7896/ApparelPOS/pull/12. All are me
 | P3-2a | Backup rules (names, keep 60, when due) | #30 | 2026-11-21 |
 | P3-2b | Backup service and restore to a clean machine | #31 | 2026-11-21 |
 | P3-2c | Backup and restore screens, first-launch restore, automatic backups | #32 | 2026-11-21 |
-| P3-3a | Windows installer, pinned data location, install test in CI | #33 | 2026-11-22 (check the PR) |
-| P3-3c | Release process: changelog, feature log, release workflow with the installer attached | open (see the pull request list) | |
+| P3-3a | Windows installer, pinned data location, install test in CI | #33 | 2026-11-22 |
+| P3-3c | Release process: changelog, feature log, release workflow with the installer attached | #34 | 2026-11-22 |
+| UX-0 to UX-5 | Redesign: plan, branding as data, register popup, shift popup and Pause, Manager Mode home, returns popup | #35 to #40 | 2026-11-23 |
+| X-1 to X-3 | Stock lookup (with out-of-stock and low-stock clarity), demo stock, Analytics | #41, #42, #43, #48 | 2026-11-23 |
+| X-4, X-8, X-10 | Staff management, 6-digit PIN, operator IDs on the bill | #44, #49, #51 | 2026-11-23 |
+| X-5, X-6, X-7, X-9 | Name search and several of one size, screens aligned to the mock-up, daily report charts, payment card | #45, #46, #47, #50 | 2026-11-23 |
+| X-11 to X-14 | Stock categories, Inter font, register shortcuts (hold bill), break time in the report | #52 to #55 | 2026-11-23 |
+| P2-4e | Markdowns set ahead of time on a style | #56 | 2026-11-23 |
+| P2-4d | Pay later (udhaar): data, rules, screens | #57, #58 | 2026-11-23 |
+| P3-4 | GST (off by default, unverified): owner-only setup, tax on bills, invoice print, GST reports and CSV export | #59, #61 | 2026-11-23 |
+| P3-3b | Runbook for the owner (written; not yet followed on a real laptop) | #60 | 2026-11-23 |
 
 ## Planned, not built
 | Task | What | Waiting for |
 |---|---|---|
-| P3-3b | Runbook for the owner (install, first day, laptop fails, database corrupt, restore, go-live checklist) | owner's go-ahead |
-| P3-4 | GST setup (off by default; rules unverified until the CA confirms) | the CA |
-| P2-4d | Pay later (udhaar): customers, balance owed, later payments | owner's questions answered |
-| P2-4e | Markdown at the register | owner's go-ahead |
+| P3-4b | GST reports that need new data: sales by HSN code, to business customers with a GSTIN, purchases and input tax | HSN codes and a customer GSTIN field; the CA |
 | P4 | Sync, cloud, the owner's phone app, a second counter (Release 2) | after go-live |
