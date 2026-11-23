@@ -52,7 +52,8 @@ Future<void> _start() async {
   await brand.reload();
   final session = SessionController(
     auth: auth,
-    onPracticeUsers: () => seedDemoStock(db, stock),
+    onPracticeUsers: () =>
+        seedDemoStock(db, stock, gst: GstRepository(db, newId: newId)),
   );
   runApp(
     PosApp(

@@ -46,3 +46,10 @@ Sales summary by day and month; tax collected by rate; sales by HSN code; invoic
 - **Export for the CA:** now six CSV files: invoices (with a Customer GSTIN column), returns, summary (rate and day), HSN, business customers and purchases.
 - **Not built:** a GST filing integration, a credit note that carries tax, IGST (inter-state sales), HSN codes for services, reverse charge.
 
+## Test GST details in development builds (2026-11-23)
+In a development build (the browser preview, `flutter run`), **Add practice users** also seeds made-up GST details so the whole GST path can be tried at once. **None of it is real and it never runs in a release build** (`apps/pos_windows/lib/data/demo_stock.dart`, only when the shop has no style yet).
+- GST is **on**: 5%, tax included in prices, per garment; shop GSTIN `27AAAAA0000A1Z5` and a "Demo Shop (test data)" address.
+- HSN codes: Cotton Kurta `6104`, Denim Jeans `6203` with **its own rate of 12%**, Linen Shirt `6205` (the codes and the 12% are made up).
+- Each demo purchase has supplier GSTIN `24CCCCC2222C1Z5`, invoice `DEMO/001` to `DEMO/003` and input tax of 5% of the goods value.
+- To try a **business sale**, type the customer GSTIN `29BBBBB1111B1Z5` at the register. Then open GST reports (this month) to see the invoice register, HSN and business-customer sections, purchases and the export.
+
