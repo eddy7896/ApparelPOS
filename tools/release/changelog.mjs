@@ -9,7 +9,7 @@
 //   node tools/release/changelog.mjs --check             the pubspec version has a dated entry
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const HEADING = /^## \[([^\]]+)\](?:\s*-\s*(\d{4}-\d{2}-\d{2}))?\s*$/;
 
@@ -89,4 +89,6 @@ function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+// pathToFileURL, not a hand-made file:// string: on Windows the path is D:\a\... and
+// only pathToFileURL turns it into the same URL as import.meta.url.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

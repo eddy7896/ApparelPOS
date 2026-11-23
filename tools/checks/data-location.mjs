@@ -7,6 +7,7 @@
 // Usage: node tools/checks/data-location.mjs [--root .] [--config tools/checks/windows-identity.json]
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 /** Pure check: returns { ok, errors[] } for the three file texts and the pinned identity. */
 export function evaluate({ rcText, mainCppText, installerText, identity }) {
@@ -55,4 +56,6 @@ function main() {
   process.exit(result.ok ? 0 : 1);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+// pathToFileURL, not a hand-made file:// string: on Windows the path is D:\a\... and
+// only pathToFileURL turns it into the same URL as import.meta.url.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();
