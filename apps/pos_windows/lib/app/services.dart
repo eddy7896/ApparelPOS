@@ -11,6 +11,7 @@ import '../data/report_repository.dart';
 import '../data/returns_repository.dart';
 import '../data/sales_repository.dart';
 import '../data/shift_repository.dart';
+import '../data/staff_repository.dart';
 import '../data/stock_lookup_repository.dart';
 import '../data/stock_repository.dart';
 import 'brand_controller.dart';
@@ -30,6 +31,7 @@ class AppServices {
     this.recovery,
     this.stockLookup,
     this.analytics,
+    this.staff,
     this.brand,
     this.brandPreview = kDebugMode,
     this.backup,
@@ -49,6 +51,10 @@ class AppServices {
   /// Stock lookup for cashiers and managers (null in tests that do not need
   /// it: the buttons that open it are then hidden).
   final StockLookupRepository? stockLookup;
+
+  /// Adding and managing staff (null in tests that do not need it: the menu
+  /// item that opens it is then hidden).
+  final StaffRepository? staff;
 
   /// The owner's analytics (null in tests that do not need it: the button
   /// that opens it is then hidden).

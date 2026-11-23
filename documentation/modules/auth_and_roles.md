@@ -26,3 +26,10 @@ Purpose: lock screen, PINs, passwords, roles and idle lock.
 - **Evals first:** E-AUTH-1, E-AUTH-2, E-AUTHZ-1, E-AUTHZ-2, E-ENC-1.
 - **Not in scope:** cloud sign-in (release 2).
 - **Open decisions:** none for the rules above (decided 2026-11-20); see Not built.
+
+## Staff management in Manager Mode (built 2026-11-22)
+Owner decisions, 2026-11-22: the owner and a manager add cashiers (name and a 6 to 12 digit PIN); only the owner adds managers or owners (password of at least 10 characters). A manager manages cashiers only; the owner manages everyone. Turning someone off keeps all their history (bills, returns, shifts are never edited) and they can be turned on again.
+- Rules in `packages/core_domain/lib/src/staff_rules.dart`: who may manage whom, `cleanPersonName` (1 to 40 characters, no control characters), and `turnOffBlock`: nobody turns off themselves, the last active owner, or someone whose shift is still open.
+- Data: `apps/pos_windows/lib/data/staff_repository.dart` (list, add, new PIN or password, rename, turn off and on; audit rows never hold a secret). A name is unique whatever its capitals, also against people who are turned off. A person may change their own PIN or password; a manager cannot reset another manager or the owner.
+- Screen: `apps/pos_windows/lib/app/ui/staff_screen.dart`, "Staff" in the Manager Mode left menu. The sign-in names refresh after each change.
+- **Counters are not added here.** Each counter is a separate laptop with its own database until sync (Release 2), so a second counter, its lot range and shared staff and stock wait for Release 2 (owner, 2026-11-22). ADR-0006 point 14 (who assigns a second counter's lot range) stays open.

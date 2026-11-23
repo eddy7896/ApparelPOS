@@ -23,6 +23,7 @@ export 'src/recovery_key.dart';
 export 'src/report_rules.dart';
 export 'src/return_rules.dart';
 export 'src/shift_rules.dart';
+export 'src/staff_rules.dart';
 export 'src/shop_time.dart';
 
 /// Version marker so the skeleton has something to test. Real rules start in P1-1.

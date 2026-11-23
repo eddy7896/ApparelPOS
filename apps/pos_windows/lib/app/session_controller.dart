@@ -123,6 +123,13 @@ class SessionController extends ChangeNotifier {
     return result;
   }
 
+  /// Reloads the names on the lock screen (after staff are added, renamed or
+  /// turned off).
+  Future<void> refreshChoices() async {
+    _choices = await auth.signInChoices();
+    notifyListeners();
+  }
+
   /// Signs out and shows the lock screen.
   void lock() {
     if (_stage != SessionStage.signedIn) {
