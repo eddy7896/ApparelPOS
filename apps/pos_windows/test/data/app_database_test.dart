@@ -55,7 +55,7 @@ void main() {
   tearDown(() => db.close());
 
   group('schema', () {
-    test('has the expected tables and schema version 10', () async {
+    test('has the expected tables and schema version 11', () async {
       final rows = await db
           .customSelect(
             "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
@@ -76,7 +76,10 @@ void main() {
         'counters',
         'credit_note_uses',
         'credit_notes',
+        'customers',
         'daybook',
+        'dues_ledger',
+        'dues_receipts',
         'outbox',
         'products',
         'return_lines',
@@ -90,9 +93,9 @@ void main() {
         'users',
         'variants',
       ]);
-      expect(db.schemaVersion, 10);
+      expect(db.schemaVersion, 11);
       final v = await db.customSelect('PRAGMA user_version').getSingle();
-      expect(v.read<int>('user_version'), 10);
+      expect(v.read<int>('user_version'), 11);
     });
 
     test('foreign keys are enforced', () async {

@@ -90,6 +90,23 @@ final class BillLineInput {
   final PriceCut? discount;
 }
 
+/// Leaving the unpaid part of a bill to be paid later (udhaar, owner
+/// 2026-11-23). Needs the customer's name and phone, and a manager or the owner
+/// to allow it: either the person saving the bill has `allowPayLater`, or an
+/// approver (role and id together) who has it.
+final class PayLaterInput {
+  const PayLaterInput({
+    required this.customerName,
+    required this.customerPhone,
+    this.approverRole,
+    this.approvedBy,
+  });
+  final String customerName;
+  final String customerPhone;
+  final Role? approverRole;
+  final String? approvedBy;
+}
+
 /// A credit note as the counter sees it.
 final class CreditNoteInfo {
   const CreditNoteInfo({
@@ -149,12 +166,16 @@ final class SavedBill {
     required this.billedAt,
     required this.lines,
     required this.settlement,
+    this.owed = Money.zero,
   });
   final String billId;
   final BillNumber billNumber;
   final DateTime billedAt;
   final List<SavedBillLine> lines;
   final Settlement settlement;
+
+  /// What was left to be paid later (zero for a bill paid in full).
+  final Money owed;
   Money get total => settlement.total;
 }
 
@@ -288,8 +309,33 @@ class SalesRepository {
     Role? discountApproverRole,
     String? discountApprovedBy,
     List<CreditNoteUseInput> creditNotes = const [],
+    PayLaterInput? payLater,
   }) async {
     require(role, Permission.sell);
+    String? laterName;
+    String? laterKey;
+    String? laterApprover;
+    if (payLater != null) {
+      if ((payLater.approverRole == null) != (payLater.approvedBy == null)) {
+        throw ArgumentError(
+          'give both approverRole and approvedBy for pay later, or neither',
+        );
+      }
+      if (can(role, Permission.allowPayLater)) {
+        laterApprover = cashierId;
+      } else if (can(payLater.approverRole, Permission.allowPayLater)) {
+        laterApprover = payLater.approvedBy;
+      } else {
+        throw PermissionDenied(role, Permission.allowPayLater);
+      }
+      laterName = cleanCustomerName(payLater.customerName);
+      laterKey = customerPhoneKey(payLater.customerPhone);
+      if (laterName == null || laterKey == null) {
+        throw InvalidBill(
+          'pay later needs the customer\'s name and a phone number of 7 to 15 digits',
+        );
+      }
+    }
     if (payments.any((p) => p.mode == PaymentMode.creditNote)) {
       throw InvalidBill('pay by credit note through creditNotes, not payments');
     }
@@ -326,8 +372,10 @@ class SalesRepository {
         require(role, Permission.setMarkdown);
       }
     }
-    final name = _cleanName(customerName);
-    final phone = _cleanPhone(customerPhone);
+    final name = payLater == null ? _cleanName(customerName) : laterName;
+    final phone = payLater == null
+        ? _cleanPhone(customerPhone)
+        : _cleanPhone(payLater.customerPhone);
 
     final billId = _newId();
     final at = _now();
@@ -440,8 +488,13 @@ class SalesRepository {
           if (creditTotal.paise > 0)
             Payment(PaymentMode.creditNote, creditTotal),
         ]);
-        if (!settlement.isPaid) {
+        if (payLater == null && !settlement.isPaid) {
           throw BillNotPaid(settlement.due);
+        }
+        if (payLater != null && settlement.isPaid) {
+          throw InvalidBill(
+            'the bill is paid in full, so nothing is left to pay later',
+          );
         }
 
         final shiftId = await requireOpenShiftId(_db, cashierId);
@@ -514,6 +567,40 @@ class SalesRepository {
             refId: billId,
           );
         }
+        var customerId = '';
+        if (payLater != null) {
+          // The same phone number is the same customer; their first name stays.
+          final found = await (_db.select(
+            _db.customers,
+          )..where((c) => c.phone.equals(laterKey!))).getSingleOrNull();
+          customerId = found?.id ?? _newId();
+          if (found == null) {
+            await _db
+                .into(_db.customers)
+                .insert(
+                  CustomersCompanion.insert(
+                    id: customerId,
+                    name: laterName!,
+                    phone: laterKey!,
+                    createdAt: at,
+                  ),
+                );
+          }
+          await _db
+              .into(_db.duesLedger)
+              .insert(
+                DuesLedgerCompanion.insert(
+                  id: _newId(),
+                  customerId: customerId,
+                  billId: billId,
+                  kind: 'OWED',
+                  amountPaise: settlement.due.paise,
+                  at: at,
+                  actorId: cashierId,
+                  approvedBy: Value(laterApprover),
+                ),
+              );
+        }
         for (final (info, amount) in usedNotes) {
           await _db
               .into(_db.creditNoteUses)
@@ -532,6 +619,7 @@ class SalesRepository {
           billedAt: at,
           lines: saved,
           settlement: settlement,
+          owed: settlement.due,
         );
       },
       // No customer details and no cost in the audit or outbox details.
@@ -539,6 +627,8 @@ class SalesRepository {
         'garments': lines.length,
         'role': role?.dbValue,
         'discountApprovedBy': ?discountApprovedBy,
+        if (payLater != null) 'payLater': true,
+        'payLaterApprovedBy': ?laterApprover,
       },
     );
   }

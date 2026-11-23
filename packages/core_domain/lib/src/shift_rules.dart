@@ -62,22 +62,25 @@ Money countCash(Map<Denomination, int> counts) {
 }
 
 /// What should be in the drawer: [opening] cash, plus [cashSales] kept (after
-/// change), minus [cashRefunds]. No amount may be negative.
+/// change), plus [cashDues] taken from customers paying what they owe, minus
+/// [cashRefunds]. No amount may be negative.
 Money expectedCash({
   required Money opening,
   required Money cashSales,
   required Money cashRefunds,
+  Money cashDues = Money.zero,
 }) {
   for (final (name, m) in [
     ('opening', opening),
     ('cashSales', cashSales),
     ('cashRefunds', cashRefunds),
+    ('cashDues', cashDues),
   ]) {
     if (m.paise < 0) {
       throw ArgumentError.value(m, name, 'must not be negative');
     }
   }
-  return opening + cashSales - cashRefunds;
+  return opening + cashSales + cashDues - cashRefunds;
 }
 
 enum VarianceKind { exact, short, over }

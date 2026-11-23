@@ -5,6 +5,7 @@ All notable changes to Apparel PoS. The format follows [Keep a Changelog](https:
 ## [Unreleased]
 
 ### Added
+- Pay later (udhaar), data and rules (screens follow): a manager or the owner may let a bill be left unpaid (customer name and phone required); customers pay later in cash, UPI or card, the oldest bill first; a return from an unpaid bill first takes down what is owed; only the owner writes a debt off. Money taken counts in the drawer and the daily report. Database version 11.
 - Markdowns: a manager or the owner sets a percentage or an amount off a whole style until a last day (Manager Mode, Markdowns). The register applies it by itself and a marked-down garment takes no cashier discount. Database version 10.
 - Daily report: each closed shift shows its break time.
 - Register: F4 puts a bill aside (Hold bill) so another customer can be served, with Resume or drop for each held bill; F6 starts a fresh search; Esc closes the bill-done popup or the name list. A held bill is kept only in memory.

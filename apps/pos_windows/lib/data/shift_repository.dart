@@ -330,10 +330,12 @@ class ShiftRepository {
                 .read<int>('s');
         final cashSales = Money(await sum('SALE_CASH'));
         final cashRefunds = Money(-await sum('REFUND_CASH'));
+        final cashDues = Money(await sum('DUES_CASH'));
         final expected = expectedCash(
           opening: opening,
           cashSales: cashSales,
           cashRefunds: cashRefunds,
+          cashDues: cashDues,
         );
         final variance = CashVariance(expected: expected, counted: counted);
         await _db

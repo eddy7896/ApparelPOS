@@ -8,6 +8,7 @@ import 'package:core_domain/core_domain.dart';
 import 'package:drift/drift.dart';
 
 import 'app_database.dart';
+import 'dues_repository.dart' show billOutstanding;
 import 'shift_repository.dart';
 
 /// What happens to a returned garment.
@@ -59,6 +60,8 @@ final class ReturnCandidate {
     required this.soldAt,
     required this.netPrice,
     required this.timing,
+    this.billId = '',
+    this.owedOnBill = Money.zero,
   });
   final String billLineId;
   final String articleId;
@@ -72,6 +75,13 @@ final class ReturnCandidate {
   /// What the customer paid for this garment, after markdown and discount.
   final Money netPrice;
   final ReturnTiming timing;
+
+  /// The bill this garment was sold on.
+  final String billId;
+
+  /// What the customer still owes on that bill (pay later); a return takes
+  /// this down first, and only the rest is refunded.
+  final Money owedOnBill;
 }
 
 /// One garment to return, and what to do with it. A damaged garment needs a
@@ -107,12 +117,22 @@ final class SavedReturn {
     required this.total,
     required this.lines,
     this.creditNote,
+    this.offset = Money.zero,
   });
   final String returnId;
   final RefundMode refundMode;
+
+  /// What the garments were sold for.
   final Money total;
   final List<ReturnCandidate> lines;
   final IssuedCreditNote? creditNote;
+
+  /// The part of [total] that took down what the customer owed on pay-later
+  /// bills (no money moves for it).
+  final Money offset;
+
+  /// What is paid out: [total] less [offset].
+  Money get payout => total - offset;
 }
 
 class ReturnsRepository {
@@ -174,7 +194,9 @@ class ReturnsRepository {
         .customSelect(
           'SELECT l.id AS line_id, l.product_name AS name, l.size AS size, '
           'l.color AS color, l.final_paise AS net, b.bill_no AS bill_no, '
-          'b.billed_at AS billed_at '
+          'b.billed_at AS billed_at, b.id AS bill_id, '
+          '(SELECT COALESCE(SUM(d.amount_paise), 0) FROM dues_ledger d '
+          'WHERE d.bill_id = b.id) AS owed '
           'FROM bill_lines l JOIN bills b ON b.id = l.bill_id '
           'WHERE l.article_id = ? '
           'AND NOT EXISTS (SELECT 1 FROM return_lines r WHERE r.bill_line_id = l.id) '
@@ -197,6 +219,8 @@ class ReturnsRepository {
       billNo: r.read<String>('bill_no'),
       soldAt: soldAt,
       netPrice: Money(r.read<int>('net')),
+      billId: r.read<String>('bill_id'),
+      owedOnBill: Money(r.read<int>('owed')),
       timing: returnTiming(
         soldAt,
         _now().isBefore(soldAt) ? soldAt : _now(),
@@ -269,9 +293,26 @@ class ReturnsRepository {
         }
         final total = refundTotal([for (final l in lines) l.netPrice]);
 
+        // Garments from a pay-later bill first take down what is still owed on
+        // that bill; only the rest is paid out (owner, 2026-11-23).
+        final offsets = <String, Money>{}; // bill id -> taken off what is owed
+        final share = <String, Money>{};
+        for (final l in lines) {
+          share[l.billId] = (share[l.billId] ?? Money.zero) + l.netPrice;
+        }
+        for (final e in share.entries) {
+          final owed = await billOutstanding(_db, e.key);
+          final off = returnOffset(refundShare: e.value, owed: owed);
+          if (off.paise > 0) {
+            offsets[e.key] = off;
+          }
+        }
+        final offset = offsets.values.fold<Money>(Money.zero, (a, b) => a + b);
+        final payout = total - offset;
+
         IssuedCreditNote? note;
-        if (refundMode == RefundMode.creditNote) {
-          note = await _issueCreditNote(total, cashierId, at);
+        if (refundMode == RefundMode.creditNote && payout.paise > 0) {
+          note = await _issueCreditNote(payout, cashierId, at);
         }
 
         await _db
@@ -288,17 +329,39 @@ class ReturnsRepository {
                 returnedAt: at,
               ),
             );
-        if (total.paise > 0) {
+        if (payout.paise > 0) {
           await addDaybookRow(
             _db,
             id: _newId(),
             at: at,
             shiftId: shiftId,
             kind: 'REFUND_${refundMode.dbValue.toUpperCase()}',
-            amountPaise: -total.paise,
+            amountPaise: -payout.paise,
             refType: 'return',
             refId: returnId,
           );
+        }
+        for (final e in offsets.entries) {
+          final who = await _db
+              .customSelect(
+                "SELECT customer_id FROM dues_ledger WHERE bill_id = ? AND kind = 'OWED' LIMIT 1",
+                variables: [Variable<String>(e.key)],
+              )
+              .getSingle();
+          await _db
+              .into(_db.duesLedger)
+              .insert(
+                DuesLedgerCompanion.insert(
+                  id: _newId(),
+                  customerId: who.read<String>('customer_id'),
+                  billId: e.key,
+                  kind: 'RETURN_OFFSET',
+                  amountPaise: -e.value.paise,
+                  returnId: Value(returnId),
+                  at: at,
+                  actorId: cashierId,
+                ),
+              );
         }
         for (var k = 0; k < items.length; k++) {
           final l = lines[k];
@@ -342,6 +405,7 @@ class ReturnsRepository {
           total: total,
           lines: lines,
           creditNote: note,
+          offset: offset,
         );
       },
       // No customer details, no note text and no cost in audit or outbox.

@@ -488,16 +488,102 @@ class Daybook extends Table {
   TextColumn get shiftId => text().references(Shifts, #id)();
   TextColumn get kind => text().customConstraint(
     "NOT NULL CHECK (kind IN ('SALE_CASH', 'SALE_UPI', 'SALE_CARD', 'SALE_CREDIT_NOTE', "
-    "'REFUND_CASH', 'REFUND_UPI', 'REFUND_CARD', 'REFUND_CREDIT_NOTE'))",
+    "'REFUND_CASH', 'REFUND_UPI', 'REFUND_CARD', 'REFUND_CREDIT_NOTE', "
+    "'DUES_CASH', 'DUES_UPI', 'DUES_CARD'))",
   )();
   IntColumn get amountPaise => integer().check(amountPaise.equals(0).not())();
   TextColumn get refType => text().customConstraint(
-    "NOT NULL CHECK (ref_type IN ('bill', 'return'))",
+    "NOT NULL CHECK (ref_type IN ('bill', 'return', 'dues'))",
   )();
   TextColumn get refId => text()();
 
   @override
   Set<Column> get primaryKey => {id};
+}
+
+/// A customer who has taken clothes on pay later (udhaar), found again by the
+/// last 10 digits of the phone number (owner, 2026-11-23). Never edited.
+@DataClassName('CustomerRow')
+class Customers extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+
+  /// The phone key (`customerPhoneKey`): the digits, last 10 when there are
+  /// more. Unique.
+  TextColumn get phone => text().unique()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Money a customer handed over against what they owe: cash, UPI and card, and
+/// the change given back. One row per visit; its daybook rows (DUES_*) carry the
+/// money into the drawer and the reports. Never edited.
+@DataClassName('DuesReceiptRow')
+class DuesReceipts extends Table {
+  TextColumn get id => text()();
+  TextColumn get customerId => text().references(Customers, #id)();
+  DateTimeColumn get at => dateTime()();
+  TextColumn get shiftId => text().references(Shifts, #id)();
+  TextColumn get receivedBy => text()();
+  IntColumn get cashPaise =>
+      integer().check(cashPaise.isBiggerOrEqualValue(0))();
+  IntColumn get upiPaise => integer().check(upiPaise.isBiggerOrEqualValue(0))();
+  IntColumn get cardPaise =>
+      integer().check(cardPaise.isBiggerOrEqualValue(0))();
+  IntColumn get changePaise =>
+      integer().check(changePaise.isBiggerOrEqualValue(0))();
+
+  /// What was taken off the debt: cash + UPI + card - change.
+  IntColumn get appliedPaise =>
+      integer().check(appliedPaise.isBiggerThanValue(0))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => [
+    'CHECK (applied_paise = cash_paise + upi_paise + card_paise - change_paise)',
+  ];
+}
+
+/// What each customer owes, bill by bill: an OWED row when a bill is left
+/// unpaid, then rows that take it down (a PAYMENT, a RETURN_OFFSET when a
+/// garment comes back, a WRITE_OFF by the owner). What is owed on a bill is the
+/// sum of its rows. Never edited; a mistake is a new row (E-AUDIT-1).
+@DataClassName('DuesLedgerRow')
+class DuesLedger extends Table {
+  TextColumn get id => text()();
+  TextColumn get customerId => text().references(Customers, #id)();
+  TextColumn get billId => text().references(Bills, #id)();
+  TextColumn get kind => text().customConstraint(
+    "NOT NULL CHECK (kind IN ('OWED', 'PAYMENT', 'RETURN_OFFSET', 'WRITE_OFF'))",
+  )();
+
+  /// Positive when it adds to what is owed (OWED), negative when it takes off.
+  IntColumn get amountPaise => integer().check(amountPaise.equals(0).not())();
+  TextColumn get receiptId => text().nullable().references(DuesReceipts, #id)();
+  TextColumn get returnId => text().nullable().references(Returns, #id)();
+  DateTimeColumn get at => dateTime()();
+  TextColumn get actorId => text()();
+
+  /// For OWED: the manager or owner who allowed it.
+  TextColumn get approvedBy => text().nullable()();
+
+  /// For WRITE_OFF: why (required).
+  TextColumn get note => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => [
+    "CHECK ((kind = 'OWED' AND amount_paise > 0) OR (kind <> 'OWED' AND amount_paise < 0))",
+    "CHECK (kind <> 'PAYMENT' OR receipt_id IS NOT NULL)",
+    "CHECK (kind <> 'RETURN_OFFSET' OR return_id IS NOT NULL)",
+    "CHECK (kind <> 'WRITE_OFF' OR (note IS NOT NULL AND length(trim(note)) > 0))",
+  ];
 }
 
 @DriftDatabase(
@@ -509,6 +595,9 @@ class Daybook extends Table {
     Counters,
     Categories,
     StyleMarkdowns,
+    Customers,
+    DuesReceipts,
+    DuesLedger,
     Products,
     Variants,
     Batches,
@@ -535,7 +624,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -601,6 +690,29 @@ class AppDatabase extends _$AppDatabase {
         ).get()).any((r) => r.read<String>('name') == 'category_id');
         if (!hasCol) {
           await m.addColumn(products, products.categoryId);
+        }
+      }
+      if (from < 11 && to >= 11) {
+        // version 11: pay later (owner, 2026-11-23): customers, what they
+        // owe bill by bill, what they paid, and the daybook takes the new
+        // kinds (a CHECK changes, so its table is rebuilt; rows are kept).
+        final tables = {
+          for (final r in await customSelect(
+            "SELECT name FROM sqlite_master WHERE type = 'table'",
+          ).get())
+            r.read<String>('name'),
+        };
+        if (!tables.contains('customers')) {
+          await m.createTable(customers);
+        }
+        if (!tables.contains('dues_receipts')) {
+          await m.createTable(duesReceipts);
+        }
+        if (!tables.contains('dues_ledger')) {
+          await m.createTable(duesLedger);
+        }
+        if (from >= 6) {
+          await m.alterTable(TableMigration(daybook));
         }
       }
       if (from < 10 && to >= 10) {
@@ -683,6 +795,9 @@ class AppDatabase extends _$AppDatabase {
         'shift_breaks',
         'shift_break_ends',
         'daybook',
+        'customers',
+        'dues_receipts',
+        'dues_ledger',
       ]) {
         if (!existing.contains(table)) {
           continue;
