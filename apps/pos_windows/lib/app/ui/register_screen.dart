@@ -11,6 +11,7 @@ import '../bill_pdf.dart';
 import 'approval_dialog.dart';
 import 'close_shift_screen.dart';
 import 'shift_gate.dart';
+import 'status_colors.dart';
 import '../services.dart';
 import '../session_controller.dart';
 
@@ -438,24 +439,32 @@ class _RegisterPanelState extends State<RegisterPanel> {
   @override
   Widget build(BuildContext context) {
     final saved = _saved;
-    if (saved != null) {
-      return _SavedView(
-        bill: saved,
-        onPrint: _print,
-        onNew: _newBill,
-        message: _message,
-      );
-    }
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(flex: 3, child: _left(context)),
-          const SizedBox(width: 16),
-          SizedBox(width: 380, child: _right(context)),
-        ],
-      ),
+    // Bill done is a popup over the register (UX-2), not a new screen. The
+    // register stays drawn behind but cannot be reached while it is open.
+    return Stack(
+      children: [
+        ExcludeFocus(
+          excluding: saved != null,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 3, child: _left(context)),
+                const SizedBox(width: 16),
+                SizedBox(width: 400, child: _right(context)),
+              ],
+            ),
+          ),
+        ),
+        if (saved != null)
+          _SavedPopup(
+            bill: saved,
+            onPrint: _print,
+            onNew: _newBill,
+            message: _message,
+          ),
+      ],
     );
   }
 
@@ -590,11 +599,31 @@ class _RegisterPanelState extends State<RegisterPanel> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Total', style: Theme.of(context).textTheme.titleMedium),
-          Text(
-            formatRupees(_total),
-            key: const Key('total-text'),
-            style: Theme.of(context).textTheme.displaySmall,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Total',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                ),
+                Text(
+                  formatRupees(_total),
+                  key: const Key('total-text'),
+                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
           ),
           for (final (n, used) in _noteUses)
             Padding(
@@ -621,24 +650,38 @@ class _RegisterPanelState extends State<RegisterPanel> {
           _amountField('cash-field', 'Cash received', _cash),
           _amountField('upi-field', 'UPI', _upi),
           _amountField('card-field', 'Card', _card),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton(
-              key: const Key('exact-cash'),
-              onPressed: _lines.isEmpty
-                  ? null
-                  : () => setState(() {
-                      final due = _toPay.paise < 0 ? Money.zero : _toPay;
-                      _cash.text =
-                          (due.paise ~/ 100).toString() +
-                          ((due.paise % 100) == 0
-                              ? ''
-                              : '.${(due.paise % 100).toString().padLeft(2, '0')}');
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton(
+                key: const Key('exact-cash'),
+                onPressed: _lines.isEmpty
+                    ? null
+                    : () => setState(() {
+                        final due = _toPay.paise < 0 ? Money.zero : _toPay;
+                        _cash.text =
+                            (due.paise ~/ 100).toString() +
+                            ((due.paise % 100) == 0
+                                ? ''
+                                : '.${(due.paise % 100).toString().padLeft(2, '0')}');
+                        _upi.clear();
+                        _card.clear();
+                      }),
+                child: const Text('Exact cash'),
+              ),
+              if (_lines.isNotEmpty)
+                for (final amount in quickCashAmounts(_toPay))
+                  OutlinedButton(
+                    key: Key('quick-cash-${amount.paise ~/ 100}'),
+                    onPressed: () => setState(() {
+                      _cash.text = (amount.paise ~/ 100).toString();
                       _upi.clear();
                       _card.clear();
                     }),
-              child: const Text('Exact cash'),
-            ),
+                    child: Text(formatRupees(amount)),
+                  ),
+            ],
           ),
           if (problem != null)
             Text(
@@ -652,7 +695,8 @@ class _RegisterPanelState extends State<RegisterPanel> {
             Text(
               'Change to give: ${formatRupees(settlement.change)}',
               key: const Key('change-text'),
-              style: Theme.of(context).textTheme.titleMedium,
+              style: Theme.of(context).textTheme.headlineSmall
+                  ?.copyWith(color: successColor, fontWeight: FontWeight.w800),
             )
           else if (_lines.isNotEmpty &&
               settlement != null &&
@@ -696,8 +740,8 @@ class _RegisterPanelState extends State<RegisterPanel> {
   }
 }
 
-class _SavedView extends StatelessWidget {
-  const _SavedView({
+class _SavedPopup extends StatelessWidget {
+  const _SavedPopup({
     required this.bill,
     required this.onPrint,
     required this.onNew,
@@ -713,74 +757,146 @@ class _SavedView extends StatelessWidget {
   Widget build(BuildContext context) {
     final change = bill.settlement.change;
     final t = Theme.of(context).textTheme;
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 560),
-        child: ListView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.all(24),
-          children: [
-            Text(
-              'Bill saved',
-              style: t.headlineSmall,
-              key: const Key('saved-title'),
-            ),
-            Text(
-              bill.billNumber.format(),
-              key: const Key('saved-bill-no'),
-              style: t.titleMedium,
-            ),
-            const SizedBox(height: 12),
-            for (final l in bill.lines)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text('${l.productName} ${l.size} ${l.color}'),
+    final scheme = Theme.of(context).colorScheme;
+    return Stack(
+      children: [
+        const ModalBarrier(color: Colors.black54, dismissible: false),
+        CallbackShortcuts(
+          bindings: {
+            const SingleActivator(LogicalKeyboardKey.enter): onNew,
+            const SingleActivator(LogicalKeyboardKey.numpadEnter): onNew,
+            const SingleActivator(LogicalKeyboardKey.keyP): onPrint,
+          },
+          child: Focus(
+            autofocus: true,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 560),
+                child: Material(
+                  key: const Key('bill-done-popup'),
+                  color: scheme.surface,
+                  borderRadius: BorderRadius.circular(18),
+                  elevation: 12,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.check_circle,
+                              color: successColor,
+                              size: 44,
+                            ),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Bill saved',
+                                  style: t.headlineMedium?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                  key: const Key('saved-title'),
+                                ),
+                                Text(
+                                  bill.billNumber.format(),
+                                  key: const Key('saved-bill-no'),
+                                  style: t.titleMedium,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        if (change.paise > 0)
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: successColor,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Text(
+                              'Change to give: ${formatRupees(change)}',
+                              key: const Key('saved-change'),
+                              style: t.headlineMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 12),
+                        for (final l in bill.lines)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    '${l.productName} ${l.size} ${l.color}',
+                                  ),
+                                ),
+                                Text(formatRupees(l.priced.finalPrice)),
+                              ],
+                            ),
+                          ),
+                        const Divider(),
+                        Text(
+                          'Total ${formatRupees(bill.total)}',
+                          key: const Key('saved-total'),
+                          style: t.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        if (message != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              message!,
+                              key: const Key('message-banner'),
+                              style: TextStyle(color: scheme.error),
+                            ),
+                          ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: FilledButton(
+                                key: const Key('new-bill'),
+                                style: FilledButton.styleFrom(
+                                  minimumSize: const Size(0, 64),
+                                  textStyle: t.titleLarge,
+                                ),
+                                onPressed: onNew,
+                                child: const Text('New bill  (Enter)'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                key: const Key('print-bill'),
+                                style: OutlinedButton.styleFrom(
+                                  minimumSize: const Size(0, 64),
+                                  textStyle: t.titleMedium,
+                                ),
+                                onPressed: onPrint,
+                                icon: const Icon(Icons.print),
+                                label: const Text('Print bill  (P)'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    Text(formatRupees(l.priced.finalPrice)),
-                  ],
+                  ),
                 ),
               ),
-            const Divider(),
-            Text(
-              'Total ${formatRupees(bill.total)}',
-              key: const Key('saved-total'),
-              style: t.headlineMedium,
             ),
-            if (change.paise > 0)
-              Text(
-                'Change to give: ${formatRupees(change)}',
-                key: const Key('saved-change'),
-                style: t.titleLarge,
-              ),
-            if (message != null)
-              Text(
-                message!,
-                key: const Key('message-banner'),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                OutlinedButton.icon(
-                  key: const Key('print-bill'),
-                  onPressed: onPrint,
-                  icon: const Icon(Icons.print),
-                  label: const Text('Print bill'),
-                ),
-                const SizedBox(width: 12),
-                FilledButton(
-                  key: const Key('new-bill'),
-                  onPressed: onNew,
-                  child: const Text('New bill'),
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

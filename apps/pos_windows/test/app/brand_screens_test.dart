@@ -250,7 +250,11 @@ void main() {
         // Colors come from the palette; status colors use the theme's scheme.
         // stock_entry_screen.dart has one amber text color for a warning: a status
         // color, not part of the shop's look.
-        final allowed = {'brand_mark.dart', 'stock_entry_screen.dart'};
+        final allowed = {
+          'brand_mark.dart',
+          'stock_entry_screen.dart',
+          'status_colors.dart',
+        };
         for (final f in Directory('lib/app/ui').listSync().whereType<File>()) {
           final name = f.uri.pathSegments.last;
           if (!name.endsWith('.dart') || allowed.contains(name)) continue;

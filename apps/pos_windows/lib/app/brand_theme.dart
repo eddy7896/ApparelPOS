@@ -14,5 +14,22 @@ ThemeData brandTheme(Brand brand) {
     primaryContainer: _color(p.soft),
     onPrimaryContainer: _color(p.ink),
   );
-  return ThemeData(colorScheme: scheme, useMaterial3: true);
+  const target = Size(64, 48); // owner, Q1: touch targets at least 48 dp
+  return ThemeData(
+    colorScheme: scheme,
+    useMaterial3: true,
+    materialTapTargetSize: MaterialTapTargetSize.padded,
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(minimumSize: target),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(minimumSize: target),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(minimumSize: target),
+    ),
+    iconButtonTheme: IconButtonThemeData(
+      style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
+    ),
+  );
 }
