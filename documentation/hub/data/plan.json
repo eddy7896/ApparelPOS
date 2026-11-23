@@ -399,14 +399,14 @@
     },
     {
       "id": "P3-4",
-      "name": "GST, switched off: owner-only setup, tax on bills and invoice (reports later)",
+      "name": "GST, switched off: owner-only setup, tax on bills and invoice, GST reports and CSV export (HSN and business-customer reports need data)",
       "phase": 3,
       "phaseName": "Go-live hardening",
       "milestone": "",
       "order": 33,
       "status": "doing",
-      "pct": 70,
-      "pr": "#59"
+      "pct": 90,
+      "pr": "#59, #61"
     },
     {
       "id": "UX-0",

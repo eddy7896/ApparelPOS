@@ -11,7 +11,7 @@
     },
     {
       "tone": "warn",
-      "text": "26 pull requests (#35 to #60) are open and stacked: each is based on develop but built on the one before, so they must be merged in order, starting with #35. Nothing in them has run on a real Windows machine."
+      "text": "27 pull requests (#35 to #61) are open and stacked: each is based on develop but built on the one before, so they must be merged in order, starting with #35. Nothing in them has run on a real Windows machine."
     }
   ],
   "branches": [
@@ -24,8 +24,8 @@
       "note": "integration; PR #34 merged 2026-11-22"
     },
     {
-      "name": "feat/ux-1 ... feat/owner-runbook (PRs #35 to #60)",
-      "note": "open, stacked in order; the newest, feat/owner-runbook (PR #60), contains all of them"
+      "name": "feat/ux-1 ... feat/gst-reports (PRs #35 to #61)",
+      "note": "open, stacked in order; the newest, feat/gst-reports (PR #61), contains all of them"
     },
     {
       "name": "merged topic branches (still on GitHub, not deleted)",
@@ -332,6 +332,11 @@
       "pr": "#60",
       "title": "Owner's runbook (P3-3b)",
       "state": "open"
+    },
+    {
+      "pr": "#61",
+      "title": "GST reports: registers, tax by rate and day, CSV export for the CA (P3-4 second step)",
+      "state": "open"
     }
   ],
   "rules": [
@@ -339,7 +344,7 @@
     "The owner merges and releases; the agent only opens pull requests."
   ],
   "ownerActions": [
-    "Merge pull requests #35 to #60 in order (each builds on the one before), then tell me \"merged proceed\"; I then prepare the Release 0.9.0 pull request. I never merge or tag.",
+    "Merge pull requests #35 to #61 in order (each builds on the one before), then tell me \"merged proceed\"; I then prepare the Release 0.9.0 pull request. I never merge or tag.",
     "Confirm my assumptions, listed in the pull requests: low stock 2 or fewer; slow mover 30+ days and under 25% sold; trend threshold 5%; markdown end date required; a return offsets only its own pay-later bill; GST rules (all unverified).",
     "Take every GST rule to your CA before switching GST on (Settings, GST, owner only). It is off by default.",
     "Decide what bills and hangtags should say until the phone app exists: the shop name, colour and logo cannot be set on the laptop yet. Also choose the real shop or company name (it fixes the data folder; ADR-0018) and send an icon if you have one.",
@@ -348,6 +353,6 @@
     "Accept or reject the SQLCipher community licence (ADR-0003 point 7).",
     "Switch on branch protection for main and develop; require branch-policy, build-lint-test and dart-flutter-windows.",
     "Review ADR-0003 (amended twice: owner-only write-off and GST), ADR-0006, ADR-0013, ADR-0014 and ADR-0018 (Proposed).",
-    "Not built, say if you want them next: GST reports, an owner password reset, the shop name on the laptop, Release 2 (second counter, phone app)."
+    "Not built, say if you want them next: HSN, business-customer and purchase GST reports (need new data), an owner password reset, the shop name on the laptop, Release 2 (second counter, phone app)."
   ]
 }

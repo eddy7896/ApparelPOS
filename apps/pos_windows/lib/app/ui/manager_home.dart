@@ -17,6 +17,7 @@ import 'brand_preview_dialog.dart';
 import 'daily_report_screen.dart';
 import 'register_screen.dart';
 import 'dues_screen.dart';
+import 'gst_report_screen.dart';
 import 'markdowns_screen.dart';
 import 'returns_screen.dart';
 import 'shift_closes_screen.dart';
@@ -142,6 +143,13 @@ class _ManagerHomeState extends State<ManagerHome> {
         'Daily report',
         () => _open(DailyReportScreen(session: _session, services: _s)),
       ),
+      if (_s.gstReports != null)
+        _NavItem(
+          'gst-reports-button',
+          Icons.receipt_long,
+          'GST reports',
+          () => _open(GstReportScreen(session: _session, services: _s)),
+        ),
       _NavItem(
         'shift-closes-button',
         Icons.fact_check,
