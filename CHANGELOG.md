@@ -4,7 +4,24 @@ All notable changes to Apparel PoS. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+Nothing yet. Planned next: GST reports that need new data (HSN codes, customer GSTIN, purchases) and Release 2 (sync, cloud, owner mobile app).
+
+## [0.9.0] - 2026-11-23
+
+The first release: a release candidate of **Release 1, the Windows counter app** for one apparel shop. It is a **pre-release**: it has been built and tested by the automatic checks, but it has **not yet been run on a real shop laptop** (see Known limitations).
+
 ### Added
+
+**Redesign and extras added since the first candidate** (#35 to #61)
+- A new look that follows one shop color and a neutral set of colors: sign-in with name tiles and a big keypad, a left menu and a Today page in Manager Mode, a register with a popup for "bill done", quick cash buttons and 48 dp touch targets, a shift popup at sign-in, Pause for a break with a running clock, and a returns popup with a big refund panel (#36 to #40, #46, #50).
+- The shop's name, main color and logo are data, not code (the screens to set them wait for the owner's phone app) (#36).
+- Stock lookup for cashiers and managers: style, size, color, MRP and count; out of stock in red, running low (2 or fewer) in amber, with a summary and filters (#41, #48). Development builds add demo stock with the practice users (#42).
+- Analytics for manager and owner: 7 and 30 days, busy hours, sales by category, trend reading and slow movers (#43). The daily report gets headline tiles, charts and a table view (#47).
+- Staff management: add cashiers (the owner also managers), new PIN or password, rename, turn off and on (#44). A cashier PIN is exactly 6 digits (#49). The bill says "Served by OP001" with an operator ID, never a staff name (#51).
+- Billing: search by item name as well as by tag, and several of one size and color at once (#45); a payment card with Cash, UPI, Card and Split (#50).
+- Stock categories in two levels, set up in Settings, used in lookup, search, analytics and the daily report (#52).
+
+**Money and the shop, added since the first candidate**
 - GST reports (Manager Mode, GST reports): invoice register, returns register, tax by rate and by day for a range of days, and an export of three CSV files for the CA. Unverified until the CA says which reports they need.
 - The owner's runbook (`documentation/owner_runbook.md`): install, the first start and the recovery key, a normal day, stock and hangtags, what to do when something goes wrong, a new laptop, and a go-live checklist. Written from what the app does; not yet tried on a real laptop.
 - GST, switched off: the owner (only) can switch GST on in Settings (GSTIN, address, rate, tax included or added, rounding, which fields to print). New bills then work out and keep the tax per garment, the total adds it when tax is added on top, the bill prints as a TAX INVOICE with the fields the owner chose, returns refund the tax too, and the daily report shows GST and leaves it out of profit. Every GST rule is unverified until your CA confirms it. GST reports are not built yet. Database version 12.
@@ -13,16 +30,7 @@ All notable changes to Apparel PoS. The format follows [Keep a Changelog](https:
 - Daily report: each closed shift shows its break time.
 - Register: F4 puts a bill aside (Hold bill) so another customer can be served, with Resume or drop for each held bill; F6 starts a fresh search; Esc closes the bill-done popup or the name list. A held bill is kept only in memory.
 
-### Changed
-- The app's text uses the Inter font, bundled with the app so every laptop looks the same; the bill and hangtag PDFs still use Noto Sans.
-
-Planned next: GST reports that need new data (HSN codes, customer GSTIN, purchases). Release 2 (sync, cloud, owner mobile app) is not started.
-
-## [0.9.0] - 2026-11-22
-
-The first release: a release candidate of **Release 1, the Windows counter app** for one apparel shop. It is a **pre-release**: it has been built and tested by the automatic checks, but it has **not yet been run on a real shop laptop** (see Known limitations).
-
-### Added
+- The app's text uses the Inter font, bundled so every laptop looks the same; the bill and hangtag PDFs use Noto Sans.
 
 **Stock and hangtags**
 - Enter a purchase in a Size by Color grid with each garment's own cost and MRP; sizes and colors come from lists you can add to (#15, #16).
@@ -64,7 +72,7 @@ The first release: a release candidate of **Release 1, the Windows counter app**
 
 **Building and checking**
 - A browser preview for development on any machine (not for the shop) (#10).
-- Automatic checks on every change: unit and screen tests (404 in the shared rules package, 441 in the app), document and rule checks, and a Windows build that installs the installer, starts the app and removes it again (#1, #6, #33).
+- Automatic checks on every change: unit and screen tests (638 in the shared rules package, 1,067 in the app), document and rule checks, and a Windows build that installs the installer, starts the app and removes it again (#1, #6, #33).
 
 ### Security
 - The database is encrypted at rest; PINs and passwords are stored only as Argon2id hashes (#13, #29).
@@ -73,7 +81,10 @@ The first release: a release candidate of **Release 1, the Windows counter app**
 ### Known limitations
 - **Never run on a real Windows laptop.** Everything was tested on a Mac and on GitHub's Windows build machine, including installing and starting the app there. The Windows credential store, real USB drives and the Windows folder dialogs are untested on real hardware.
 - **Never printed on a real printer** and no barcode scanner has been tried; hangtag, bill and credit note slip printing and scanning are untested on real hardware.
-- Not built: GST invoices and reports, pay later (udhaar), markdown at the register, thermal receipt printing, search by style name at the register, holding a bill, sync and the owner's phone app (Release 2). One counter only.
+- Not built: GST reports that need new data (sales by HSN code, to business customers with a GSTIN, purchases), thermal receipt printing, the shop name, color and logo on the laptop, an owner password reset, a hold bill that survives a lock, sync and the owner's phone app (Release 2). One counter only.
+- **GST is built but switched off**, and every GST rule is unverified until your CA confirms it. Take the Settings GST card and the exported reports to your CA first.
+- Several more rules were chosen by the assistant and wait for the owner (low stock 2 or fewer, slow mover 30+ days and under 25% sold, a markdown's last day required, a return offsets only its own pay-later bill, and the GST rules). They are listed in the pull requests and the module documents.
+- The owner's runbook (`documentation/owner_runbook.md`) was written but has not been followed on a real laptop.
 - Tags and bills use a font that covers Latin, Greek and Cyrillic: Hindi (Devanagari) text would print as boxes.
 - The app icon is Flutter's default and the company name "Apparel PoS" is a placeholder; the name also decides where Windows keeps the data, so it must be settled **before** go-live and never changed after.
 - Several rules were chosen by the assistant and are waiting for the owner's confirmation (listed in `documentation/modules/`): return and credit note details, shift choices, the daily report's profit definition, bill and credit note number limits.
