@@ -13,6 +13,7 @@ import '../../data/analytics_repository.dart';
 import '../services.dart';
 import '../session_controller.dart';
 import 'chart_colors.dart';
+import 'chart_parts.dart';
 import 'daily_report_screen.dart' show signedRupees;
 
 const List<String> _weekdays = [
@@ -544,132 +545,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   // ---- busiest hours -----------------------------------------------------------
 
-  Widget _hoursCard(BuildContext context, AnalyticsOverview d) {
-    final counts = d.billsByHour;
-    var from = 9;
-    var to = 21;
-    for (var h = 0; h < 24; h++) {
-      if (counts[h] > 0) {
-        from = math.min(from, h);
-        to = math.max(to, h);
-      }
-    }
-    final most = counts.reduce(math.max);
-    final peak = peakHour(counts);
-    final shown = _hoverHour ?? peak;
-    final readout = shown == null
-        ? 'No bills yet.'
-        : _hoverHour == null
-        ? 'Busiest: ${hourText(shown)} to ${hourText((shown + 1) % 24)}, ${counts[shown]} bills. Tap a column for any hour.'
-        : '${hourText(shown)} to ${hourText((shown + 1) % 24)}: ${counts[shown]} bills';
-    return _card(
-      context,
-      title: 'Busiest hours',
-      subtitle: 'Number of bills in each hour of the day',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(readout, key: const Key('hours-readout')),
-          const SizedBox(height: 10),
-          SizedBox(
-            key: const Key('hours-chart'),
-            height: 190,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (var h = from; h <= to; h++)
-                  Expanded(
-                    child: MouseRegion(
-                      onEnter: (_) => setState(() => _hoverHour = h),
-                      onExit: (_) => setState(() => _hoverHour = null),
-                      child: GestureDetector(
-                        key: Key('hour-$h'),
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () => setState(() => _hoverHour = h),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 2),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              SizedBox(
-                                height: 18,
-                                child:
-                                    counts[h] > 0 &&
-                                        (h == peak || h == _hoverHour)
-                                    ? FittedBox(
-                                        child: Text(
-                                          '${counts[h]}',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                      )
-                                    : null,
-                              ),
-                              Flexible(
-                                child: FractionallySizedBox(
-                                  heightFactor: most == 0
-                                      ? 0
-                                      : counts[h] / most,
-                                  alignment: Alignment.bottomCenter,
-                                  child: Container(
-                                    width: 30,
-                                    decoration: BoxDecoration(
-                                      color: h == peak
-                                          ? ChartColors.seriesDark
-                                          : ChartColors.seriesLight,
-                                      borderRadius: const BorderRadius.vertical(
-                                        top: Radius.circular(4),
-                                      ),
-                                      border: h == _hoverHour
-                                          ? Border.all(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurface,
-                                              width: 2,
-                                            )
-                                          : null,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const Divider(height: 1, color: ChartColors.axis),
-          Row(
-            children: [
-              for (var h = from; h <= to; h++)
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      '${h % 12 == 0 ? 12 : h % 12}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: ChartColors.mutedText,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const Padding(
-            padding: EdgeInsets.only(top: 4),
-            child: Text(
-              'Hour of the day, shop time (am until 11, pm from 12).',
-              style: TextStyle(fontSize: 12, color: ChartColors.mutedText),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _hoursCard(BuildContext context, AnalyticsOverview d) => _card(
+    context,
+    title: 'Busiest hours',
+    subtitle: 'Number of bills in each hour of the day',
+    child: HourColumns(
+      counts: d.billsByHour,
+      hover: _hoverHour,
+      onHover: (h) => setState(() => _hoverHour = h),
+    ),
+  );
 
   // ---- how customers paid ------------------------------------------------------
 
@@ -704,37 +589,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     required String value,
     String? extra,
     required double fraction,
-  }) => Padding(
+  }) => RankedBarRow(
     key: Key(key),
-    padding: const EdgeInsets.only(bottom: 14),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
-            Text(value, style: const TextStyle(fontWeight: FontWeight.w700)),
-            if (extra != null) ...[const SizedBox(width: 8), Text(extra)],
-          ],
-        ),
-        const SizedBox(height: 5),
-        LayoutBuilder(
-          builder: (context, c) => Container(
-            width: c.maxWidth * fraction.clamp(0.0, 1.0),
-            height: 12,
-            decoration: const BoxDecoration(
-              color: ChartColors.series,
-              borderRadius: BorderRadius.horizontal(right: Radius.circular(6)),
-            ),
-          ),
-        ),
-      ],
-    ),
+    label: label,
+    value: value,
+    extra: extra,
+    fraction: fraction,
   );
 
   // ---- best sellers -------------------------------------------------------------
@@ -885,11 +745,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   Widget _closesCard(BuildContext context, AnalyticsOverview d) {
     final closes = d.recentCloses;
-    final biggest = closes.fold<int>(
-      0,
-      (a, c) => math.max(a, c.variance.paise.abs()),
-    );
-    const half = 80.0;
     return _card(
       context,
       title: 'Cash over and short at shift close',
@@ -897,142 +752,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           'The last ${closes.length} closes. Only managers and the owner see this; the cashier counted blind.',
       child: closes.isEmpty
           ? const Text('No shift closed yet.', key: Key('closes-empty'))
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Wrap(
-                  spacing: 18,
-                  runSpacing: 6,
-                  children: [
-                    _swatch(ChartColors.over, 'Over (more cash than expected)'),
-                    _swatch(
-                      ChartColors.short,
-                      'Short (less cash than expected)',
+          : CashCloseBars(
+              closes: [
+                for (final c in closes)
+                  CloseBar(
+                    name: c.cashierName,
+                    sub: _dayText(
+                      ShopDay.fromUtc(c.closedAt),
+                      withMonth: false,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (var i = 0; i < closes.length; i++)
-                      Expanded(
-                        child: Column(
-                          key: Key('close-$i'),
-                          children: [
-                            SizedBox(
-                              height: half + 20,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  if (closes[i].variance.paise > 0)
-                                    Text(
-                                      '+${formatRupees(closes[i].variance)}',
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  if (closes[i].variance.paise > 0)
-                                    Container(
-                                      width: 32,
-                                      height:
-                                          half *
-                                          closes[i].variance.paise /
-                                          biggest,
-                                      decoration: const BoxDecoration(
-                                        color: ChartColors.over,
-                                        borderRadius: BorderRadius.vertical(
-                                          top: Radius.circular(4),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                            Container(height: 1, color: ChartColors.axis),
-                            SizedBox(
-                              height: half + 20,
-                              child: Column(
-                                children: [
-                                  if (closes[i].variance.paise < 0)
-                                    Container(
-                                      width: 32,
-                                      height:
-                                          half *
-                                          -closes[i].variance.paise /
-                                          biggest,
-                                      decoration: const BoxDecoration(
-                                        color: ChartColors.short,
-                                        borderRadius: BorderRadius.vertical(
-                                          bottom: Radius.circular(4),
-                                        ),
-                                      ),
-                                    ),
-                                  if (closes[i].variance.paise < 0)
-                                    Text(
-                                      '-${formatRupees(Money(-closes[i].variance.paise))}',
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  if (closes[i].variance.paise == 0)
-                                    const Padding(
-                                      padding: EdgeInsets.only(top: 4),
-                                      child: Text(
-                                        'Exact',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                            Text(
-                              closes[i].cashierName,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              _dayText(
-                                ShopDay.fromUtc(closes[i].closedAt),
-                                withMonth: false,
-                              ),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: ChartColors.mutedText,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
+                    variance: c.variance,
+                  ),
               ],
             ),
     );
   }
-
-  Widget _swatch(Color color, String text) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Container(
-        width: 14,
-        height: 14,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(3),
-        ),
-      ),
-      const SizedBox(width: 8),
-      Text(text),
-    ],
-  );
 }
 
 // ---- the line chart --------------------------------------------------------------
