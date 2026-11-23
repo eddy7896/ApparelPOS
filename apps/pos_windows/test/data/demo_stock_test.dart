@@ -8,6 +8,9 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pos_windows/data/app_database.dart';
 import 'package:pos_windows/data/demo_stock.dart';
+import 'package:pos_windows/data/gst_repository.dart';
+import 'package:pos_windows/data/gst_report_repository.dart';
+import 'package:pos_windows/data/sales_repository.dart';
 import 'package:pos_windows/data/stock_lookup_repository.dart';
 import 'package:pos_windows/data/stock_repository.dart';
 
@@ -82,6 +85,131 @@ void main() {
     );
     expect(await seedDemoStock(db, stock), 0);
     expect(await count('products'), 1);
+  });
+
+  group('test GST details', () {
+    late GstRepository gst;
+    setUp(() => gst = GstRepository(db, newId: newId));
+
+    test('without the GST service nothing about GST is seeded', () async {
+      await seedDemoStock(db, stock);
+      expect((await gst.settings(role: Role.owner)).enabled, isFalse);
+      expect(
+        (await db
+                .customSelect(
+                  'SELECT COUNT(*) AS c FROM products WHERE hsn IS NOT NULL',
+                )
+                .getSingle())
+            .read<int>('c'),
+        0,
+      );
+      expect(
+        (await db
+                .customSelect('SELECT SUM(input_tax_paise) AS s FROM batches')
+                .getSingle())
+            .read<int>('s'),
+        0,
+      );
+    });
+
+    test('with it, GST is on with a made-up GSTIN and address', () async {
+      await seedDemoStock(db, stock, gst: gst);
+      final s = await gst.settings(role: Role.owner);
+      expect(s.enabled, isTrue);
+      expect(s.gstin, demoShopGstin);
+      expect(isGstinShaped(demoShopGstin), isTrue);
+      expect(isGstinShaped(demoBusinessGstin), isTrue);
+      expect(isGstinShaped(demoSupplierGstin), isTrue);
+      expect(s.address, contains('test data'));
+      expect(s.rateBp, 500);
+    });
+
+    test('each demo style has its HSN code, and jeans their own 12%', () async {
+      await seedDemoStock(db, stock, gst: gst);
+      final styles = {
+        for (final x in await gst.styles(role: Role.owner)) x.name: x,
+      };
+      expect(styles['Cotton Kurta']!.hsn, '6104');
+      expect(styles['Cotton Kurta']!.rateBp, isNull);
+      expect(styles['Denim Jeans']!.hsn, '6203');
+      expect(styles['Denim Jeans']!.rateBp, 1200);
+      expect(styles['Linen Shirt']!.hsn, '6205');
+    });
+
+    test(
+      'each purchase has a supplier GSTIN, an invoice number and 5% input tax',
+      () async {
+        await seedDemoStock(db, stock, gst: gst);
+        final r = await GstReportRepository(db).report(
+          role: Role.owner,
+          from: ShopDay.fromUtc(DateTime.now().toUtc()),
+          to: ShopDay.fromUtc(DateTime.now().toUtc()),
+        );
+        expect(r.purchases.length, 3);
+        expect(
+          r.purchases.every((p) => p.supplierGstin == demoSupplierGstin),
+          isTrue,
+        );
+        expect(r.purchases.map((p) => p.invoiceNo).toSet(), {
+          'DEMO/001',
+          'DEMO/002',
+          'DEMO/003',
+        });
+        // Cotton Kurta: 12 garments x 220.00 = 2,640.00; 5% = 132.00
+        expect(r.purchases.first.goodsValue, Money(264000));
+        expect(r.purchases.first.inputTax, Money(13200));
+        expect(r.inputTax.paise, greaterThan(0));
+      },
+    );
+
+    test('a first bill is taxed at the shop rate, a jeans bill at 12%', () async {
+      await seedDemoStock(db, stock, gst: gst);
+      final codes = [
+        for (final r
+            in await db
+                .customSelect(
+                  "SELECT a.barcode_value AS b, p.name AS n FROM articles a JOIN variants v ON v.id = a.variant_id JOIN products p ON p.id = v.product_id WHERE p.name IN ('Cotton Kurta', 'Denim Jeans') GROUP BY p.name",
+                )
+                .get())
+          (r.read<String>('n'), r.read<String>('b')),
+      ];
+      final sales = SalesRepository(db, newId: newId);
+      final kurta = codes.firstWhere((c) => c.$1 == 'Cotton Kurta').$2;
+      final jeans = codes.firstWhere((c) => c.$1 == 'Denim Jeans').$2;
+      await db
+          .into(db.users)
+          .insert(
+            UsersCompanion.insert(
+              id: 'c1',
+              name: 'C',
+              role: 'CASHIER',
+              credentialHash: 'x',
+              createdAt: DateTime.utc(2026),
+              updatedAt: DateTime.utc(2026),
+            ),
+          );
+      await db.customStatement(
+        "INSERT INTO shifts (id, cashier_id, counter_id, opened_at, opening_paise, opening_count) SELECT 's1', 'c1', id, ${DateTime.now().millisecondsSinceEpoch ~/ 1000}, 0, '{}' FROM counters",
+      );
+      final bill = await sales.saveBill(
+        role: Role.cashier,
+        cashierId: 'c1',
+        lines: [BillLineInput(kurta), BillLineInput(jeans)],
+        payments: [Payment(PaymentMode.cash, Money(49900 + 129900))],
+        customerName: 'Shah Traders',
+        customerGstin: demoBusinessGstin,
+      );
+      expect(bill.tax.lines[0].rateBp, 500);
+      expect(bill.tax.lines[1].rateBp, 1200);
+      expect(bill.customerGstin, demoBusinessGstin);
+      expect(bill.hsns, ['6104', '6203']);
+    });
+
+    test('does nothing on a shop that already has a style', () async {
+      await seedDemoStock(db, stock);
+      expect(await seedDemoStock(db, stock, gst: gst), 0);
+      expect((await gst.settings(role: Role.owner)).enabled, isFalse);
+    });
   });
 
   test('the release guard is in place: nothing is added unless kDebugMode', () {
