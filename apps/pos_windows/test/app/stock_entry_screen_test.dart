@@ -15,6 +15,7 @@ import 'package:pos_windows/app/services.dart';
 import 'package:pos_windows/app/session_controller.dart';
 import 'package:pos_windows/data/app_database.dart';
 import 'package:pos_windows/data/auth_service.dart';
+import 'package:pos_windows/data/category_repository.dart';
 import 'package:pos_windows/data/report_repository.dart';
 import 'package:pos_windows/data/returns_repository.dart';
 import 'package:pos_windows/data/sales_repository.dart';
@@ -70,6 +71,7 @@ void main() {
     Role role = Role.owner,
     bool shopName = true,
     bool goToStock = true,
+    bool withCategories = false,
   }) async {
     tester.view.physicalSize = const Size(1400, 2600);
     tester.view.devicePixelRatio = 1;
@@ -94,6 +96,7 @@ void main() {
       shifts: ShiftRepository(db, newId: newId),
       reports: ReportRepository(db),
       auth: auth,
+      categories: withCategories ? CategoryRepository(db, newId: newId) : null,
       printer: printer,
       fonts: () async => LabelFonts(
         regular: File('assets/fonts/NotoSans-Regular.ttf').readAsBytesSync(),
@@ -300,6 +303,143 @@ void main() {
       );
       expect(saveEnabled(tester), isTrue);
     });
+  });
+
+  group('the category of a style (owner, 2026-11-23)', () {
+    Future<String> makeGroup(String name, {String? parent}) =>
+        CategoryRepository(
+          db,
+          newId: newId,
+        ).add(role: Role.owner, actorId: 'o', name: name, parentId: parent);
+
+    Future<String?> styleCategory(WidgetTester tester, String style) async {
+      final r = await tester.runAsync(
+        () => db
+            .customSelect(
+              "SELECT category_id AS c FROM products WHERE name = '$style'",
+            )
+            .getSingle(),
+      );
+      return r!.read<String?>('c');
+    }
+
+    Future<void> pickCategory(WidgetTester tester, String path) async {
+      await tester.tap(find.byKey(const Key('category-picker')));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.tap(find.text(path).last);
+      await tester.pump();
+    }
+
+    testWidgets('no picker when the category service is not there', (
+      tester,
+    ) async {
+      await open(tester);
+      expect(find.byKey(const Key('category-picker')), findsNothing);
+    });
+
+    testWidgets('with no categories yet it says where to set them up', (
+      tester,
+    ) async {
+      await open(tester, withCategories: true);
+      expect(find.byKey(const Key('category-picker')), findsOneWidget);
+      expect(
+        find.text('No categories yet. Set them up in Settings.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('the chosen category is saved on the style', (tester) async {
+      await open(tester, withCategories: true, goToStock: false);
+      final men = await tester.runAsync(() => makeGroup('Men'));
+      final shirts = await tester.runAsync(
+        () => makeGroup('Shirts', parent: men),
+      );
+      await tester.tap(find.byKey(const Key('stock-entry-button')));
+      await settle(tester);
+      await fillValid(tester);
+      await pickCategory(tester, 'Men › Shirts');
+      await tester.tap(find.byKey(const Key('save-purchase')));
+      await settle(tester);
+      expect(find.byKey(const Key('saved-dialog')), findsOneWidget);
+      expect(await styleCategory(tester, 'Cotton Kurta'), shirts);
+    });
+
+    testWidgets('only places that can take styles are offered', (tester) async {
+      await open(tester, withCategories: true, goToStock: false);
+      final men = await tester.runAsync(() => makeGroup('Men'));
+      await tester.runAsync(() => makeGroup('Shirts', parent: men));
+      await tester.tap(find.byKey(const Key('stock-entry-button')));
+      await settle(tester);
+      await tester.tap(find.byKey(const Key('category-picker')));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('Men › Shirts'), findsWidgets);
+      expect(
+        find.descendant(
+          of: find.byType(DropdownMenuItem<String?>),
+          matching: find.text('Men'),
+        ),
+        findsNothing,
+      );
+    });
+
+    testWidgets('no category is fine: the style is saved with none', (
+      tester,
+    ) async {
+      await open(tester, withCategories: true);
+      await fillValid(tester);
+      await tester.tap(find.byKey(const Key('save-purchase')));
+      await settle(tester);
+      expect(await styleCategory(tester, 'Cotton Kurta'), isNull);
+    });
+
+    testWidgets(
+      'typing a style that already has a category shows it, and it can be changed',
+      (tester) async {
+        await open(tester, withCategories: true, goToStock: false);
+        final kids = await tester.runAsync(() => makeGroup('Kids'));
+        final women = await tester.runAsync(() => makeGroup('Women'));
+        await tester.runAsync(() async {
+          await stock.receivePurchase(
+            role: Role.owner,
+            categoryId: kids,
+            draft: PurchaseDraft(
+              supplier: 'S',
+              style: 'Cotton Kurta',
+              lines: [
+                PurchaseLine(
+                  size: 'M',
+                  color: 'Blue',
+                  quantity: 1,
+                  cost: Money(10000),
+                  mrp: Money(20000),
+                ),
+              ],
+            ),
+          );
+        });
+        await tester.tap(find.byKey(const Key('stock-entry-button')));
+        await settle(tester);
+        await type(tester, 'style-field', 'cotton kurta');
+        await settle(tester);
+        expect(
+          find.descendant(
+            of: find.byKey(const Key('category-picker')),
+            matching: find.text('Kids'),
+          ),
+          findsOneWidget,
+        );
+        await type(tester, 'supplier-field', 'Sample Supplier');
+        await choose(tester, ['M'], ['Blue']);
+        await type(tester, 'default-cost', '100');
+        await type(tester, 'default-mrp', '200');
+        await type(tester, 'qty-M-Blue', '1');
+        await pickCategory(tester, 'Women');
+
+        await tester.tap(find.byKey(const Key('save-purchase')));
+        await settle(tester);
+        expect(await styleCategory(tester, 'Cotton Kurta'), women);
+      },
+    );
   });
 
   group('saving and printing', () {

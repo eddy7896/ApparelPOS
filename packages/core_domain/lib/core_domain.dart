@@ -9,6 +9,7 @@ export 'src/backup_rules.dart';
 export 'src/barcode.dart';
 export 'src/bill_number.dart';
 export 'src/brand.dart';
+export 'src/category_rules.dart';
 export 'src/code128.dart';
 export 'src/credit_note.dart';
 export 'src/hangtag_artwork.dart';

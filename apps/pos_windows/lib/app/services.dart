@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import '../data/analytics_repository.dart';
 import '../data/auth_service.dart';
 import '../data/brand.dart';
+import '../data/category_repository.dart';
 import '../data/backup/backup_models.dart';
 import '../data/recovery_key_repository.dart';
 import '../data/report_repository.dart';
@@ -32,6 +33,7 @@ class AppServices {
     this.stockLookup,
     this.analytics,
     this.staff,
+    this.categories,
     this.brand,
     this.brandPreview = kDebugMode,
     this.backup,
@@ -51,6 +53,10 @@ class AppServices {
   /// Stock lookup for cashiers and managers (null in tests that do not need
   /// it: the buttons that open it are then hidden).
   final StockLookupRepository? stockLookup;
+
+  /// Stock categories (null in tests that do not need them: the pickers,
+  /// filters and Settings page are then hidden).
+  final CategoryRepository? categories;
 
   /// Adding and managing staff (null in tests that do not need it: the menu
   /// item that opens it is then hidden).

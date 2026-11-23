@@ -16,6 +16,7 @@ import 'package:pos_windows/app/ui/analytics_screen.dart';
 import 'package:pos_windows/data/analytics_repository.dart';
 import 'package:pos_windows/data/app_database.dart';
 import 'package:pos_windows/data/auth_service.dart';
+import 'package:pos_windows/data/category_repository.dart';
 import 'package:pos_windows/data/report_repository.dart';
 import 'package:pos_windows/data/returns_repository.dart';
 import 'package:pos_windows/data/sales_repository.dart';
@@ -148,7 +149,7 @@ void main() {
     }
   }
 
-  AppServices services() => AppServices(
+  AppServices services({bool withCategories = false}) => AppServices(
     stock: StockRepository(db, newId: newId),
     sales: sales,
     returns: returns,
@@ -156,6 +157,7 @@ void main() {
     reports: ReportRepository(db),
     auth: auth,
     analytics: AnalyticsRepository(db, now: () => today),
+    categories: withCategories ? CategoryRepository(db, newId: newId) : null,
     printer: const SystemLabelPrinter(),
     fonts: () async => LabelFonts(
       regular: File('assets/fonts/NotoSans-Regular.ttf').readAsBytesSync(),
@@ -163,7 +165,11 @@ void main() {
     ),
   );
 
-  Future<void> openScreen(WidgetTester tester, {double width = 1500}) async {
+  Future<void> openScreen(
+    WidgetTester tester, {
+    double width = 1500,
+    bool withCategories = false,
+  }) async {
     tester.view.physicalSize = Size(width, 2400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -171,7 +177,12 @@ void main() {
       await session.start();
       await session.signIn(ownerId, 'a long passphrase');
     });
-    await tester.pumpWidget(PosApp(session: session, services: services()));
+    await tester.pumpWidget(
+      PosApp(
+        session: session,
+        services: services(withCategories: withCategories),
+      ),
+    );
     await pump(tester);
     await tester.tap(find.byKey(const Key('analytics-button')));
     await tester.pump();
@@ -555,5 +566,152 @@ void main() {
     await openScreen(tester, width: 800);
     expect(find.byKey(const Key('kpi-net')), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  group('by category (owner, 2026-11-23)', () {
+    // Men > Shirts has Cotton Kurta; Kids has Denim Jeans.
+    Future<void> setUpCategories() async {
+      final c = CategoryRepository(db, newId: newId);
+      final men = await c.add(role: Role.owner, actorId: 'o', name: 'Men');
+      final shirts = await c.add(
+        role: Role.owner,
+        actorId: 'o',
+        name: 'Shirts',
+        parentId: men,
+      );
+      final kids = await c.add(role: Role.owner, actorId: 'o', name: 'Kids');
+      final styles = await c.styles(role: Role.owner);
+      await c.assignStyle(
+        role: Role.owner,
+        actorId: 'o',
+        styleId: styles.singleWhere((s) => s.name == 'Cotton Kurta').id,
+        categoryId: shirts,
+      );
+      await c.assignStyle(
+        role: Role.owner,
+        actorId: 'o',
+        styleId: styles.singleWhere((s) => s.name == 'Denim Jeans').id,
+        categoryId: kids,
+      );
+    }
+
+    Future<void> categorySales() async {
+      await sell(DateTime.utc(2026, 11, 20, 5), [
+        kurta[0],
+        kurta[1],
+      ]); // Men this week 998
+      await sell(DateTime.utc(2026, 11, 20, 6), [
+        jeans[0],
+      ]); // Kids this week 1299
+      await sell(DateTime.utc(2026, 11, 12, 5), [kurta[2]]); // Men before 499
+      await sell(DateTime.utc(2026, 11, 12, 6), [
+        jeans[1],
+        jeans[2],
+      ]); // Kids before 2598
+    }
+
+    testWidgets('without the category service there is no category card', (
+      tester,
+    ) async {
+      await categorySales();
+      await openScreen(tester);
+      expect(find.text('Sales by category'), findsNothing);
+    });
+
+    testWidgets('with none set up it points to Settings', (tester) async {
+      await openScreen(tester, withCategories: true);
+      expect(find.byKey(const Key('categories-hint')), findsOneWidget);
+    });
+
+    testWidgets(
+      'groups show their sales and the change against the week before',
+      (tester) async {
+        await setUpCategories();
+        await categorySales();
+        await openScreen(tester, withCategories: true);
+        expect(find.byKey(const Key('catrow-Men')), findsOneWidget);
+        expect(find.byKey(const Key('catrow-Kids')), findsOneWidget);
+        expect(textOf(tester, 'catchange-Men'), 'Up 100.0% (before: ₹499.00)');
+        expect(
+          textOf(tester, 'catchange-Kids'),
+          'Down 50.0% (before: ₹2,598.00)',
+        );
+        expect(find.text('₹998.00'), findsWidgets);
+        expect(find.text('₹1,299.00'), findsWidgets);
+        // the largest first: Kids 1299 above Men 998
+        expect(
+          tester.getTopLeft(find.byKey(const Key('catrow-Kids'))).dy,
+          lessThan(tester.getTopLeft(find.byKey(const Key('catrow-Men'))).dy),
+        );
+      },
+    );
+
+    testWidgets('Categories splits a group into the categories inside it', (
+      tester,
+    ) async {
+      await setUpCategories();
+      await categorySales();
+      await openScreen(tester, withCategories: true);
+      expect(find.byKey(const Key('catrow-Men › Shirts')), findsNothing);
+      await tester.tap(find.byKey(const Key('cat-by-category')));
+      await tester.pump();
+      expect(find.byKey(const Key('catrow-Men › Shirts')), findsOneWidget);
+      expect(find.byKey(const Key('catrow-Men')), findsNothing);
+    });
+
+    testWidgets('styles in no category are shown as No category', (
+      tester,
+    ) async {
+      await sell(DateTime.utc(2026, 11, 20, 5), [kurta[0]]);
+      await setUpCategories();
+      await db.customStatement("UPDATE products SET category_id = NULL");
+      await openScreen(tester, withCategories: true);
+      expect(find.byKey(const Key('catrow-No category')), findsOneWidget);
+    });
+
+    testWidgets(
+      'the trend reading names the fastest growing and the most falling group',
+      (tester) async {
+        await setUpCategories();
+        await categorySales();
+        await openScreen(tester, withCategories: true);
+        expect(
+          textOf(tester, 'insight-category-up'),
+          'Growing fastest: Men (up 100.0%).',
+        );
+        expect(
+          textOf(tester, 'insight-category-down'),
+          'Falling most: Kids (down 50.0%).',
+        );
+      },
+    );
+
+    testWidgets(
+      'sell-through can be read by category, with slow movers counted',
+      (tester) async {
+        await setUpCategories();
+        await sell(DateTime.utc(2026, 11, 20, 5), [
+          kurta[0],
+        ]); // 1 of 10 kurtas: 10%, 60 days old: slow
+        await openScreen(tester, withCategories: true);
+        await tester.tap(find.byKey(const Key('through-by-category')));
+        await tester.pump();
+        expect(find.byKey(const Key('throughcat-Men')), findsOneWidget);
+        expect(find.text('10%'), findsWidgets);
+        expect(find.byKey(const Key('slowcat-Men')), findsOneWidget);
+        expect(find.byKey(const Key('slowcat-Kids')), findsNothing);
+        expect(find.byKey(const Key('through-Cotton Kurta')), findsNothing);
+        await tester.tap(find.byKey(const Key('through-by-style')));
+        await tester.pump();
+        expect(find.byKey(const Key('through-Cotton Kurta')), findsOneWidget);
+      },
+    );
+
+    testWidgets('no By category switch when no categories are set up', (
+      tester,
+    ) async {
+      await openScreen(tester, withCategories: true);
+      expect(find.byKey(const Key('through-by-category')), findsNothing);
+    });
   });
 }

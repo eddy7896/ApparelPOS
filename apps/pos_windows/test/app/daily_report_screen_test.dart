@@ -13,6 +13,7 @@ import 'package:pos_windows/app/session_controller.dart';
 import 'package:pos_windows/app/ui/daily_report_screen.dart';
 import 'package:pos_windows/data/app_database.dart';
 import 'package:pos_windows/data/auth_service.dart';
+import 'package:pos_windows/data/category_repository.dart';
 import 'package:pos_windows/data/report_repository.dart';
 import 'package:pos_windows/data/returns_repository.dart';
 import 'package:pos_windows/data/sales_repository.dart';
@@ -120,6 +121,7 @@ void main() {
       shifts: shifts,
       reports: ReportRepository(db),
       auth: auth,
+      categories: CategoryRepository(db, newId: newId),
       printer: const SystemLabelPrinter(),
       fonts: () async => LabelFonts(
         regular: File('assets/fonts/NotoSans-Regular.ttf').readAsBytesSync(),
@@ -386,6 +388,79 @@ void main() {
       tester.view.physicalSize = const Size(700, 2400);
       await tester.pump();
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('sales by category (owner, 2026-11-23)', () {
+    Future<void> categorise() async {
+      await db.customStatement(
+        "INSERT INTO categories (id, name, created_at, updated_at) VALUES ('men', 'Men', 1700000000, 1700000000)",
+      );
+      await db.customStatement(
+        "INSERT INTO categories (id, name, parent_id, created_at, updated_at) VALUES ('shirts', 'Shirts', 'men', 1700000000, 1700000000)",
+      );
+      await db.customStatement(
+        "UPDATE products SET category_id = 'shirts' WHERE name = 'Cotton Kurta'",
+      );
+    }
+
+    testWidgets('no category card until the shop has set some up', (
+      tester,
+    ) async {
+      await tester.runAsync(busyDay);
+      await openReport(tester);
+      expect(find.text('Sales by category'), findsNothing);
+    });
+
+    testWidgets(
+      'a ranked bar per category with its share, No category for the rest',
+      (tester) async {
+        await tester.runAsync(() async {
+          await busyDay();
+          await categorise();
+        });
+        await openReport(tester);
+        expect(find.text('Sales by category'), findsOneWidget);
+        expect(
+          find.byKey(const Key('chart-category-Men › Shirts')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('chart-category-No category')),
+          findsOneWidget,
+        );
+        // kurtas 499 + 449.10 = 948.10 of 3286.30 is 28%; jeans 1299 + 1039.20 = 2338.20 is 71%
+        expect(find.text('28%'), findsOneWidget);
+        expect(find.text('71%'), findsOneWidget);
+        final none = tester
+            .getTopLeft(find.byKey(const Key('chart-category-No category')))
+            .dy;
+        final shirts = tester
+            .getTopLeft(find.byKey(const Key('chart-category-Men › Shirts')))
+            .dy;
+        expect(none, lessThan(shirts)); // the larger first
+      },
+    );
+
+    testWidgets('the table view has the category, garments, sales and share', (
+      tester,
+    ) async {
+      await tester.runAsync(() async {
+        await busyDay();
+        await categorise();
+      });
+      await openReport(tester);
+      await tester.tap(find.byKey(const Key('report-table-toggle')));
+      await tester.pump();
+      expect(find.byKey(const Key('table-categories')), findsOneWidget);
+      expect(find.text('Men › Shirts'), findsOneWidget);
+      expect(find.text('₹948.10'), findsWidgets);
+    });
+
+    testWidgets('an empty day says so', (tester) async {
+      await tester.runAsync(categorise);
+      await openReport(tester);
+      expect(find.byKey(const Key('chart-no-category-sales')), findsOneWidget);
     });
   });
 

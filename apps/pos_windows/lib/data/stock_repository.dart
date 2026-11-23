@@ -7,6 +7,7 @@ import 'package:core_domain/core_domain.dart';
 import 'package:drift/drift.dart';
 
 import 'app_database.dart';
+import 'category_repository.dart' show NotAssignable;
 
 /// Thrown when a purchase has problems; [issues] says which.
 final class InvalidPurchase implements Exception {
@@ -196,6 +197,7 @@ class StockRepository {
     required Role? role,
     required PurchaseDraft draft,
     String? actor,
+    String? categoryId,
   }) async {
     require(role, Permission.enterStock);
     final problems = checkPurchase(draft).where((i) => !i.isWarning).toList();
@@ -221,6 +223,24 @@ class StockRepository {
         final plan = planPurchase(draft, cursor, year: year, month: month);
 
         final productId = await _findOrCreateProduct(plan.style, actor, at);
+        if (categoryId != null) {
+          // The category chosen on the stock entry screen goes on the style.
+          final nodes = [
+            for (final r in await _db.select(_db.categories).get())
+              CategoryNode(id: r.id, name: r.name, parentId: r.parentId),
+          ];
+          if (!isAssignable(nodes, categoryId)) {
+            throw NotAssignable();
+          }
+          await (_db.update(
+            _db.products,
+          )..where((p) => p.id.equals(productId))).write(
+            ProductsCompanion(
+              categoryId: Value(categoryId),
+              updatedAt: Value(at),
+            ),
+          );
+        }
         final variantIds = <int, String>{};
         for (var i = 0; i < plan.lines.length; i++) {
           variantIds[i] = await _upsertVariant(productId, plan.lines[i], at);

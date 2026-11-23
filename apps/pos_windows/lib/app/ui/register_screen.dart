@@ -10,6 +10,7 @@ import '../../data/sales_repository.dart';
 import '../../data/stock_lookup_repository.dart';
 import '../bill_pdf.dart';
 import 'approval_dialog.dart';
+import 'category_chips.dart';
 import 'close_shift_screen.dart';
 import 'shift_gate.dart';
 import 'status_colors.dart';
@@ -112,6 +113,10 @@ class _RegisterPanelState extends State<RegisterPanel> {
   int _qty = 1;
 
   _PayMethod _method = _PayMethod.cash;
+
+  /// The shop's categories and the one chosen to narrow the name search.
+  List<CategoryNode> _categories = const [];
+  String? _catFilter;
   String? _savedCustomerName;
   String? _savedCustomerPhone;
 
@@ -125,6 +130,34 @@ class _RegisterPanelState extends State<RegisterPanel> {
     if (code != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _addNote(code));
     }
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    final cats = _s.categories;
+    if (cats == null) {
+      return;
+    }
+    try {
+      final list = await cats.list(role: _role);
+      if (mounted) {
+        setState(() => _categories = [for (final e in list) e.node]);
+      }
+    } on PermissionDenied {
+      // no chips
+    }
+  }
+
+  /// The name results narrowed to the chosen category.
+  List<StyleStock>? get _visibleNameResults {
+    final all = _nameResults;
+    if (all == null) {
+      return null;
+    }
+    return [
+      for (final s in all)
+        if (categoryMatches(_categories, _catFilter, s.categoryId)) s,
+    ];
   }
 
   @override
@@ -313,7 +346,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
       await _scan(raw);
       return;
     }
-    final results = _nameResults;
+    final results = _visibleNameResults;
     final choices = [
       for (final s in results ?? const <StyleStock>[])
         for (final v in s.variants)
@@ -782,7 +815,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
   }
 
   Widget _nameResultsPanel(BuildContext context) {
-    final results = _nameResults!;
+    final results = _visibleNameResults!;
     final scheme = Theme.of(context).colorScheme;
     return Container(
       key: const Key('name-results'),
@@ -794,17 +827,37 @@ class _RegisterPanelState extends State<RegisterPanel> {
         color: scheme.surfaceContainerLowest,
       ),
       child: results.isEmpty
-          ? const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                'No style like that in the shop.',
-                key: Key('name-results-empty'),
+          ? Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CategoryChips(
+                    nodes: _categories,
+                    selected: _catFilter,
+                    onChanged: (v) => setState(() => _catFilter = v),
+                  ),
+                  Text(
+                    _nameResults!.isEmpty
+                        ? 'No style like that in the shop.'
+                        : 'No style like that in this category.',
+                    key: const Key('name-results-empty'),
+                  ),
+                ],
               ),
             )
           : ListView(
               shrinkWrap: true,
               padding: const EdgeInsets.all(12),
               children: [
+                if (_categories.isNotEmpty) ...[
+                  CategoryChips(
+                    nodes: _categories,
+                    selected: _catFilter,
+                    onChanged: (v) => setState(() => _catFilter = v),
+                  ),
+                  const SizedBox(height: 10),
+                ],
                 Row(
                   children: [
                     const Text('How many'),

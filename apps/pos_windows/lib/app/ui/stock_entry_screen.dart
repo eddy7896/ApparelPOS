@@ -5,6 +5,7 @@ import 'package:core_domain/hangtag_pdf.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/stock_repository.dart';
+import '../../data/category_repository.dart';
 import '../services.dart';
 import '../session_controller.dart';
 import 'start_cell_picker.dart';
@@ -56,6 +57,12 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
   final _selectedColors = <String>{};
   var _loaded = false;
   var _busy = false;
+
+  /// The category chosen for this style (none until picked), and the list to
+  /// pick from: only groups and categories that can take styles.
+  String? _categoryId;
+  bool _categoryTouched = false;
+  List<CategoryEntry> _categoryList = const [];
   var _setting = false; // true while the program (not the user) changes a field
 
   StockRepository get _stock => widget.services.stock;
@@ -87,6 +94,21 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
     if (mounted) {
       setState(() {});
     }
+    _prefillCategory();
+  }
+
+  /// A style that already exists keeps its category: show it, unless the
+  /// person has already picked one.
+  Future<void> _prefillCategory() async {
+    final cats = widget.services.categories;
+    if (cats == null || _categoryTouched) {
+      return;
+    }
+    final name = _style.text;
+    final found = await cats.categoryOfStyleNamed(role: _role, name: name);
+    if (mounted && !_categoryTouched && _style.text == name) {
+      setState(() => _categoryId = found);
+    }
   }
 
   Future<void> _load() async {
@@ -94,9 +116,14 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
     final sizes = await _stock.sizes();
     final colors = await _stock.colors();
     final shop = await _stock.shopName();
+    final cats = widget.services.categories;
+    final catList = cats == null
+        ? const <CategoryEntry>[]
+        : await cats.list(role: _role);
     if (!mounted) {
       return;
     }
+    _categoryList = catList;
     setState(() {
       _sizes = sizes;
       _colors = colors;
@@ -342,6 +369,7 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
         role: _role,
         draft: draft,
         actor: widget.session.user!.userId,
+        categoryId: _categoryId,
       );
       if (!mounted) {
         return;
@@ -429,10 +457,53 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
     }
   }
 
+  /// The category of this style. Only places that can take styles are listed;
+  /// the owner or a manager sets them up in Settings.
+  Widget _categoryPicker() {
+    final nodes = [for (final e in _categoryList) e.node];
+    final options = [
+      for (final e in _categoryList)
+        if (isAssignable(nodes, e.node.id)) e.node,
+    ];
+    final shown = options.any((n) => n.id == _categoryId) ? _categoryId : null;
+    return SizedBox(
+      key: const Key('category-picker'),
+      child: DropdownButtonFormField<String?>(
+        // A new key when the choice changes from outside (the prefill), so the
+        // field shows it.
+        key: ValueKey('category-$shown'),
+        initialValue: shown,
+        decoration: InputDecoration(
+          labelText: 'Category (optional)',
+          helperText: options.isEmpty
+              ? 'No categories yet. Set them up in Settings.'
+              : null,
+        ),
+        items: [
+          const DropdownMenuItem<String?>(
+            value: null,
+            child: Text('No category'),
+          ),
+          for (final n in options)
+            DropdownMenuItem<String?>(
+              value: n.id,
+              child: Text(categoryPath(nodes, n.id)),
+            ),
+        ],
+        onChanged: (v) => setState(() {
+          _categoryId = v;
+          _categoryTouched = true;
+        }),
+      ),
+    );
+  }
+
   void _reset() {
     setState(() {
       _supplier.clear();
       _style.clear();
+      _categoryId = null;
+      _categoryTouched = false;
       _setting = true;
       _defaultCost.clear();
       _defaultMrp.clear();
@@ -499,6 +570,10 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
                     ),
                   ],
                 ),
+                if (widget.services.categories != null) ...[
+                  const SizedBox(height: 12),
+                  _categoryPicker(),
+                ],
                 const SizedBox(height: 16),
                 _chips(
                   'Sizes',

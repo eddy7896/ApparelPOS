@@ -97,12 +97,32 @@ class ColorOptions extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// A group (no parent) or a category inside a group, set up by the owner or a
+/// manager in Settings (two levels at most). Styles are put in categories; the
+/// quick lookup and the analytics group by them.
+@DataClassName('CategoryRow')
+class Categories extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+
+  /// Null for a group.
+  TextColumn get parentId => text().nullable().references(Categories, #id)();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// A style, such as "Cotton Kurta".
 @DataClassName('ProductRow')
 class Products extends Table {
   TextColumn get id => text()();
   TextColumn get name => text()();
   TextColumn get createdBy => text().nullable()();
+
+  /// The category this style is in (none until the shop sets it).
+  TextColumn get categoryId => text().nullable().references(Categories, #id)();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -457,6 +477,7 @@ class Daybook extends Table {
     ColorOptions,
     Users,
     Counters,
+    Categories,
     Products,
     Variants,
     Batches,
@@ -483,7 +504,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -531,6 +552,24 @@ class AppDatabase extends _$AppDatabase {
         }
         if (!await has('returns')) {
           await m.addColumn(returns, returns.shiftId);
+        }
+      }
+      if (from < 9 && to >= 9) {
+        // version 9: stock categories (owner, 2026-11-23)
+        final tables = {
+          for (final r in await customSelect(
+            "SELECT name FROM sqlite_master WHERE type = 'table'",
+          ).get())
+            r.read<String>('name'),
+        };
+        if (!tables.contains('categories')) {
+          await m.createTable(categories);
+        }
+        final hasCol = (await customSelect(
+          'PRAGMA table_info(products)',
+        ).get()).any((r) => r.read<String>('name') == 'category_id');
+        if (!hasCol) {
+          await m.addColumn(products, products.categoryId);
         }
       }
       if (from < 8 && to >= 8) {

@@ -19,6 +19,7 @@ import 'register_screen.dart';
 import 'returns_screen.dart';
 import 'shift_closes_screen.dart';
 import 'stock_entry_screen.dart';
+import 'settings_screen.dart';
 import 'staff_screen.dart';
 import 'stock_lookup_screen.dart';
 
@@ -131,6 +132,13 @@ class _ManagerHomeState extends State<ManagerHome> {
         'Shift closes',
         () => _open(ShiftClosesScreen(session: _session, services: _s)),
       ),
+      if (_s.categories != null)
+        _NavItem(
+          'settings-button',
+          Icons.settings,
+          'Settings',
+          () => _open(SettingsScreen(session: _session, services: _s)),
+        ),
       if (_s.staff != null)
         _NavItem(
           'staff-button',
