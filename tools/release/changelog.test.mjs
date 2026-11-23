@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { test } from 'node:test';
 import { checkChangelog, extractNotes, isPrerelease, parseChangelog, pubspecVersion } from './changelog.mjs';
 
@@ -77,4 +78,11 @@ test('the real CHANGELOG.md has an entry for the real app version', () => {
   const changelog = readFileSync(new URL('CHANGELOG.md', root), 'utf8');
   const version = pubspecVersion(readFileSync(new URL('apps/pos_windows/pubspec.yaml', root), 'utf8'));
   assert.deepEqual(checkChangelog(changelog, version), []);
+});
+
+test('run as a script it prints what the release workflow reads (notes and the prerelease flag)', () => {
+  const script = new URL('./changelog.mjs', import.meta.url).pathname;
+  const out = (...args) => execFileSync(process.execPath, [script, ...args], { encoding: 'utf8' });
+  assert.equal(out('--prerelease', '0.9.0').trim(), 'true');
+  assert.match(out('--notes', '0.9.0'), /Windows/);
 });
