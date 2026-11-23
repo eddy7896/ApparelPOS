@@ -12,4 +12,5 @@ Purpose: index of feature modules. Each file lists status, rules, workflow, task
 | Branding and counter UX redesign | 1 | [branding_and_ux.md](branding_and_ux.md) |
 | Backup and restore | 1 | [backup_and_restore.md](backup_and_restore.md) |
 | GST toggle | 1 scaffold | [gst.md](gst.md) |
+| Analytics (charts for manager and owner) | 1 | [analytics.md](analytics.md) |
 | Sync and manager mobile | 2 | not yet written (planned at P4) |

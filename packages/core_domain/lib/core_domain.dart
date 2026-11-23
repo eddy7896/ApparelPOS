@@ -2,6 +2,7 @@
 /// Money is integer paise; there is no `double` in money code (E-MONEY-1).
 library;
 
+export 'src/analytics_rules.dart';
 export 'src/article_status.dart';
 export 'src/auth_rules.dart';
 export 'src/backup_rules.dart';

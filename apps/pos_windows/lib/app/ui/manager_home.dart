@@ -10,6 +10,7 @@ import '../../data/report_repository.dart';
 import '../bill_pdf.dart' show billDateText;
 import '../services.dart';
 import '../session_controller.dart';
+import 'analytics_screen.dart';
 import 'backup_banner.dart';
 import 'backup_screen.dart';
 import 'brand_preview_dialog.dart';
@@ -110,6 +111,13 @@ class _ManagerHomeState extends State<ManagerHome> {
         'Stock entry',
         () => _open(StockEntryScreen(session: _session, services: _s)),
       ),
+      if (_s.analytics != null)
+        _NavItem(
+          'analytics-button',
+          Icons.show_chart,
+          'Analytics',
+          () => _open(AnalyticsScreen(session: _session, services: _s)),
+        ),
       _NavItem(
         'daily-report-button',
         Icons.bar_chart,

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart' show kDebugMode;
 
+import '../data/analytics_repository.dart';
 import '../data/auth_service.dart';
 import '../data/brand.dart';
 import '../data/backup/backup_models.dart';
@@ -28,6 +29,7 @@ class AppServices {
     required this.printer,
     this.recovery,
     this.stockLookup,
+    this.analytics,
     this.brand,
     this.brandPreview = kDebugMode,
     this.backup,
@@ -47,6 +49,10 @@ class AppServices {
   /// Stock lookup for cashiers and managers (null in tests that do not need
   /// it: the buttons that open it are then hidden).
   final StockLookupRepository? stockLookup;
+
+  /// The owner's analytics (null in tests that do not need it: the button
+  /// that opens it is then hidden).
+  final AnalyticsRepository? analytics;
 
   /// The recovery key (null in the browser preview, which has no encryption).
   final RecoveryKeyRepository? recovery;

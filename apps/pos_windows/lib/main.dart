@@ -9,6 +9,7 @@ import 'app/label_printer.dart';
 import 'app/services.dart';
 import 'app/session_controller.dart';
 import 'app/startup_failed.dart';
+import 'data/analytics_repository.dart';
 import 'data/auth_service.dart';
 import 'data/brand_repository.dart';
 import 'data/connection/connection.dart';
@@ -57,6 +58,7 @@ Future<void> _start() async {
         shifts: shifts,
         reports: ReportRepository(db),
         stockLookup: StockLookupRepository(db),
+        analytics: AnalyticsRepository(db),
         recovery: appKeyStore == null
             ? null
             : RecoveryKeyRepository(db, appKeyStore!, newId: newId),
