@@ -64,8 +64,9 @@ CreditNoteSlip describeSlip({
 /// Draws [slip] on one A4 page.
 Future<Uint8List> buildCreditNoteSlipPdf(
   CreditNoteSlip slip,
-  LabelFonts fonts,
-) async {
+  LabelFonts fonts, {
+  Uint8List? logo,
+}) async {
   final theme = pw.ThemeData.withFont(
     base: pw.Font.ttf(ByteData.sublistView(fonts.regular)),
     bold: pw.Font.ttf(ByteData.sublistView(fonts.bold)),
@@ -89,6 +90,15 @@ Future<Uint8List> buildCreditNoteSlipPdf(
           child: pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.center,
             children: [
+              if (logo != null)
+                pw.Padding(
+                  padding: const pw.EdgeInsets.only(bottom: 6),
+                  child: pw.Image(
+                    pw.MemoryImage(logo),
+                    height: 48,
+                    fit: pw.BoxFit.contain,
+                  ),
+                ),
               if (slip.shopName != null)
                 pw.Text(
                   slip.shopName!,

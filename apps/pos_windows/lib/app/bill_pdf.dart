@@ -114,7 +114,11 @@ BillSheet describeBill({
 }
 
 /// Draws [sheet] on A4 pages (more pages if there are many garments).
-Future<Uint8List> buildBillPdf(BillSheet sheet, LabelFonts fonts) async {
+Future<Uint8List> buildBillPdf(
+  BillSheet sheet,
+  LabelFonts fonts, {
+  Uint8List? logo,
+}) async {
   final theme = pw.ThemeData.withFont(
     base: pw.Font.ttf(ByteData.sublistView(fonts.regular)),
     bold: pw.Font.ttf(ByteData.sublistView(fonts.bold)),
@@ -134,6 +138,16 @@ Future<Uint8List> buildBillPdf(BillSheet sheet, LabelFonts fonts) async {
       pageFormat: PdfPageFormat.a4,
       margin: const pw.EdgeInsets.all(40),
       build: (_) => [
+        if (logo != null)
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(bottom: 6),
+            child: pw.Image(
+              pw.MemoryImage(logo),
+              height: 48,
+              fit: pw.BoxFit.contain,
+              alignment: pw.Alignment.centerLeft,
+            ),
+          ),
         if (sheet.shopName != null)
           pw.Text(
             sheet.shopName!,

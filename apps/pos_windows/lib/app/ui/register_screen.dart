@@ -399,7 +399,11 @@ class _RegisterPanelState extends State<RegisterPanel> {
         customerName: _savedCustomerName,
         customerPhone: _savedCustomerPhone,
       );
-      final pdf = await buildBillPdf(sheet, await _s.fonts());
+      final pdf = await buildBillPdf(
+        sheet,
+        await _s.fonts(),
+        logo: _s.currentBrand.logo,
+      );
       await _s.printer.printSheet(pdf, name: 'Bill ${sheet.billNo}');
     } on Object catch (e) {
       if (mounted) {

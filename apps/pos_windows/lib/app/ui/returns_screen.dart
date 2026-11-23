@@ -200,7 +200,11 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
         note: note,
         shopName: await _s.stock.shopName(),
       );
-      final pdf = await buildCreditNoteSlipPdf(slip, await _s.fonts());
+      final pdf = await buildCreditNoteSlipPdf(
+        slip,
+        await _s.fonts(),
+        logo: _s.currentBrand.logo,
+      );
       await _s.printer.printSheet(pdf, name: 'Credit note ${slip.noteNumber}');
     } on Object catch (e) {
       if (mounted) {

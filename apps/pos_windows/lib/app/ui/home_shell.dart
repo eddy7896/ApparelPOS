@@ -6,6 +6,8 @@ import '../session_controller.dart';
 import 'recovery_key_screen.dart';
 import 'register_screen.dart';
 import 'backup_banner.dart';
+import 'brand_mark.dart';
+import 'brand_preview_dialog.dart';
 import 'backup_screen.dart';
 import 'daily_report_screen.dart';
 import 'shift_closes_screen.dart';
@@ -27,7 +29,13 @@ class HomeShell extends StatelessWidget {
     final sales = user.role == Role.cashier;
     return Scaffold(
       appBar: AppBar(
-        title: Text(sales ? 'Sales Mode' : 'Manager Mode'),
+        title: Row(
+          children: [
+            BrandMark(brand: services.currentBrand),
+            const SizedBox(width: 16),
+            Text(sales ? 'Sales Mode' : 'Manager Mode'),
+          ],
+        ),
         actions: [
           if (sales)
             TextButton.icon(
@@ -153,6 +161,24 @@ class HomeShell extends StatelessWidget {
                             label: const Text('Stock entry'),
                           ),
                           const SizedBox(height: 12),
+                          if (services.brandPreview &&
+                              services.brand != null) ...[
+                            OutlinedButton.icon(
+                              key: const Key('brand-preview-button'),
+                              onPressed: () => showDialog<void>(
+                                context: context,
+                                builder: (_) => BrandPreviewDialog(
+                                  session: session,
+                                  services: services,
+                                ),
+                              ),
+                              icon: const Icon(Icons.palette),
+                              label: const Text(
+                                'Try a look (development only)',
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
                           const Text('Settings are not built yet.'),
                         ],
                       ),

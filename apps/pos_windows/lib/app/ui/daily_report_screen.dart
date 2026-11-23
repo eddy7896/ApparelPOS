@@ -86,7 +86,12 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Daily report')),
+    appBar: AppBar(
+      title: Text(
+        'Daily report · ${widget.services.currentBrand.displayName}',
+        key: const Key('report-title'),
+      ),
+    ),
     body: Column(
       children: [
         _dayBar(context),

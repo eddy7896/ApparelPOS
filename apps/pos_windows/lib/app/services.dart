@@ -1,6 +1,9 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
+
 import '../data/auth_service.dart';
+import '../data/brand.dart';
 import '../data/backup/backup_models.dart';
 import '../data/recovery_key_repository.dart';
 import '../data/report_repository.dart';
@@ -8,6 +11,7 @@ import '../data/returns_repository.dart';
 import '../data/sales_repository.dart';
 import '../data/shift_repository.dart';
 import '../data/stock_repository.dart';
+import 'brand_controller.dart';
 import 'label_printer.dart';
 import 'pickers.dart';
 
@@ -22,6 +26,8 @@ class AppServices {
     required this.auth,
     required this.printer,
     this.recovery,
+    this.brand,
+    this.brandPreview = kDebugMode,
     this.backup,
     this.pickers = const FilePickers(),
     required this.fonts,
@@ -38,6 +44,16 @@ class AppServices {
 
   /// The recovery key (null in the browser preview, which has no encryption).
   final RecoveryKeyRepository? recovery;
+
+  /// The shop's current look (null in tests that do not care: the placeholder).
+  final BrandController? brand;
+
+  /// Shows the development-only button to try a look in Manager Mode. There is
+  /// no shop-facing settings screen until the owner's mobile app (Release 2).
+  final bool brandPreview;
+
+  /// The look to show now: the shop's, or the placeholder.
+  Brand get currentBrand => brand?.brand ?? Brand.placeholder;
 
   /// Backing up and restoring (null in the browser preview).
   final BackupController? backup;
