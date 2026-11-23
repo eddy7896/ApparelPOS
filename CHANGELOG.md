@@ -5,6 +5,7 @@ All notable changes to Apparel PoS. The format follows [Keep a Changelog](https:
 ## [Unreleased]
 
 ### Added
+- Daily report: each closed shift shows its break time.
 - Register: F4 puts a bill aside (Hold bill) so another customer can be served, with Resume or drop for each held bill; F6 starts a fresh search; Esc closes the bill-done popup or the name list. A held bill is kept only in memory.
 
 ### Changed

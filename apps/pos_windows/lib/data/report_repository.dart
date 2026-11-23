@@ -292,6 +292,11 @@ class ReportRepository {
     return [
       for (final r in rows)
         ShiftCloseReport(
+          breakTime: await shiftBreakTime(
+            _db,
+            r.read<String>('id'),
+            upTo: r.read<DateTime>('closed_at'),
+          ),
           shiftId: r.read<String>('id'),
           cashierName: r.read<String>('name'),
           openedAt: r.read<DateTime>('opened_at').toUtc(),

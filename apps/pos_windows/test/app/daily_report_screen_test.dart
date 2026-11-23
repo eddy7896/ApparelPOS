@@ -164,7 +164,18 @@ void main() {
     );
   }
 
-  Future<void> busyDay() async {
+  Future<void> busyDay({bool withBreaks = false}) async {
+    if (withBreaks) {
+      // 20 min and 5 min of break: 25 min in the shift
+      now = DateTime.utc(2026, 11, 20, 4, 30);
+      await shifts.pauseShift(role: Role.cashier, userId: cashierId);
+      now = DateTime.utc(2026, 11, 20, 4, 50);
+      await shifts.resumeShift(role: Role.cashier, userId: cashierId);
+      now = DateTime.utc(2026, 11, 20, 4, 55);
+      await shifts.pauseShift(role: Role.cashier, userId: cashierId);
+      now = DateTime.utc(2026, 11, 20, 5);
+      await shifts.resumeShift(role: Role.cashier, userId: cashierId);
+    }
     await sell(
       DateTime.utc(2026, 11, 20, 5),
       [BillLineInput(kurta[0]), BillLineInput(jeans[0])],
@@ -310,6 +321,18 @@ void main() {
         expect(card, lessThan(upi)); // largest first
       },
     );
+
+    testWidgets('each closed shift shows its break time', (tester) async {
+      await tester.runAsync(() => busyDay(withBreaks: true));
+      await openReport(tester);
+      expect(find.text('Breaks 25 min'), findsOneWidget);
+    });
+
+    testWidgets('a shift with no break says 0 min', (tester) async {
+      await tester.runAsync(busyDay);
+      await openReport(tester);
+      expect(find.text('Breaks 0 min'), findsOneWidget);
+    });
 
     testWidgets('refunds, best sellers and cash over and short are drawn', (
       tester,
