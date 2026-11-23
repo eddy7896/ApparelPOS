@@ -20,3 +20,9 @@ Purpose: scanning, pricing, payment and returns at the counter.
 - **Not in scope:** promos, loyalty, card/UPI terminal integration, WhatsApp receipts, hold/resume (decide later).
 - **Hardware (owner, 2026-11-17):** none yet. Receipts support both an ordinary A4 printer and a thermal receipt printer; a scanner is optional. Exact models are chosen later and then recorded here.
 - **Open decisions:** printer and scanner models (owner will tell us).
+
+## Finding an item by name, and several of one article (built 2026-11-22)
+Owner request, 2026-11-22. In the billing box, **digits** are still a barcode or credit note (scan, then Enter). **Letters** search the shop's styles by name (part of a name, any capitals) and list each size and color with its MRP and how many are in stock (the same cashier-safe lookup as Stock lookup, so no cost). Tapping a size and color puts the **lowest in-stock barcode not already on the bill** on the bill, through the normal scan checks (already sold, not found). Enter with one match picks it; with several it asks the cashier to choose.
+- Each garment keeps its own barcode and is sold once (E-SALE-1), so "several of one article" means several different garments of the same size and color. A **How many** box (1 to 50) in the list adds that many at once; if fewer are available it adds what there is and says so. Each bill line also has a **+** button that adds one more of the same size and color.
+- Assistant's choice, to be confirmed: when picked by name the system chooses which garment of that size and color (lowest barcode). If tags of one size and color carry different MRPs, the price follows the garment chosen, not the tag in the cashier's hand; scanning the tag is exact.
+- Rules: `pickGarments` and `clampGarmentCount` in `packages/core_domain/lib/src/pick_garments.dart`; the garment list comes from `StockLookupRepository` (up to 50 barcodes per size and color).
