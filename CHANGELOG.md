@@ -4,6 +4,9 @@ All notable changes to Apparel PoS. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
+### Changed
+- The app's text uses the Inter font, bundled with the app so every laptop looks the same; the bill and hangtag PDFs still use Noto Sans.
+
 Nothing yet. Planned next: the owner's runbook (P3-3b), GST setup (P3-4, off by default, rules unverified until the CA confirms), pay later (P2-4d), markdown at the register (P2-4e). Release 2 (sync, cloud, owner mobile app) is not started.
 
 ## [0.9.0] - 2026-11-22

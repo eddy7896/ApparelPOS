@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import '../data/brand.dart';
 import 'ui/ui_tokens.dart';
 
+/// The bundled text font (assets/fonts/inter, pubspec.yaml).
+const appFontFamily = 'Inter';
+
 Color _color(int rgb) => Color(0xFF000000 | rgb);
 
 /// The app theme built from the shop's one main color (Material 3). The palette
@@ -20,6 +23,7 @@ ThemeData brandTheme(Brand brand) {
   const hairline = BorderSide(color: UiColors.line);
   return ThemeData(
     colorScheme: scheme,
+    fontFamily: appFontFamily,
     useMaterial3: true,
     scaffoldBackgroundColor: UiColors.canvas,
     appBarTheme: const AppBarTheme(
