@@ -1,7 +1,7 @@
 # Owner's runbook
 Status: written 2026-11-23 (P3-3b) from what the app does today. **Nothing in it has been tried on a real Windows laptop yet.** A step marked (check) is one I could not confirm; do it once on the real laptop and fix this guide.
 
-Written for the shop owner, not for a programmer. Short steps, plain words. The version in mind is 0.9.0 (a pre-release).
+Written for the shop owner, not for a programmer. Short steps, plain words. The version in mind is 1.0.0 (released before the real-laptop checks in section 8; those are still yours to do).
 
 ## 1. The few things to remember
 - **Your recovery key and your owner password are written on paper and kept in two safe places.** Lose both the laptop and the recovery key and the shop's data is gone for good. Nobody can get it back, not even the programmer.
