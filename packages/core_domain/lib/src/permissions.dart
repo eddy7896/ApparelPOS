@@ -51,6 +51,13 @@ enum Permission {
   configureGst,
   manageUsers,
   backupAndRestore,
+
+  /// Leave a bill unpaid, to be paid later (owner, 2026-11-23).
+  allowPayLater,
+
+  /// Close what a customer owes without being paid: the one permission the
+  /// owner has and a manager does not (owner, 2026-11-23).
+  writeOffDebt,
 }
 
 const Set<Permission> _cashierPermissions = {
@@ -62,11 +69,17 @@ const Set<Permission> _cashierPermissions = {
   Permission.giveDiscount,
 };
 
-/// Manager and owner have every permission today (same person; owner decision).
-/// Written as a separate entry per role so they can diverge later.
+/// What only the owner may do. Every other back-office permission is shared
+/// with the manager (same person today; owner decision). The first difference
+/// is writing off what a customer owes (owner, 2026-11-23, ADR-0003 amended).
+const Set<Permission> _ownerOnlyPermissions = {Permission.writeOffDebt};
+
+/// Written as a separate entry per role so they can diverge further.
 final Map<Role, Set<Permission>> _matrix = {
   Role.cashier: _cashierPermissions,
-  Role.manager: Set.unmodifiable(Permission.values),
+  Role.manager: Set.unmodifiable(
+    Permission.values.toSet().difference(_ownerOnlyPermissions),
+  ),
   Role.owner: Set.unmodifiable(Permission.values),
 };
 

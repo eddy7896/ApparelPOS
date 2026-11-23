@@ -42,17 +42,34 @@ void main() {
         Permission.overrideDiscountLimit,
         Permission.approveLateReturn,
         Permission.backupAndRestore,
+        Permission.allowPayLater,
+        Permission.writeOffDebt,
       ]) {
         expect(can(Role.cashier, p), isFalse, reason: '$p');
       }
     });
 
-    test('manager and owner have every permission today', () {
-      for (final role in [Role.manager, Role.owner]) {
-        for (final p in Permission.values) {
-          expect(can(role, p), isTrue, reason: '$role $p');
-        }
+    test('the owner has every permission', () {
+      for (final p in Permission.values) {
+        expect(can(Role.owner, p), isTrue, reason: '$p');
       }
+    });
+
+    test('a manager has every permission except writing off a debt', () {
+      for (final p in Permission.values) {
+        expect(
+          can(Role.manager, p),
+          p != Permission.writeOffDebt,
+          reason: '$p',
+        );
+      }
+    });
+
+    test('a cashier cannot leave a bill unpaid or write off a debt', () {
+      expect(can(Role.cashier, Permission.allowPayLater), isFalse);
+      expect(can(Role.cashier, Permission.writeOffDebt), isFalse);
+      expect(can(Role.manager, Permission.allowPayLater), isTrue);
+      expect(can(Role.owner, Permission.allowPayLater), isTrue);
     });
 
     test('require throws PermissionDenied for a denied action', () {

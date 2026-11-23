@@ -12,6 +12,7 @@ export 'src/brand.dart';
 export 'src/category_rules.dart';
 export 'src/code128.dart';
 export 'src/credit_note.dart';
+export 'src/dues_rules.dart';
 export 'src/hangtag_artwork.dart';
 export 'src/label_layout.dart';
 export 'src/markdown_rules.dart';

@@ -33,6 +33,11 @@ final class DailyReport {
     required this.salesByHour,
     this.categoryValue = const {},
     this.categoryQuantity = const {},
+    this.duesReceived = const {},
+    this.owedNew = Money.zero,
+    this.returnOffsets = Money.zero,
+    this.writtenOff = Money.zero,
+    this.totalOwedNow = Money.zero,
   });
 
   final ShopDay day;
@@ -71,6 +76,19 @@ final class DailyReport {
   final List<int> billsByHour;
   final List<Money> salesByHour;
 
+  /// Pay later (udhaar): money customers paid against what they owe, by mode
+  /// (cash is after change); what bills left to be paid later; what returns
+  /// took off what is owed; what the owner wrote off; and everything owed now
+  /// (not just this day).
+  final Map<PaymentMode, Money> duesReceived;
+  final Money owedNew;
+  final Money returnOffsets;
+  final Money writtenOff;
+  final Money totalOwedNow;
+
+  Money get duesReceivedTotal =>
+      duesReceived.values.fold<Money>(Money.zero, (a, b) => a + b);
+
   /// Null unless the person may see margins.
   final Money? costOfGoods;
   final Money? profit;
@@ -80,10 +98,12 @@ final class DailyReport {
   Money get refundsPaidTotal =>
       refundsByMode.values.fold<Money>(Money.zero, (a, b) => a + b);
 
-  /// True when the daybook agrees with the bills and returns: money taken
-  /// equals sales, and refunds paid equal what returns came to.
+  /// True when the daybook agrees with the bills and returns: money taken plus
+  /// what bills left to be paid later equals sales, and refunds paid plus what
+  /// returns took off what is owed equal what returns came to.
   bool get matchesDaybook =>
-      moneyInTotal == salesTotal && refundsPaidTotal == refundsTotal;
+      moneyInTotal + owedNew == salesTotal &&
+      refundsPaidTotal + returnOffsets == refundsTotal;
 }
 
 class ReportRepository {
@@ -154,6 +174,7 @@ class ReportRepository {
 
     final moneyIn = <PaymentMode, Money>{};
     final refundsByMode = <RefundMode, Money>{};
+    final duesReceived = <PaymentMode, Money>{};
     final rows = await _db
         .customSelect(
           'SELECT kind, SUM(amount_paise) AS total FROM daybook '
@@ -178,8 +199,29 @@ class ReportRepository {
         if (mode != null) {
           refundsByMode[mode] = Money(-total);
         }
+      } else if (kind.startsWith('DUES_')) {
+        final mode = PaymentMode.fromDb(text);
+        if (mode != null) {
+          duesReceived[mode] = Money(total);
+        }
       }
     }
+    Future<int> ledgerSum(String kind) => _int(
+      'SELECT COALESCE(SUM(amount_paise), 0) AS v FROM dues_ledger '
+      "WHERE kind = '$kind' AND at >= ? AND at < ?",
+      day,
+    );
+    final owedNew = Money(await ledgerSum('OWED'));
+    final returnOffsets = Money(-await ledgerSum('RETURN_OFFSET'));
+    final writtenOff = Money(-await ledgerSum('WRITE_OFF'));
+    final totalOwedNow = Money(
+      (await _db
+              .customSelect(
+                'SELECT COALESCE(SUM(amount_paise), 0) AS v FROM dues_ledger',
+              )
+              .getSingle())
+          .read<int>('v'),
+    );
 
     final styleRows = await _db
         .customSelect(
@@ -270,6 +312,11 @@ class ReportRepository {
       categoryQuantity: {
         for (final r in catRows) r.read<String?>('c'): r.read<int>('q'),
       },
+      duesReceived: duesReceived,
+      owedNew: owedNew,
+      returnOffsets: returnOffsets,
+      writtenOff: writtenOff,
+      totalOwedNow: totalOwedNow,
     );
   }
 
