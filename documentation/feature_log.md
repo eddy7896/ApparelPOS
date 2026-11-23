@@ -1,5 +1,5 @@
 # Feature log
-Status: current to 2026-11-23 (release 0.9.0)
+Status: current to 2026-11-23 (release 1.0.0)
 
 Purpose: every feature, task by task, with the pull request that built it, so the owner can see what exists and when it arrived. The release notes are in [CHANGELOG.md](../CHANGELOG.md); the plan is [implementation_plan.md](implementation_plan.md).
 
