@@ -27,5 +27,56 @@ jobs:
           node-version: 22
       - run: npm run check:drift
       - run: npm run check:project-rules
+      - run: npm run check:data-location
+      - run: npm run check:changelog
       - run: npm run eval:hallucination
       - run: npm run test:checks
+  dart-flutter-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.5
+          cache: true
+      - run: flutter --version
+      - name: core_domain analyze and test
+        working-directory: packages/core_domain
+        run: |
+          dart pub get
+          dart analyze
+          dart test
+      - name: pos_windows generated files are up to date
+        working-directory: apps/pos_windows
+        run: |
+          flutter pub get
+          dart run build_runner build
+          git diff --exit-code --ignore-cr-at-eol -- lib
+      - name: pos_windows analyze and test
+        working-directory: apps/pos_windows
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+      - name: pos_windows build (Windows release)
+        working-directory: apps/pos_windows
+        run: flutter build windows --release
+      - name: Installer - build Setup.exe and the zip
+        shell: pwsh
+        run: ./tools/release/build-installer.ps1
+      - name: Installer - install, start the app, uninstall (smoke test)
+        shell: pwsh
+        run: ./tools/release/smoke-test-installer.ps1
+      - name: Installer - keep Setup.exe for download
+        uses: actions/upload-artifact@v4
+        with:
+          name: ApparelPoS-Setup
+          path: |
+            build/installer/ApparelPoS-Setup-*.exe
+            build/installer/ApparelPoS-*-windows-x64.zip
+            build/installer/SHA256SUMS.txt
+          retention-days: 14
+      - name: pos_windows build (web, development preview)
+        working-directory: apps/pos_windows
+        run: flutter build web

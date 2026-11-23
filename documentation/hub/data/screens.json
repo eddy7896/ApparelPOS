@@ -1,11 +1,203 @@
 {
-  "updatedAt": "2026-11-17",
+  "updatedAt": "2026-11-23",
   "items": [
-    { "id": "pos-lock", "app": "pos_windows", "title": "Lock screen", "note": "PIN or password to enter Sales or Manager Mode.", "status": "planned", "pr": "", "task": "P2-2", "images": {}, "device": "desktop" },
-    { "id": "pos-billing", "app": "pos_windows", "title": "Billing register", "note": "Scan items, take payment, finish the bill.", "status": "planned", "pr": "", "task": "P2-4", "images": {}, "device": "desktop" },
-    { "id": "pos-stock", "app": "pos_windows", "title": "Stock entry (Size x Color grid)", "note": "Owner enters a purchase and prints hangtags.", "status": "planned", "pr": "", "task": "P2-3", "images": {}, "device": "desktop" },
-    { "id": "pos-returns", "app": "pos_windows", "title": "Returns", "note": "Scan a sold garment, refund or issue a credit note.", "status": "planned", "pr": "", "task": "P2-5", "images": {}, "device": "desktop" },
-    { "id": "pos-shift", "app": "pos_windows", "title": "Blind shift close", "note": "Cashier counts cash without seeing the expected amount.", "status": "planned", "pr": "", "task": "P2-6", "images": {}, "device": "desktop" },
-    { "id": "pos-report", "app": "pos_windows", "title": "Daily report", "note": "Owner reads the day's sales and cash variance.", "status": "planned", "pr": "", "task": "P2-7", "images": {}, "device": "desktop" }
+    {
+      "id": "pos-setup",
+      "app": "pos_windows",
+      "title": "First-time setup",
+      "note": "Create the owner account on first launch. No screenshot yet: not seen on screen.",
+      "status": "built",
+      "pr": "#14",
+      "task": "P2-2",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-lock",
+      "app": "pos_windows",
+      "title": "Lock screen",
+      "note": "Pick a name, then type a PIN (cashier) or password. No screenshot yet: not seen on screen.",
+      "status": "built",
+      "pr": "#14",
+      "task": "P2-2",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-billing",
+      "app": "pos_windows",
+      "title": "Billing register",
+      "note": "Scan or type a barcode, lines left, total and payment right, manager approval for a big discount, saved bill with Print and New bill. No screenshot yet: not seen on screen.",
+      "status": "built",
+      "pr": "#19",
+      "task": "P2-4c",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-stock",
+      "app": "pos_windows",
+      "title": "Stock entry (Size x Color grid)",
+      "note": "Owner enters a purchase in a Size x Color grid and prints hangtags. No screenshot yet: not seen on screen.",
+      "status": "built",
+      "pr": "#16",
+      "task": "P2-3",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-returns",
+      "app": "pos_windows",
+      "title": "Returns",
+      "note": "Scan a sold garment, back in stock or damaged, refund by cash, UPI, card, credit note or exchange; manager approval after 7 days; credit note slip. No screenshot yet: not seen on screen.",
+      "status": "built",
+      "pr": "#22",
+      "task": "P2-5c",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-shift",
+      "app": "pos_windows",
+      "title": "Blind shift close",
+      "note": "Open a shift by counting the drawer, blind close (no expected amount shown), forced close of an earlier day, owner list of closes. No screenshot yet: not seen on screen.",
+      "status": "built",
+      "pr": "#25",
+      "task": "P2-6c",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-daily-report",
+      "app": "pos_windows",
+      "title": "Daily report",
+      "note": "One India day at a time: sales, money by mode, refunds, cash count per shift, top styles, profit. No screenshot yet: not seen on screen.",
+      "status": "built",
+      "pr": "#28",
+      "task": "P2-7c",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-backups",
+      "app": "pos_windows",
+      "title": "Backups and restore",
+      "note": "Choose the USB drive and a second folder, Back up now, status and failures, restore from a backup (owner's password and RESTORE typed), first-launch restore on a new computer. No screenshot yet: not seen on screen.",
+      "status": "built",
+      "pr": "#32",
+      "task": "P3-2c",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-recovery-key",
+      "app": "pos_windows",
+      "title": "Recovery key",
+      "note": "Shown once to the owner or manager after first sign-in; they type the last group back. No screenshot yet: not seen on screen.",
+      "status": "built",
+      "pr": "#29",
+      "task": "P3-1",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-home",
+      "app": "pos_windows",
+      "title": "Manager Mode home",
+      "note": "Left menu and a Today page for the manager and owner. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#39",
+      "task": "UX-4",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-shift-popup",
+      "app": "pos_windows",
+      "title": "Shift popup and break screen",
+      "note": "Count the drawer at sign-in, Pause for a break with a running clock. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#38",
+      "task": "UX-3",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-stock-lookup",
+      "app": "pos_windows",
+      "title": "Stock lookup",
+      "note": "Style, size, color, MRP and count; out of stock in red, running low in amber, category chips. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#41, #48, #52",
+      "task": "X-1",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-analytics",
+      "app": "pos_windows",
+      "title": "Analytics",
+      "note": "7 and 30 day charts, busy hours, sales by category, slow movers. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#43",
+      "task": "X-3",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-staff",
+      "app": "pos_windows",
+      "title": "Staff",
+      "note": "Add cashiers and managers, new PIN, rename, turn off and on; operator IDs. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#44",
+      "task": "X-4",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-settings",
+      "app": "pos_windows",
+      "title": "Settings: categories and GST",
+      "note": "Groups and categories for styles; the owner-only GST card (off by default, unverified). No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#52, #59",
+      "task": "X-11",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-markdowns",
+      "app": "pos_windows",
+      "title": "Markdowns",
+      "note": "Set a percent or amount off a whole style until a last day. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#56",
+      "task": "P2-4e",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-dues",
+      "app": "pos_windows",
+      "title": "Pay later (udhaar)",
+      "note": "Who owes what, take a payment, owner-only write-off. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#58",
+      "task": "P2-4d",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-register-new",
+      "app": "pos_windows",
+      "title": "Register after the redesign",
+      "note": "Payment card with Cash, UPI, Card, Split and Pay later; hold bill; name search; sale tags; GST line. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#37, #45, #50, #54, #58",
+      "task": "X-9",
+      "images": {},
+      "device": "desktop"
+    }
   ]
 }

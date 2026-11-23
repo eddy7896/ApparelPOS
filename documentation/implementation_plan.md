@@ -15,39 +15,64 @@ Purpose: phases and task IDs. Size S <= 1 day, M <= 3 days, L <= 1 week. Phases 
 ## P0 foundation
 | ID | Task | Size | Acceptance | Depends on | Status |
 |---|---|---|---|---|---|
-| P0-1 | Repo and workspace tooling | S | `AGENTS.md` commands run | Gate 5 | todo |
+| P0-1 | Repo and workspace tooling | S | `AGENTS.md` commands run | Gate 5 | done |
 | P0-2 | Documents and ADRs | M | Gate 3 passed | Gate 2 | done |
 | P0-3 | Drift check, evals, golden set | M | Gate 4 green | P0-2 | done |
-| P0-4 | Branching, CI, PR template | S | Gate 5 | P0-3 | todo |
-| P0-5 | Skeletons for `pos_windows`, `core_domain` that build and test | M | builds on Windows (unverified) | P0-4 | todo |
+| P0-4 | Branching, CI, PR template | S | Gate 5 | P0-3 | done |
+| P0-5 | Skeletons for `pos_windows`, `core_domain` that build and test | M | builds on Windows (unverified) | P0-4 | done |
 
 ## P1 core domain
 | ID | Task | Size | Acceptance | Depends on | Status |
 |---|---|---|---|---|---|
-| P1-1 | Money type and rounding in paise | S | E-MONEY-1 | P0-5 | todo |
-| P1-2 | Barcode encoder and serial ranges | M | E-SERIAL-1 | P1-1 | todo |
-| P1-3 | Pricing engine (MRP, markdown) | M | unit tests | P1-1 | todo |
-| P1-4 | Permission matrix | S | E-AUTHZ-2 | P0-5 | todo |
-| P1-5 | PDF hangtag builder | M | cell geometry tests | P1-2 | todo |
+| P1-1 | Money type and rounding in paise | S | E-MONEY-1 | P0-5 | done |
+| P1-2 | Barcode encoder and serial ranges | M | E-SERIAL-1 | P1-1 | done |
+| P1-3 | Pricing engine (MRP, markdown) | M | unit tests | P1-1 | done |
+| P1-4 | Permission matrix | S | E-AUTHZ-2 | P0-5 | done |
+| P1-5 | Hangtag geometry, rupee text and Code 128C encoder | M | cell geometry tests; oracle-checked encoder | P1-2 | done |
+| P1-5b | PDF drawing: embed a font with the rupee sign, draw bars and text | M | PDF opens and scans; font licence verified | P1-5 | done |
 
 ## P2 counter app
 | ID | Task | Size | Acceptance | Depends on | Status |
 |---|---|---|---|---|---|
-| P2-1 | Drift tables, WAL, migrations | M | E-SERIAL-1 | P1 | todo |
-| P2-2 | Lock screen, auth, idle lock | M | E-AUTH-1, 2 | P2-1 | todo |
-| P2-3 | Stock entry (GRN matrix) and labels | L | stock tests | P2-1, P1-5 | todo |
-| P2-4 | Billing register | L | E-SALE-1, E-OFFLINE-1 | P2-1 | todo |
-| P2-5 | Returns and credit notes | M | E-RETURN-1 | P2-4 | todo |
-| P2-6 | Blind shift close and daybook | M | E-SHIFT-1 | P2-4 | todo |
-| P2-7 | Owner reports (daily) | M | totals match daybook | P2-6 | todo |
+| P2-1 | Drift tables, WAL, migrations | M | E-SERIAL-1 | P1 | done |
+| P2-2 | Lock screen, auth, idle lock | M | E-AUTH-1, 2 | P2-1 | done |
+| P2-3a | Purchase rules, save in one transaction, size and color lists, label data | M | stock tests | P2-1, P1-5 | done |
+| P2-3b | Stock entry screen (Size x Color grid) and label printing | L | screen tests; a printed sheet scans | P2-3a, P2-2 | done |
+| P2-4a | Bill rules: bill number (year/counter/serial), payments (cash, UPI, card, split), change | S | unit tests; mutation-checked | P1 | done |
+| P2-4b | Sales tables, safe stock lookup for cashiers (no cost columns), save a bill in one transaction (E-SALE-1) | L | E-SALE-1, E-AUTHZ-1 | P2-4a | done |
+| P2-4c | Register screen: scan, bill lines, discount, pay, on-screen bill and PDF print | L | E-OFFLINE-1; screen tests | P2-4b | done |
+| P2-4e | Markdown set ahead of time on a style in Manager Mode (percent or amount, until a last day); the register applies it (owner changed this from "at the register", 2026-11-23) | M | rules, database, screen and register tests; schema v10 | P2-4c | done |
+| P2-4d | Pay later (udhaar): customer records, balance owed, later payments | L | rules, database v11, repositories, report and drawer, register choice, Pay later page, returns and report screens (built) | P2-4c | done |
+| P2-5a | Return rules: window, refund total, refund modes, credit note code, expiry and balance | S | unit tests; mutation-checked | P2-4a | done |
+| P2-5b | Return and credit note tables, save a return in one transaction (restock or damaged), use a credit note on a bill, exchange | L | E-RETURN-1, E-SALE-1, E-AUDIT-1 | P2-5a, P2-4c | done |
+| P2-5c | Returns screen, credit note slip print, credit note at the register | L | screen tests | P2-5b | done |
+| P2-6a | Shift rules: denominations, cash count, expected cash, variance | S | unit tests; mutation-checked | P2-4a | done |
+| P2-6b | Shifts, blind close (data layer), daybook table; sales and returns need an open shift and write daybook rows (schema v6); the open-shift screen | L | E-SHIFT-1, E-AUDIT-1 | P2-6a, P2-5b | done |
+| P2-6c | Screens: blind close, forced close of a stale shift at sign-in, owner's shift list with variance | L | screen tests; E-SHIFT-1 | P2-6b | done |
+| P2-7a | Report rules: India day bounds, net sales, cost of goods, profit, top styles | S | unit tests; mutation-checked | P2-6a | done |
+| P2-7b | Daily report data: sales, bills, garments, money by mode, refunds, discounts, returns, shift variances, profit, top 5 styles; totals match the daybook | M | totals match daybook; permission tests | P2-7a, P2-6b | done |
+| P2-7c | Daily report screen in Manager Mode: one day at a time with arrows | M | screen tests | P2-7b | doing |
 
 ## P3 go-live
 | ID | Task | Size | Acceptance | Depends on | Status |
 |---|---|---|---|---|---|
-| P3-1 | SQLCipher encryption spike and rollout | M | E-ENC-1 | P2-1 | todo |
-| P3-2 | Daily backup and restore test | M | E-BACKUP-1 | P3-1 | todo |
-| P3-3 | Installer and runbook | M | owner can install | P3-2 | todo |
-| P3-4 | GST toggle scaffold (settings, tax fields) | M | E-GST-1 | P2-4 | todo |
+| P3-1 | SQLCipher encryption spike and rollout | M | E-ENC-1 | P2-1 | done |
+| P3-2a | Backup rules: file names, keep the last 60, when a backup is due | S | unit tests; mutation-checked | P3-1 | done |
+| P3-2b | Backup service (snapshot, two places, check, prune) and restore to a clean machine | L | E-BACKUP-1 | P3-2a | done |
+| P3-2c | Backup screens: folder pickers, Back up now, status, restore; automatic backup at shift close and start-up | L | screen tests | P3-2b | done |
+| P3-3a | Windows installer (Inno Setup, per-user, unsigned), pinned data location, CI install smoke test | M | Setup builds, installs, starts and uninstalls on the CI runner | P3-2c | doing |
+| P3-3c | Release process: changelog, feature log, release workflow that attaches the installer to a GitHub Release | M | check:changelog passes; workflow files parse; first real run is the 0.9.0 tag | P3-3a | doing |
+| P3-3b | Runbook for the owner: install, first day, laptop fails, database corrupt, restore, SmartScreen warning, go-live checklist | M | owner can follow it (written 2026-11-23 as `documentation/owner_runbook.md`; the owner must follow it once on the real laptop and fix what is wrong) | P3-3a | written, unverified |
+| P3-4 | GST toggle scaffold (settings, tax fields); first step also tax on bills, the printed invoice, returns and the daily report (owner, 2026-11-23); GST reports (invoice and returns registers, tax by rate and day, CSV export) built in a second step; HSN, business-customer and purchase reports wait for data | L | E-GST-1; rules, database v12, screens, bill and report tests | P2-4 | done except the reports that need data |
+
+## UX redesign and branding (owner asked 2026-11-22; plan in `documentation/modules/branding_and_ux.md`)
+| ID | Task | Size | Acceptance | Depends on | Status |
+|---|---|---|---|---|---|
+| UX-1 | Branding as data: rules, settings with placeholder defaults, theme and name and logo from settings | M | tests; the Windows data folder does not change with the name | P3-3a | todo |
+| UX-2 | Register redesign (scan first, big total, quick cash, 48 dp targets, bill done as a popup) | L | screen tests; before and after screenshots | owner approves the mock-up | todo |
+| UX-3 | Sign-in with the shift opening at sign-in, Pause (break) with a break record, three top-bar buttons (Pause, Close shift, Lock), blind close for touch | L | screen tests; permission and migration tests | UX-2 | todo |
+| UX-4 | Manager navigation and home; reports and backups polish | L | screen tests | UX-2 | todo |
+| UX-5 | Returns and stock entry restyle | M | screen tests | UX-2 | todo |
 
 ## P4 release 2
 Sync engine, Firestore rules, manager mobile app, counter setup (count and per-counter settings), second counter support. Tasks are split when P3 closes.

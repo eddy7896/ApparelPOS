@@ -14,6 +14,16 @@ Audit is required for every write. Several counters will later write independent
 4. The audit row (who, when, what) and the outbox row are written in the same transaction as the change.
 5. Every schema change ships with a Drift migration and a migration test.
 6. `barcode_value` has a unique index.
+7. The barcode is 12 digits: YYMM + 3-digit lot + 4-digit serial + a check digit. The owner approved the check digit on 2026-11-18 because Code 128 Subset C encodes digit pairs and the original 11 digits is odd. The Luhn algorithm is the assistant's pick; please confirm.
+8. Counters are kept apart by lot number: each counter owns a range of lots (for example 000-499 and 500-999) and issues serials 0000-9999 inside its current lot, one lot at a time. Ranges must never overlap (owner chose this, 2026-11-18). Who assigns ranges, and how they are stored, is not yet decided (P2-1).
+9. Each garment (article) keeps its own MRP, saved when its tag is printed; changing a style's MRP later does not change garments already in stock (owner, 2026-11-20).
+10. Cost columns live only in `batch_lines` so cashier code can be kept away from one table (E-AUTHZ-1 is enforced when the cashier data layer is built, not by the schema alone).
+11. The local database uses write-ahead logging (WAL) and foreign keys, stores times as UTC, and refuses to open a database made by a newer app version.
+12. Release-1 tables: schema version 1 has `counters`, `products`, `variants`, `batches`, `batch_lines`, `articles`, `audit_log`, `outbox`; version 2 adds `users` (P2-2); version 3 settings and size and color lists (P2-3); version 4 `bills`, `bill_lines`, `bill_payments`, `bill_sequences` (P2-4b); version 5 `credit_notes`, `credit_note_uses`, `returns`, `return_lines` (P2-5b); version 6 `shifts`, `shift_closes`, `daybook` and a shift id on bills and returns (P2-6b). Each version has a migration test (`apps/pos_windows/test/data/migration_test.dart`; every test ends at the latest version, and migration steps stop at the target version). SQLite triggers refuse UPDATE and DELETE on bills, their lines and payments, credit notes and their uses, returns and their lines, shifts, shift closes and the daybook. The database is **not encrypted yet** (SQLCipher is P3-1, E-ENC-1 pending).
+
+13. Schema version 3 adds `app_settings` (shop name), `size_options` and `color_options` (the lists offered in the purchase grid; names are unique ignoring case). Sizes and colors on variants stay plain text.
+14. Counter 1 is created once with lots 000-499 at lot 0, serial 0; lots 500-999 stay free for a second counter (owner, 2026-11-20). Who assigns a second counter's range is still undecided.
+15. Saving a purchase writes the style, variants, batch, costs, every article, the counter's new position, one audit row and one outbox row in one transaction. Costs are not written to the audit or outbox details.
 
 ## Alternatives considered
 - **Auto-increment integer ids:** collide across counters.
@@ -24,8 +34,9 @@ Audit is required for every write. Several counters will later write independent
 ## Enforcement
 | Rule | Check |
 |---|---|
-| Audit written with the change | E-AUDIT-1 (planned) |
-| Barcode unique | E-SERIAL-1 (planned) |
+| Audit and outbox written with the change | E-AUDIT-1: `apps/pos_windows/test/data/app_database_test.dart` (`AuditedWriter`) |
+| Barcode unique, 12 digits; valid status; MRP and cost not negative; foreign keys on; WAL | same test file |
+| Barcode unique | E-SERIAL-1: `packages/core_domain/test/barcode_test.dart` (the database unique index is planned, P2-1) |
 
 ## Open decisions
 None.

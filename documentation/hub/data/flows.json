@@ -1,18 +1,29 @@
 {
-  "updatedAt": "2026-11-17",
-  "legend": [{ "label": "Built and tested", "class": "built" }, { "label": "Planned, nothing built yet", "class": "plan" }],
-  "diagrams": [
+  "updatedAt": "2026-11-23",
+  "legend": [
     {
-      "id": "connect", "title": "How the pieces connect",
-      "note": "Nothing is built yet. Dashed lines are release 2 (sync, cloud, mobile app). Not shown: backups.",
-      "kind": "mermaid",
-      "source": "flowchart LR\n  C1[\"pos_windows counter 1<br/>encrypted SQLite\"]:::plan -. \"sync, release 2\" .-> F[(\"Firestore + Auth\")]:::plan\n  C2[\"Future counter 2\"]:::plan -.-> F\n  M[\"manager_mobile\"]:::plan -.-> F\n  F -.->|commands| C1\n  classDef built fill:#dcf4e7,stroke:#0f7a4a\n  classDef plan fill:#eceef6,stroke:#9aa1bd,stroke-dasharray: 4 3"
+      "label": "Built and tested",
+      "class": "built"
     },
     {
-      "id": "sale", "title": "What happens in one sale",
-      "note": "Not shown: payment details and receipt printing.",
+      "label": "Planned, nothing built yet",
+      "class": "plan"
+    }
+  ],
+  "diagrams": [
+    {
+      "id": "connect",
+      "title": "How the pieces connect",
+      "note": "Built (all tests pass, nothing has run on a real Windows machine): the shared rules package (core_domain) and the counter app with its encrypted local database (SQLCipher, key in the Windows credential store, recovery key shown once): sign-in, stock entry and hangtags, billing register with pay later, markdowns and hold bill, returns and credit notes, shifts with the blind cash close, the daybook, the owner's daily report, analytics, staff, categories, GST (off by default, rules unverified), and backups to a USB drive and a folder with restore. The Windows installer builds in CI. Not built: GST reports, sync, cloud, mobile app. Dashed lines are release 2.",
       "kind": "mermaid",
-      "source": "flowchart LR\n  S[\"Scan barcode\"]:::plan --> R[\"core_domain prices the cart\"]:::plan --> T[\"One local transaction: sale, items, daybook, audit, outbox\"]:::plan --> A[\"Article marked SOLD\"]:::plan\n  classDef built fill:#dcf4e7,stroke:#0f7a4a\n  classDef plan fill:#eceef6,stroke:#9aa1bd,stroke-dasharray: 4 3"
+      "source": "flowchart LR\n  D[\"core_domain<br/>money, barcodes, pricing, permissions, hangtags, bills, returns, shifts, reports, pay later, GST rules, backup rules\"]:::built\n  C1[\"pos_windows counter 1<br/>sign-in, stock, register, returns, shifts, reports, backups\"]:::built --> D\n  C1 --> DB[(\"Encrypted local database<br/>SQLCipher, key in Windows credential store\")]:::built\n  DB --> BK[(\"Backups<br/>USB drive and a folder\")]:::built\n  I[\"Windows installer<br/>built in CI\"]:::plan -.-> C1\n  W[\"Browser preview<br/>development only\"]:::built --> D\n  C1 -. \"sync, release 2\" .-> F[(\"Firestore + Auth\")]:::plan\n  C2[\"Future counter 2\"]:::plan -.-> F\n  M[\"manager_mobile\"]:::plan -.-> F\n  F -.->|commands| C1\n  classDef built fill:#dcf4e7,stroke:#0f7a4a\n  classDef plan fill:#eceef6,stroke:#9aa1bd,stroke-dasharray: 4 3"
+    },
+    {
+      "id": "sale",
+      "title": "What happens in one sale",
+      "note": "Built: scanning, cashier-safe lookup, pricing with markdowns set ahead of time, the discount limit with manager approval, payment and change, pay later (a manager allows it; the unpaid part is kept per bill), GST when the owner switches it on, credit notes, the bill number, an open shift, and the one local transaction that marks garments SOLD and writes the bill, daybook rows, audit and outbox. The daybook feeds the shift close and the owner's daily report. Not built: receipts other than A4, GST reports.",
+      "kind": "mermaid",
+      "source": "flowchart LR\n  S[\"Scan barcode\"]:::built --> R[\"core_domain prices the bill, tax if GST is on\"]:::built --> T[\"One local transaction in an open shift: bill, lines, payments, bill number, daybook, audit, outbox\"]:::built --> A[\"Article marked SOLD\"]:::built --> P[\"Print A4 bill\"]:::built\n  T --> DB[\"Daybook rows\"]:::built --> X[\"Blind shift close and daily report\"]:::built\n  classDef built fill:#dcf4e7,stroke:#0f7a4a\n  classDef plan fill:#eceef6,stroke:#9aa1bd,stroke-dasharray: 4 3"
     }
   ]
 }

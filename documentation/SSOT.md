@@ -5,18 +5,19 @@ Purpose: the single home of product behaviour. Tags: [ASSUMED] owner has not con
 
 ## Accounts and roles
 1. Roles are CASHIER, MANAGER, OWNER. [ADR-0003]
-2. Cashiers sign in with a PIN of at least 6 digits; manager and owner use a password. Hashes use Argon2id. [ADR-0002]
+2. Cashiers pick their name and sign in with a PIN of exactly 6 digits; manager and owner use a password of at least 10 characters. Hashes use Argon2id. 5 wrong tries lock the account for 5 minutes (doubling to 1 hour); the screen locks after 5 idle minutes. [ADR-0002]
 3. The owner and manager are the same person today. [owner]
-4. A cashier discount above their limit needs the manager's password. [DESIGN]
+4. A cashier discount above their limit (10% of the item price by default) needs the manager's password. [ADR-0003]
 
 ## Stock and barcodes
-5. Every garment gets a unique serialized barcode: YYMM + 3-digit lot + 4-digit serial (11 digits, Code 128 Subset C). [DESIGN, from owner spec]
-6. A barcode is unique across the shop. Each counter has its own reserved range, one lot at a time. [ADR-0008]
+5. Every garment gets a unique serialized barcode: YYMM + 3-digit lot + 4-digit serial + 1 check digit (12 digits, Code 128 Subset C needs an even count; check digit approved by the owner 2026-11-18). [DESIGN, from owner spec]
+6a. A purchase is entered in a Size x Color grid where every cell has its own quantity, cost and MRP (owner, 2026-11-20). The whole purchase is saved in one transaction. The counter keeps filling its current lot; a purchase that does not fit goes whole into the next lot and is never split (assistant's rule, unconfirmed). Counter 1 owns lots 000-499.
+6. A barcode is unique across the shop. Each counter has its own reserved range of lot numbers (ranges never overlap), one lot at a time. [ADR-0008]
 7. Statuses: IN_STOCK, SOLD, RETURNED, DAMAGED.
 
 ## Billing
 8. A scanned barcode must be IN_STOCK; the same barcode cannot be added twice. [GUARD]
-9. Price comes from the variant's MRP, then markdowns. Promos are out of release 1. [DESIGN]
+9. Price comes from the variant's MRP, then a markdown, which is either a percentage or a fixed amount (owner picks each time, decided 2026-11-18). A marked-down garment takes no cashier discount. A markdown is set ahead of time by a manager or the owner on a whole style (Manager Mode, Markdowns page) and runs until a last day; the register applies it, nobody types it at the counter (owner, 2026-11-23). Each garment keeps the MRP printed on its own tag (owner, 2026-11-20). Promos are out of release 1. [DESIGN]
 10. Customer name and phone are optional at checkout. [ADR-0011]
 11. Payment types: cash, UPI (QR and manual reference), card (manual reference).
 
