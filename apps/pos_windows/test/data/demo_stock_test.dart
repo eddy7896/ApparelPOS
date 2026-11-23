@@ -85,7 +85,10 @@ void main() {
   });
 
   test('the release guard is in place: nothing is added unless kDebugMode', () {
-    final source = File('lib/data/demo_stock.dart').readAsStringSync();
+    // Windows checks files out with CRLF line endings; compare with LF.
+    final source = File('lib/data/demo_stock.dart')
+        .readAsStringSync()
+        .replaceAll('\r\n', '\n');
     expect(source, contains('if (!kDebugMode) {\n    return 0;'));
   });
 }
