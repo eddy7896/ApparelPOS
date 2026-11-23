@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-21",
+  "updatedAt": "2026-11-23",
   "items": [
     {
       "id": "pos-setup",
@@ -97,6 +97,105 @@
       "status": "built",
       "pr": "#29",
       "task": "P3-1",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-home",
+      "app": "pos_windows",
+      "title": "Manager Mode home",
+      "note": "Left menu and a Today page for the manager and owner. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#39",
+      "task": "UX-4",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-shift-popup",
+      "app": "pos_windows",
+      "title": "Shift popup and break screen",
+      "note": "Count the drawer at sign-in, Pause for a break with a running clock. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#38",
+      "task": "UX-3",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-stock-lookup",
+      "app": "pos_windows",
+      "title": "Stock lookup",
+      "note": "Style, size, color, MRP and count; out of stock in red, running low in amber, category chips. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#41, #48, #52",
+      "task": "X-1",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-analytics",
+      "app": "pos_windows",
+      "title": "Analytics",
+      "note": "7 and 30 day charts, busy hours, sales by category, slow movers. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#43",
+      "task": "X-3",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-staff",
+      "app": "pos_windows",
+      "title": "Staff",
+      "note": "Add cashiers and managers, new PIN, rename, turn off and on; operator IDs. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#44",
+      "task": "X-4",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-settings",
+      "app": "pos_windows",
+      "title": "Settings: categories and GST",
+      "note": "Groups and categories for styles; the owner-only GST card (off by default, unverified). No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#52, #59",
+      "task": "X-11",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-markdowns",
+      "app": "pos_windows",
+      "title": "Markdowns",
+      "note": "Set a percent or amount off a whole style until a last day. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#56",
+      "task": "P2-4e",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-dues",
+      "app": "pos_windows",
+      "title": "Pay later (udhaar)",
+      "note": "Who owes what, take a payment, owner-only write-off. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#58",
+      "task": "P2-4d",
+      "images": {},
+      "device": "desktop"
+    },
+    {
+      "id": "pos-register-new",
+      "app": "pos_windows",
+      "title": "Register after the redesign",
+      "note": "Payment card with Cash, UPI, Card, Split and Pay later; hold bill; name search; sale tags; GST line. No screenshot yet: not seen on screen.",
+      "status": "open-pr",
+      "pr": "#37, #45, #50, #54, #58",
+      "task": "X-9",
       "images": {},
       "device": "desktop"
     }

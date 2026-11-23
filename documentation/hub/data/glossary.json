@@ -36,6 +36,11 @@
       "group": "Apparel PoS"
     },
     {
+      "term": "Category",
+      "definition": "A group (Men) with categories inside it (Shirts) that a style is put in; used for lookup, search and analytics.",
+      "group": "Apparel PoS"
+    },
+    {
       "term": "Counter",
       "definition": "One billing station with its own local database and counter ID.",
       "group": "Apparel PoS"
@@ -56,8 +61,18 @@
       "group": "Apparel PoS"
     },
     {
+      "term": "GST (off by default)",
+      "definition": "Tax the owner can switch on in Settings. Every rule is unverified until the CA confirms it; only the owner may change it.",
+      "group": "Apparel PoS"
+    },
+    {
       "term": "Hangtag",
       "definition": "The sticker or tag on a garment showing shop name, style, size, color, MRP and the barcode",
+      "group": "Apparel PoS"
+    },
+    {
+      "term": "Hold bill",
+      "definition": "Putting a bill aside (F4) to serve someone else; kept in memory only.",
       "group": "Apparel PoS"
     },
     {
@@ -72,7 +87,7 @@
     },
     {
       "term": "Markdown",
-      "definition": "A price reduction below MRP set by the owner, as a percentage or a fixed amount. A marked-down garment takes no cashier discount",
+      "definition": "A price reduction below MRP set ahead of time by a manager or the owner on a whole style (percent or amount) until a last day; the register applies it and a marked-down garment takes no cashier discount.",
       "group": "Apparel PoS"
     },
     {
@@ -81,8 +96,18 @@
       "group": "Apparel PoS"
     },
     {
+      "term": "Operator ID",
+      "definition": "OP001, OP002...: printed on the bill as Served by instead of a staff name.",
+      "group": "Apparel PoS"
+    },
+    {
       "term": "Paise",
       "definition": "Integer money unit; 100 paise is 1 rupee.",
+      "group": "Apparel PoS"
+    },
+    {
+      "term": "Pay later (udhaar)",
+      "definition": "A bill left partly or wholly unpaid with a manager's or owner's approval; the customer's name and phone are required and later payments settle the oldest bill first.",
       "group": "Apparel PoS"
     },
     {
