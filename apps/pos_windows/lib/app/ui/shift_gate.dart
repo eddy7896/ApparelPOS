@@ -8,6 +8,7 @@ import '../../data/shift_repository.dart';
 import '../services.dart';
 import '../session_controller.dart';
 import 'cash_count_form.dart';
+import 'ui_tokens.dart';
 
 class ShiftGate extends StatefulWidget {
   const ShiftGate({
@@ -15,11 +16,15 @@ class ShiftGate extends StatefulWidget {
     required this.session,
     required this.services,
     required this.child,
+    this.onChanged,
   });
 
   final SessionController session;
   final AppServices services;
   final Widget child;
+
+  /// Called after the shift is loaded, opened or closed (the top bar reads it).
+  final VoidCallback? onChanged;
 
   @override
   State<ShiftGate> createState() => _ShiftGateState();
@@ -53,6 +58,7 @@ class _ShiftGateState extends State<ShiftGate> {
         _stale = stale;
         _loaded = true;
       });
+      widget.onChanged?.call();
     }
   }
 
@@ -96,6 +102,7 @@ class _ShiftGateState extends State<ShiftGate> {
       );
       if (mounted) {
         setState(() => _shift = s);
+        widget.onChanged?.call();
       }
     } on ShiftAlreadyOpen {
       await _load();
@@ -131,10 +138,10 @@ class _ShiftGateState extends State<ShiftGate> {
     // the drawer is counted.
     return Stack(
       children: [
-        const ModalBarrier(color: Colors.black54, dismissible: false),
+        const ModalBarrier(color: UiColors.scrim, dismissible: false),
         Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 460),
+            constraints: const BoxConstraints(maxWidth: 760),
             child: Material(
               key: const Key('shift-popup'),
               color: Theme.of(context).colorScheme.surface,
@@ -145,9 +152,14 @@ class _ShiftGateState extends State<ShiftGate> {
                 padding: const EdgeInsets.all(24),
                 children: [
                   Text(
-                    stale ? 'Close your earlier shift' : 'Open your shift',
+                    stale
+                        ? 'Close your earlier shift'
+                        : '${greetingFor(widget.session.now)}, ${widget.session.user!.name}',
                     key: Key(stale ? 'stale-shift-title' : 'open-shift-title'),
-                    style: Theme.of(context).textTheme.headlineSmall,
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -155,14 +167,28 @@ class _ShiftGateState extends State<ShiftGate> {
                         ? 'Your last shift was opened on an earlier day and was never closed. '
                               'Count all the cash in the drawer by notes and coins to close it. '
                               'Then you can open a new shift.'
-                        : 'Count the cash in the drawer by notes and coins, then open the shift.',
+                        : 'Your shift is opening. Count the cash in the drawer so the day starts right. Tap + for each note or coin.',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: UiColors.inkSoft,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   CashCountForm(
                     key: Key(stale ? 'stale-count' : 'open-count'),
-                    buttonLabel: stale ? 'Close earlier shift' : 'Open shift',
+                    buttonLabel: stale
+                        ? 'Close earlier shift'
+                        : 'Open my shift',
                     busy: _busy,
                     onSubmit: stale ? _closeStale : _open,
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.only(top: 10),
+                    child: Text(
+                      'An empty drawer is fine: leave everything at 0. You '
+                      'cannot bill until the shift is open.',
+                      style: TextStyle(fontSize: 13, color: UiColors.inkMuted),
+                    ),
                   ),
                   if (_message != null)
                     Padding(

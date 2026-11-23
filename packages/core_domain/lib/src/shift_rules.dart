@@ -142,3 +142,14 @@ String breakMinutesText(Duration d) {
   }
   return '${minutes ~/ 60} h ${minutes % 60} min';
 }
+
+/// A running break as a clock: "06:12", or "1:02:03" from an hour on. A clock
+/// that went backwards shows "00:00".
+String breakClockText(Duration d) {
+  final total = d.isNegative ? 0 : d.inSeconds;
+  String two(int n) => n.toString().padLeft(2, '0');
+  final h = total ~/ 3600;
+  final m = (total % 3600) ~/ 60;
+  final s = total % 60;
+  return h > 0 ? '$h:${two(m)}:${two(s)}' : '${two(m)}:${two(s)}';
+}

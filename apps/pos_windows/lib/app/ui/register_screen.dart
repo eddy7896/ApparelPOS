@@ -13,6 +13,7 @@ import 'approval_dialog.dart';
 import 'close_shift_screen.dart';
 import 'shift_gate.dart';
 import 'status_colors.dart';
+import 'ui_tokens.dart';
 import '../services.dart';
 import '../session_controller.dart';
 
@@ -568,74 +569,169 @@ class _RegisterPanelState extends State<RegisterPanel> {
     }
     // Bill done is a popup over the register (UX-2), not a new screen. The
     // register stays drawn behind but cannot be reached while it is open.
-    return Stack(
-      children: [
-        ExcludeFocus(
-          excluding: saved != null,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(flex: 3, child: _left(context)),
-                const SizedBox(width: 16),
-                SizedBox(width: 400, child: _right(context)),
-              ],
+    return CallbackShortcuts(
+      bindings: {
+        // F2 back to the scan box, F9 complete the bill (as the mock-up).
+        const SingleActivator(LogicalKeyboardKey.f2): () {
+          if (_saved == null) {
+            _barcodeFocus.requestFocus();
+          }
+        },
+        const SingleActivator(LogicalKeyboardKey.f9): () {
+          if (_saved == null && _canComplete) {
+            _complete();
+          }
+        },
+      },
+      child: Stack(
+        children: [
+          ExcludeFocus(
+            excluding: saved != null,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 3, child: _left(context)),
+                  const SizedBox(width: 16),
+                  SizedBox(width: 400, child: _right(context)),
+                ],
+              ),
             ),
           ),
-        ),
-        if (saved != null)
-          _SavedPopup(
-            bill: saved,
-            onPrint: _print,
-            onNew: _newBill,
-            message: _message,
-          ),
-      ],
+          if (saved != null)
+            _SavedPopup(
+              bill: saved,
+              onPrint: _print,
+              onNew: _newBill,
+              message: _message,
+            ),
+        ],
+      ),
     );
   }
 
   Widget _left(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    const none = InputBorder.none;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextField(
-          key: const Key('barcode-field'),
-          controller: _barcode,
-          focusNode: _barcodeFocus,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: _s.stockLookup == null
-                ? 'Scan or type a barcode or credit note, then Enter'
-                : 'Scan a tag, or type an item name',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.qr_code_scanner),
+        // The scan card: a 2 dp outline in the main color, always ready.
+        Container(
+          constraints: const BoxConstraints(minHeight: 72),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: scheme.primary, width: 2),
           ),
-          onChanged: _onType,
-          onSubmitted: _submit,
+          child: TextField(
+            key: const Key('barcode-field'),
+            controller: _barcode,
+            focusNode: _barcodeFocus,
+            autofocus: true,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            decoration: InputDecoration(
+              labelText: _s.stockLookup == null
+                  ? 'Scan or type a barcode or credit note, then Enter'
+                  : 'Scan a tag, or type an item name',
+              helperText:
+                  'The scanner is always ready. Press F2 to come back here.',
+              border: none,
+              enabledBorder: none,
+              focusedBorder: none,
+              filled: false,
+              icon: Icon(Icons.qr_code_scanner, color: scheme.primary),
+            ),
+            onChanged: _onType,
+            onSubmitted: _submit,
+          ),
         ),
         if (_nameResults != null) _nameResultsPanel(context),
         if (_message != null)
           Container(
             key: const Key('message-banner'),
             width: double.infinity,
-            margin: const EdgeInsets.only(top: 8),
-            padding: const EdgeInsets.all(10),
-            color: scheme.errorContainer,
+            margin: const EdgeInsets.only(top: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: UiColors.amberSoft,
+              borderRadius: BorderRadius.circular(10),
+            ),
             child: Text(
               _message!,
-              style: TextStyle(color: scheme.onErrorContainer),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: UiColors.amberInk,
+              ),
             ),
           ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 16),
         Expanded(
-          child: _lines.isEmpty
-              ? const Center(child: Text('No garments yet. Scan a tag.'))
-              : ListView(
-                  key: const Key('bill-lines'),
-                  children: [for (final l in _lines) _lineTile(l)],
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: UiColors.line),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 14,
+                  ),
+                  decoration: const BoxDecoration(
+                    border: Border(bottom: BorderSide(color: UiColors.line)),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _lines.isEmpty
+                              ? 'Garments'
+                              : '${_lines.length} ${_lines.length == 1 ? 'garment' : 'garments'}',
+                          key: const Key('lines-count'),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: UiColors.inkSoft,
+                          ),
+                        ),
+                      ),
+                      const Text(
+                        'Price',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: UiColors.inkSoft,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                Expanded(
+                  child: _lines.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'No garments yet. Scan the first tag.',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: UiColors.inkMuted,
+                            ),
+                          ),
+                        )
+                      : ListView(
+                          key: const Key('bill-lines'),
+                          children: [for (final l in _lines) _lineTile(l)],
+                        ),
+                ),
+              ],
+            ),
+          ),
         ),
         if (widget.showCloseShift)
           Align(
@@ -756,47 +852,112 @@ class _RegisterPanelState extends State<RegisterPanel> {
   Widget _lineTile(_Line l) {
     final priced = l.priced;
     final off = priced == null ? Money.zero : priced.discountAmount;
-    return Card(
+    final scheme = Theme.of(context).colorScheme;
+    final initial = l.item.productName.isEmpty
+        ? '?'
+        : String.fromCharCode(l.item.productName.runes.first).toUpperCase();
+    return Container(
       key: Key('line-${l.item.barcode}'),
-      child: ListTile(
-        title: Text('${l.item.productName}  ${l.item.size}  ${l.item.color}'),
-        subtitle: Text(
-          off.paise == 0
-              ? 'MRP ${formatRupees(l.item.mrp)}   ${l.item.barcode}'
-              : 'MRP ${formatRupees(l.item.mrp)}   off -${formatRupees(off)}   ${l.item.barcode}',
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              formatRupees(priced?.finalPrice ?? l.item.mrp),
-              key: Key('price-${l.item.barcode}'),
-              style: Theme.of(context).textTheme.titleMedium,
+      constraints: const BoxConstraints(minHeight: 76),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: UiColors.lineSoft)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: scheme.primaryContainer,
+              borderRadius: BorderRadius.circular(10),
             ),
-            const SizedBox(width: 8),
-            if (_s.stockLookup != null)
-              IconButton(
-                key: Key('more-${l.item.barcode}'),
-                tooltip: 'Add another ${l.item.size} ${l.item.color}',
-                icon: const Icon(Icons.add_circle_outline),
-                onPressed: () => _addAnother(l),
+            child: Text(
+              initial,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: scheme.onPrimaryContainer,
               ),
-            TextButton(
-              key: Key('discount-${l.item.barcode}'),
-              onPressed: () => _editDiscount(l),
-              child: const Text('Discount'),
             ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${l.item.productName}  ${l.item.size}  ${l.item.color}',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  off.paise == 0
+                      ? 'MRP ${formatRupees(l.item.mrp)}   ${l.item.barcode}'
+                      : 'MRP ${formatRupees(l.item.mrp)}   off -${formatRupees(off)}   ${l.item.barcode}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: UiColors.inkMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (_s.stockLookup != null)
             IconButton(
-              key: Key('remove-${l.item.barcode}'),
-              tooltip: 'Remove',
-              icon: const Icon(Icons.close),
-              onPressed: () => setState(() {
-                _lines.remove(l);
-                _message = null;
-              }),
+              key: Key('more-${l.item.barcode}'),
+              tooltip: 'Add another ${l.item.size} ${l.item.color}',
+              icon: const Icon(Icons.add_circle_outline),
+              onPressed: () => _addAnother(l),
             ),
-          ],
-        ),
+          OutlinedButton(
+            key: Key('discount-${l.item.barcode}'),
+            style: OutlinedButton.styleFrom(
+              backgroundColor: off.paise == 0
+                  ? Colors.white
+                  : scheme.primaryContainer,
+            ),
+            onPressed: () => _editDiscount(l),
+            child: const Text('Discount'),
+          ),
+          const SizedBox(width: 12),
+          ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 110),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (off.paise != 0)
+                  Text(
+                    formatRupees(l.item.mrp),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: UiColors.inkMuted,
+                      decoration: TextDecoration.lineThrough,
+                    ),
+                  ),
+                Text(
+                  formatRupees(priced?.finalPrice ?? l.item.mrp),
+                  key: Key('price-${l.item.barcode}'),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            key: Key('remove-${l.item.barcode}'),
+            tooltip: 'Remove',
+            icon: const Icon(Icons.close),
+            onPressed: () => setState(() {
+              _lines.remove(l);
+              _message = null;
+            }),
+          ),
+        ],
       ),
     );
   }
@@ -834,7 +995,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Total',
+                  'Total to pay',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onPrimary,
                   ),
@@ -845,6 +1006,15 @@ class _RegisterPanelState extends State<RegisterPanel> {
                   style: Theme.of(context).textTheme.displayMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onPrimary,
                     fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Text(
+                  _lines.isEmpty
+                      ? 'Scan the first tag to begin.'
+                      : '${_lines.length} ${_lines.length == 1 ? 'garment' : 'garments'}',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),
               ],
@@ -871,7 +1041,16 @@ class _RegisterPanelState extends State<RegisterPanel> {
                 ],
               ),
             ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+          const Text(
+            'How is the customer paying?',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: UiColors.inkSoft,
+            ),
+          ),
+          const SizedBox(height: 8),
           _amountField('cash-field', 'Cash received', _cash),
           _amountField('upi-field', 'UPI', _upi),
           _amountField('card-field', 'Card', _card),
@@ -909,27 +1088,53 @@ class _RegisterPanelState extends State<RegisterPanel> {
             ],
           ),
           if (problem != null)
-            Text(
-              problem,
-              key: const Key('payment-problem'),
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(
+                problem,
+                key: const Key('payment-problem'),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
             )
           else if (_lines.isNotEmpty &&
               settlement != null &&
               settlement.change.paise > 0)
-            Text(
-              'Change to give: ${formatRupees(settlement.change)}',
-              key: const Key('change-text'),
-              style: Theme.of(context).textTheme.headlineSmall
-                  ?.copyWith(color: successColor, fontWeight: FontWeight.w800),
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(top: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: UiColors.successSoft,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                'Change to give: ${formatRupees(settlement.change)}',
+                key: const Key('change-text'),
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: UiColors.successInk,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             )
           else if (_lines.isNotEmpty &&
               settlement != null &&
               !settlement.isPaid)
-            Text(
-              'Still due: ${formatRupees(settlement.due)}',
-              key: const Key('due-text'),
-              style: Theme.of(context).textTheme.titleMedium,
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(top: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: UiColors.amberSoft,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                'Still due: ${formatRupees(settlement.due)}',
+                key: const Key('due-text'),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: UiColors.amberInk,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
           const SizedBox(height: 12),
           TextField(
@@ -953,11 +1158,69 @@ class _RegisterPanelState extends State<RegisterPanel> {
           const SizedBox(height: 16),
           FilledButton(
             key: const Key('complete-bill'),
-            onPressed: _canComplete ? _complete : null,
-            child: const Padding(
-              padding: EdgeInsets.all(12),
-              child: Text('Complete bill'),
+            style: FilledButton.styleFrom(
+              backgroundColor: UiColors.success,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: UiColors.lineStrong,
+              minimumSize: const Size.fromHeight(68),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+              ),
             ),
+            onPressed: _canComplete ? _complete : null,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('Complete bill'),
+                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.white54),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text(
+                    'F9',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Wrap(
+            spacing: 16,
+            children: [
+              Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'F2',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    TextSpan(text: ' Scan'),
+                  ],
+                ),
+              ),
+              Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'F9',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    TextSpan(text: ' Complete bill'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),

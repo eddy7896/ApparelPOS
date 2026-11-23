@@ -208,6 +208,27 @@ void main() {
     });
   });
 
+  group('the close screen look', () {
+    testWidgets(
+      'counts beside a total panel, says the count is blind, and has the green close button',
+      (tester) async {
+        await open(tester);
+        await tester.tap(find.byKey(const Key('close-shift-button')));
+        await slide(tester);
+        expect(find.text('Close your shift'), findsOneWidget);
+        expect(find.text('You have counted'), findsOneWidget);
+        expect(find.textContaining('This count is blind.'), findsOneWidget);
+        expect(find.text('Close shift and lock'), findsOneWidget);
+        await tester.tap(find.byKey(const Key('inc-note500')));
+        await tester.pump();
+        expect(
+          tester.widget<Text>(find.byKey(const Key('count-total'))).data,
+          '₹500.00',
+        );
+      },
+    );
+  });
+
   group('closing blind', () {
     testWidgets('Cancel in the confirmation keeps the shift open', (
       tester,
@@ -273,10 +294,8 @@ void main() {
           expect(shown, isNot(contains('2,499.00')));
           expect(shown, isNot(contains('99.00')));
         }
-        expect(
-          onCount,
-          contains('Total counted: ₹2,400.00'),
-        ); // only what was typed
+        expect(onCount, contains('₹2,400.00')); // only what was typed
+        expect(onCount, contains('You have counted'));
       },
     );
     testWidgets('after the close, signing in again asks for a new shift', (

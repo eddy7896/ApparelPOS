@@ -37,6 +37,8 @@ class SessionController extends ChangeNotifier {
   SignedIn? _user;
   List<SignInChoice> _choices = const [];
   String? _pausedName;
+  String? _pausedUserId;
+  DateTime? _pausedSince;
   DateTime _lastActivity = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
 
   SessionStage get stage => _stage;
@@ -50,6 +52,10 @@ class SessionController extends ChangeNotifier {
   /// The name of the cashier who paused for a break, shown on the lock screen
   /// until someone signs in; null when the counter is simply locked.
   String? get pausedName => _pausedName;
+
+  /// Who is on a break and since when (the break screen shows a running clock).
+  String? get pausedUserId => _pausedUserId;
+  DateTime? get pausedSince => _pausedSince;
 
   /// Who appears on the lock screen.
   List<SignInChoice> get choices => _choices;
@@ -116,6 +122,8 @@ class SessionController extends ChangeNotifier {
     if (result is SignedIn) {
       _user = result;
       _pausedName = null;
+      _pausedUserId = null;
+      _pausedSince = null;
       _stage = SessionStage.signedIn;
       _lastActivity = _now();
       notifyListeners();
@@ -142,12 +150,15 @@ class SessionController extends ChangeNotifier {
 
   /// The Pause button: locks the counter and remembers whose break it is. The
   /// break itself is recorded by the shift repository before this is called.
-  void lockForBreak(String name) {
+  void lockForBreak(String name, {String? userId, DateTime? since}) {
     if (_stage != SessionStage.signedIn) {
       return;
     }
+    final uid = userId ?? _user?.userId;
     lock();
     _pausedName = name;
+    _pausedUserId = uid;
+    _pausedSince = since ?? _now();
     notifyListeners();
   }
 

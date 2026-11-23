@@ -195,6 +195,33 @@ void main() {
     });
   });
 
+  group('the shift summary for the top bar', () {
+    test('no shift is null; an open shift gives when it started and its breaks so far', () async {
+      expect(await shifts.currentShiftSummary('cashier-1'), isNull);
+      await open('cashier-1');
+      final started = now;
+      var s = (await shifts.currentShiftSummary('cashier-1'))!;
+      expect(s.openedAt, started);
+      expect(s.breaks, Duration.zero);
+      await shifts.pauseShift(role: Role.cashier, userId: 'cashier-1');
+      now = now.add(const Duration(minutes: 12));
+      await shifts.resumeShift(role: Role.cashier, userId: 'cashier-1');
+      now = now.add(const Duration(hours: 1));
+      s = (await shifts.currentShiftSummary('cashier-1'))!;
+      expect(s.breaks, const Duration(minutes: 12));
+    });
+
+    test('a break still going counts up to now', () async {
+      await open('cashier-1');
+      await shifts.pauseShift(role: Role.cashier, userId: 'cashier-1');
+      now = now.add(const Duration(minutes: 5));
+      expect(
+        (await shifts.currentShiftSummary('cashier-1'))!.breaks,
+        const Duration(minutes: 5),
+      );
+    });
+  });
+
   group('closing a shift on a break', () {
     test('ends the break first, so nothing is left going', () async {
       await open('cashier-1');

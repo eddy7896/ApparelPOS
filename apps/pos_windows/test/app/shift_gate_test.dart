@@ -118,12 +118,59 @@ void main() {
 
   testWidgets('the total follows what is typed', (tester) async {
     await open(tester);
-    expect(textOf(tester, 'count-total'), 'Total counted: ₹0.00');
+    expect(textOf(tester, 'count-total'), '₹0.00');
     await count(tester, 'note500', '2');
     await count(tester, 'coin10', '3');
     await count(tester, 'note10', '1');
-    expect(textOf(tester, 'count-total'), 'Total counted: ₹1,040.00');
+    expect(textOf(tester, 'count-total'), '₹1,040.00');
   });
+
+  testWidgets('plus and minus change the count by one and stop at zero', (
+    tester,
+  ) async {
+    await open(tester);
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(find.byKey(const Key('inc-note500')));
+    }
+    await tester.pump();
+    expect(textOf(tester, 'count-total'), '₹1,500.00');
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('count-note500')))
+          .controller!
+          .text,
+      '3',
+    );
+    await tester.tap(find.byKey(const Key('dec-note500')));
+    await tester.pump();
+    expect(textOf(tester, 'count-total'), '₹1,000.00');
+    for (var i = 0; i < 5; i++) {
+      await tester.tap(find.byKey(const Key('dec-note500')));
+    }
+    await tester.pump();
+    expect(textOf(tester, 'count-total'), '₹0.00');
+  });
+
+  testWidgets('plus works together with typing', (tester) async {
+    await open(tester);
+    await count(tester, 'coin10', '4');
+    await tester.tap(find.byKey(const Key('inc-coin10')));
+    await tester.pump();
+    expect(textOf(tester, 'count-total'), '₹50.00');
+  });
+
+  testWidgets(
+    'the popup greets the cashier by name and says an empty drawer is fine',
+    (tester) async {
+      await open(tester);
+      expect(
+        textOf(tester, 'open-shift-title'),
+        matches(RegExp(r'^Good (morning|afternoon|evening), Asha$')),
+      );
+      expect(find.textContaining('An empty drawer is fine'), findsOneWidget);
+      expect(find.text('Open my shift'), findsOneWidget);
+    },
+  );
 
   testWidgets('an absurd count disables the button', (tester) async {
     await open(tester);

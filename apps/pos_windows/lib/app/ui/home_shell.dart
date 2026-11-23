@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../services.dart';
 import '../session_controller.dart';
 import 'close_shift_screen.dart';
+import 'ui_tokens.dart';
 import 'manager_home.dart';
 import 'recovery_key_screen.dart';
 import 'register_screen.dart';
@@ -30,8 +31,37 @@ class _HomeShellState extends State<HomeShell> {
   SessionController get session => widget.session;
   AppServices get services => widget.services;
 
+  /// When this cashier's shift started and the breaks so far (the green pill).
+  ({DateTime openedAt, Duration breaks})? _summary;
+
+  @override
+  void initState() {
+    super.initState();
+    _billInProgress.addListener(_refreshShift);
+  }
+
+  /// Reloads the shift pill; also after each bill, so a break shows up.
+  Future<void> _refreshShift() async {
+    final user = session.user;
+    if (user == null || user.role != Role.cashier) {
+      return;
+    }
+    final s = await services.shifts.currentShiftSummary(user.userId);
+    if (mounted) {
+      setState(() => _summary = s);
+    }
+  }
+
+  String _shiftPill(({DateTime openedAt, Duration breaks}) s) {
+    final local = s.openedAt.toUtc().add(shopUtcOffset);
+    String two(int n) => n.toString().padLeft(2, '0');
+    return 'Shift open since ${two(local.hour)}:${two(local.minute)} · '
+        'breaks ${breakMinutesText(s.breaks)}';
+  }
+
   @override
   void dispose() {
+    _billInProgress.removeListener(_refreshShift);
     _billInProgress.dispose();
     super.dispose();
   }
@@ -40,7 +70,7 @@ class _HomeShellState extends State<HomeShell> {
   Future<void> _pause() async {
     final user = session.user!;
     await services.shifts.pauseShift(role: user.role, userId: user.userId);
-    session.lockForBreak(user.name);
+    session.lockForBreak(user.name, userId: user.userId);
   }
 
   /// Sales Mode top bar: Pause, Close shift, Lock (owner, 2026-11-22).
@@ -131,6 +161,32 @@ class _HomeShellState extends State<HomeShell> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            if (sales && _summary != null) ...[
+              const SizedBox(width: 12),
+              Flexible(
+                flex: 2,
+                child: Container(
+                  key: const Key('shift-pill'),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: UiColors.successSoft,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    _shiftPill(_summary!),
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: UiColors.successInk,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
         actions: [
@@ -158,7 +214,16 @@ class _HomeShellState extends State<HomeShell> {
               icon: const Icon(Icons.assignment_return),
               label: const Text('Returns'),
             ),
-          Center(child: Text('Signed in: ${user.name}')),
+          Center(
+            child: Text(
+              '${user.name} (${user.role == Role.cashier
+                  ? 'Cashier'
+                  : user.role == Role.manager
+                  ? 'Manager'
+                  : 'Owner'})',
+              style: const TextStyle(fontSize: 14, color: UiColors.inkSoft),
+            ),
+          ),
           const SizedBox(width: 12),
           if (sales) ..._shiftButtons(context),
           _barButton(
@@ -175,6 +240,7 @@ class _HomeShellState extends State<HomeShell> {
           ? ShiftGate(
               session: session,
               services: services,
+              onChanged: _refreshShift,
               child: RegisterPanel(
                 session: session,
                 services: services,

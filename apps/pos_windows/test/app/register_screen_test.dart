@@ -12,6 +12,7 @@ import 'package:pos_windows/app/app.dart';
 import 'package:pos_windows/app/label_printer.dart';
 import 'package:pos_windows/app/services.dart';
 import 'package:pos_windows/app/session_controller.dart';
+import 'package:pos_windows/app/ui/ui_tokens.dart';
 import 'package:pos_windows/data/app_database.dart';
 import 'package:pos_windows/data/auth_service.dart';
 import 'package:pos_windows/data/report_repository.dart';
@@ -261,6 +262,101 @@ void main() {
     testWidgets('an empty bill cannot be completed', (tester) async {
       await open(tester);
       expect(canComplete(tester), isFalse);
+    });
+  });
+
+  group('the look (mock-up board 3)', () {
+    testWidgets('the garments card counts the garments', (tester) async {
+      await open(tester);
+      expect(textOf(tester, 'lines-count'), 'Garments');
+      await scan(tester, barcodes[0]);
+      expect(textOf(tester, 'lines-count'), '1 garment');
+      await scan(tester, barcodes[1]);
+      expect(textOf(tester, 'lines-count'), '2 garments');
+    });
+
+    testWidgets('the total panel says what is to pay and how many garments', (
+      tester,
+    ) async {
+      await open(tester);
+      expect(find.text('Total to pay'), findsOneWidget);
+      expect(find.text('Scan the first tag to begin.'), findsOneWidget);
+      await scan(tester, barcodes[0]);
+      expect(find.text('1 garment'), findsWidgets);
+    });
+
+    testWidgets(
+      'F9 completes the bill when it can be completed, and does nothing otherwise',
+      (tester) async {
+        await open(tester);
+        await scan(tester, barcodes[0]);
+        await tester.sendKeyEvent(LogicalKeyboardKey.f9); // nothing paid yet
+        await pump(tester);
+        expect(find.byKey(const Key('saved-title')), findsNothing);
+        await tester.tap(find.byKey(const Key('exact-cash')));
+        await tester.pump();
+        await tester.sendKeyEvent(LogicalKeyboardKey.f9);
+        await pump(tester);
+        expect(find.byKey(const Key('saved-title')), findsOneWidget);
+      },
+    );
+
+    testWidgets('F2 brings the cursor back to the scan box', (tester) async {
+      await open(tester);
+      await tester.tap(find.byKey(const Key('customer-name')));
+      await tester.pump();
+      bool scanHasFocus() => tester
+          .widget<TextField>(find.byKey(const Key('barcode-field')))
+          .focusNode!
+          .hasFocus;
+      expect(scanHasFocus(), isFalse);
+      await tester.sendKeyEvent(LogicalKeyboardKey.f2);
+      await tester.pump();
+      expect(scanHasFocus(), isTrue);
+    });
+
+    testWidgets('a discounted line shows the struck-through MRP', (
+      tester,
+    ) async {
+      await open(tester);
+      await scan(tester, barcodes[0]);
+      await tester.tap(find.byKey(Key('discount-${barcodes[0]}')));
+      await tester.pump();
+      await tester.enterText(find.byKey(const Key('discount-input')), '10%');
+      await tester.tap(find.byKey(const Key('discount-apply')));
+      await pump(tester);
+      expect(textOf(tester, 'price-${barcodes[0]}'), '₹449.10');
+      final struck = tester
+          .widgetList<Text>(find.text('₹499.00'))
+          .where((t) => t.style?.decoration == TextDecoration.lineThrough);
+      expect(struck.length, 1);
+    });
+
+    testWidgets('Still due is an amber notice and Change a green one', (
+      tester,
+    ) async {
+      await open(tester);
+      await scan(tester, barcodes[0]);
+      await type(tester, 'cash-field', '300');
+      final due = tester.widget<Container>(
+        find
+            .ancestor(
+              of: find.byKey(const Key('due-text')),
+              matching: find.byType(Container),
+            )
+            .first,
+      );
+      expect((due.decoration as BoxDecoration).color, UiColors.amberSoft);
+      await type(tester, 'cash-field', '500');
+      final change = tester.widget<Container>(
+        find
+            .ancestor(
+              of: find.byKey(const Key('change-text')),
+              matching: find.byType(Container),
+            )
+            .first,
+      );
+      expect((change.decoration as BoxDecoration).color, UiColors.successSoft);
     });
   });
 

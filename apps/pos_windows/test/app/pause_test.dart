@@ -151,6 +151,42 @@ void main() {
     expect(find.byKey(const Key('barcode-field')), findsNothing);
   });
 
+  testWidgets(
+    'a green pill in the top bar says when the shift started and the breaks so far',
+    (tester) async {
+      await tester.runAsync(() async {
+        await openShift(ashaId);
+        await shifts.pauseShift(role: Role.cashier, userId: ashaId);
+        clock = clock.add(const Duration(minutes: 12));
+        await shifts.resumeShift(role: Role.cashier, userId: ashaId);
+      });
+      await start(tester, signInAs: ashaId, pin: '482916');
+      final text = tester
+          .widget<Text>(
+            find.descendant(
+              of: find.byKey(const Key('shift-pill')),
+              matching: find.byType(Text),
+            ),
+          )
+          .data!;
+      expect(
+        text,
+        matches(RegExp(r'^Shift open since \d\d:\d\d · breaks 12 min$')),
+      );
+    },
+  );
+
+  testWidgets('the pill appears as soon as the drawer is counted', (
+    tester,
+  ) async {
+    await start(tester, signInAs: ashaId, pin: '482916');
+    expect(find.byKey(const Key('shift-pill')), findsNothing);
+    await tester.tap(find.byKey(const Key('count-submit')));
+    await pump(tester);
+    expect(find.byKey(const Key('shift-pill')), findsOneWidget);
+    expect(find.textContaining('Asha (Cashier)'), findsOneWidget);
+  });
+
   testWidgets('the top bar has Pause, Close shift and Lock', (tester) async {
     await tester.runAsync(() => openShift(ashaId));
     await start(tester, signInAs: ashaId, pin: '482916');
@@ -204,6 +240,63 @@ void main() {
         () => count('SELECT COUNT(*) AS c FROM shift_break_ends'),
       ),
       0,
+    );
+  });
+
+  testWidgets(
+    'the break screen: amber, who is on a break, a running clock and Resume my shift',
+    (tester) async {
+      await tester.runAsync(() => openShift(ashaId));
+      await start(tester, signInAs: ashaId, pin: '482916');
+      await tester.tap(find.byKey(const Key('pause-button')));
+      await pump(tester);
+      expect(find.byKey(const Key('on-break-chip')), findsOneWidget);
+      expect(find.text('Take your time, Asha'), findsOneWidget);
+      expect(find.textContaining('Break started at'), findsOneWidget);
+      expect(
+        tester.widget<Text>(find.byKey(const Key('break-clock'))).data,
+        matches(RegExp(r'^\d\d:\d\d$')),
+      );
+      expect(find.text('Resume my shift'), findsOneWidget);
+      expect(find.text('Type your PIN to come back'), findsOneWidget);
+      // only the cashier who paused is offered, not the other people
+      expect(find.byKey(Key('user-$raviId')), findsNothing);
+    },
+  );
+
+  testWidgets('on the break screen Someone else shows the ordinary list', (
+    tester,
+  ) async {
+    await tester.runAsync(() => openShift(ashaId));
+    await start(tester, signInAs: ashaId, pin: '482916');
+    await tester.tap(find.byKey(const Key('pause-button')));
+    await pump(tester);
+    await tester.tap(find.byKey(const Key('someone-else')));
+    await tester.pump();
+    expect(find.byKey(Key('user-$raviId')), findsOneWidget);
+    expect(find.byKey(Key('user-$ashaId')), findsOneWidget);
+    expect(find.byKey(const Key('on-break-banner')), findsOneWidget);
+  });
+
+  testWidgets('typing the cashier PIN on the break screen resumes the shift', (
+    tester,
+  ) async {
+    await tester.runAsync(() => openShift(ashaId));
+    await start(tester, signInAs: ashaId, pin: '482916');
+    await tester.tap(find.byKey(const Key('pause-button')));
+    await pump(tester);
+    for (final d in '482916'.split('')) {
+      await tester.tap(find.byKey(Key('key-$d')));
+    }
+    await tester.tap(find.byKey(const Key('signin-submit')));
+    await pump(tester);
+    await pump(tester);
+    expect(find.byKey(const Key('barcode-field')), findsOneWidget);
+    expect(
+      await tester.runAsync(
+        () => count('SELECT COUNT(*) AS c FROM shift_break_ends'),
+      ),
+      1,
     );
   });
 

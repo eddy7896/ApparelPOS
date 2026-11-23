@@ -52,4 +52,24 @@ void main() {
       expect(breakMinutesText(const Duration(minutes: 135)), '2 h 15 min');
     });
   });
+
+  group('breakClockText', () {
+    test('minutes and seconds under an hour', () {
+      expect(breakClockText(const Duration(minutes: 6, seconds: 12)), '06:12');
+      expect(breakClockText(Duration.zero), '00:00');
+      expect(breakClockText(const Duration(seconds: 59)), '00:59');
+    });
+
+    test('hours from one hour on', () {
+      expect(
+        breakClockText(const Duration(hours: 1, minutes: 2, seconds: 3)),
+        '1:02:03',
+      );
+      expect(breakClockText(const Duration(minutes: 60)), '1:00:00');
+    });
+
+    test('a negative duration (a clock that went back) shows zero', () {
+      expect(breakClockText(const Duration(seconds: -5)), '00:00');
+    });
+  });
 }
