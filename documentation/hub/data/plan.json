@@ -206,8 +206,8 @@
       "phaseName": "Counter app (release 1)",
       "milestone": "",
       "order": 23.25,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#56"
     },
     {
@@ -217,8 +217,8 @@
       "phaseName": "Counter app (release 1)",
       "milestone": "",
       "order": 23.3,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#57, #58"
     },
     {
@@ -388,7 +388,7 @@
     },
     {
       "id": "P3-3b",
-      "name": "Runbook for the owner (written, not yet followed on a real laptop)",
+      "name": "Runbook for the owner (written; the owner must follow it once on a real laptop)",
       "phase": 3,
       "phaseName": "Go-live hardening",
       "milestone": "",
@@ -399,7 +399,7 @@
     },
     {
       "id": "P3-4",
-      "name": "GST, switched off: owner-only setup, tax on bills and invoice, GST reports and CSV export (HSN and business-customer reports need data)",
+      "name": "GST, switched off: owner-only setup, tax, invoice, reports and CSV export (HSN, business-customer and purchase reports need data)",
       "phase": 3,
       "phaseName": "Go-live hardening",
       "milestone": "",
@@ -415,8 +415,8 @@
       "phaseName": "After release 0.9.0: redesign and extras",
       "milestone": "",
       "order": 40,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#35"
     },
     {
@@ -426,8 +426,8 @@
       "phaseName": "After release 0.9.0: redesign and extras",
       "milestone": "",
       "order": 41,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#36"
     },
     {
@@ -437,8 +437,8 @@
       "phaseName": "After release 0.9.0: redesign and extras",
       "milestone": "",
       "order": 42,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#37"
     },
     {
@@ -448,8 +448,8 @@
       "phaseName": "After release 0.9.0: redesign and extras",
       "milestone": "",
       "order": 43,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#38"
     },
     {
@@ -459,8 +459,8 @@
       "phaseName": "After release 0.9.0: redesign and extras",
       "milestone": "",
       "order": 44,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#39"
     },
     {
@@ -470,8 +470,8 @@
       "phaseName": "After release 0.9.0: redesign and extras",
       "milestone": "",
       "order": 45,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#40"
     },
     {
@@ -481,8 +481,8 @@
       "phaseName": "After release 0.9.0: redesign and extras",
       "milestone": "",
       "order": 46,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#41, #48"
     },
     {
@@ -492,8 +492,8 @@
       "phaseName": "After release 0.9.0: redesign and extras",
       "milestone": "",
       "order": 47,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#42"
     },
     {
@@ -503,8 +503,8 @@
       "phaseName": "After release 0.9.0: redesign and extras",
       "milestone": "",
       "order": 48,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#43"
     },
     {
@@ -514,8 +514,8 @@
       "phaseName": "After release 0.9.0: redesign and extras",
       "milestone": "",
       "order": 49,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#44"
     },
     {
@@ -525,8 +525,8 @@
       "phaseName": "After release 0.9.0: redesign and extras",
       "milestone": "",
       "order": 50,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#45"
     },
     {
@@ -536,8 +536,8 @@
       "phaseName": "After release 0.9.0: redesign and extras",
       "milestone": "",
       "order": 51,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#46"
     },
     {
@@ -547,8 +547,8 @@
       "phaseName": "After release 0.9.0: redesign and extras",
       "milestone": "",
       "order": 52,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#47"
     },
     {
@@ -558,8 +558,8 @@
       "phaseName": "After release 0.9.0: redesign and extras",
       "milestone": "",
       "order": 53,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#49"
     },
     {
@@ -569,8 +569,8 @@
       "phaseName": "After release 0.9.0: redesign and extras",
       "milestone": "",
       "order": 54,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#50"
     },
     {
@@ -580,8 +580,8 @@
       "phaseName": "After release 0.9.0: redesign and extras",
       "milestone": "",
       "order": 55,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#51"
     },
     {
@@ -591,8 +591,8 @@
       "phaseName": "After release 0.9.0: redesign and extras",
       "milestone": "",
       "order": 56,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#52"
     },
     {
@@ -602,8 +602,8 @@
       "phaseName": "After release 0.9.0: redesign and extras",
       "milestone": "",
       "order": 57,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#53"
     },
     {
@@ -613,8 +613,8 @@
       "phaseName": "After release 0.9.0: redesign and extras",
       "milestone": "",
       "order": 58,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#54"
     },
     {
@@ -624,9 +624,20 @@
       "phaseName": "After release 0.9.0: redesign and extras",
       "milestone": "",
       "order": 59,
-      "status": "doing",
-      "pct": 90,
+      "status": "done",
+      "pct": 100,
       "pr": "#55"
+    },
+    {
+      "id": "REL-0.9.0",
+      "name": "Release 0.9.0 (pre-release): changelog, release PR, tag, installer on GitHub",
+      "phase": 3,
+      "phaseName": "Go-live hardening",
+      "milestone": "",
+      "order": 32.2,
+      "status": "done",
+      "pct": 100,
+      "pr": "#62 to #66"
     }
   ]
 }
