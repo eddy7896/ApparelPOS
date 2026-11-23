@@ -65,6 +65,15 @@ Purpose: phases and task IDs. Size S <= 1 day, M <= 3 days, L <= 1 week. Phases 
 | P3-3b | Runbook for the owner: install, first day, laptop fails, database corrupt, restore, SmartScreen warning, go-live checklist | M | owner can follow it (written 2026-11-23 as `documentation/owner_runbook.md`; the owner must follow it once on the real laptop and fix what is wrong) | P3-3a | written, unverified |
 | P3-4 | GST toggle scaffold (settings, tax fields); first step also tax on bills, the printed invoice, returns and the daily report (owner, 2026-11-23); GST reports later | L | E-GST-1; rules, database v12, screens, bill and report tests | P2-4 | first step done |
 
+## UX redesign and branding (owner asked 2026-11-22; plan in `documentation/modules/branding_and_ux.md`)
+| ID | Task | Size | Acceptance | Depends on | Status |
+|---|---|---|---|---|---|
+| UX-1 | Branding as data: rules, settings with placeholder defaults, theme and name and logo from settings | M | tests; the Windows data folder does not change with the name | P3-3a | todo |
+| UX-2 | Register redesign (scan first, big total, quick cash, 48 dp targets, bill done as a popup) | L | screen tests; before and after screenshots | owner approves the mock-up | todo |
+| UX-3 | Sign-in with the shift opening at sign-in, Pause (break) with a break record, three top-bar buttons (Pause, Close shift, Lock), blind close for touch | L | screen tests; permission and migration tests | UX-2 | todo |
+| UX-4 | Manager navigation and home; reports and backups polish | L | screen tests | UX-2 | todo |
+| UX-5 | Returns and stock entry restyle | M | screen tests | UX-2 | todo |
+
 ## P4 release 2
 Sync engine, Firestore rules, manager mobile app, counter setup (count and per-counter settings), second counter support. Tasks are split when P3 closes.
 
