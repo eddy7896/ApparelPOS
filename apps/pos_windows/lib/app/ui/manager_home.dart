@@ -16,6 +16,7 @@ import 'backup_screen.dart';
 import 'brand_preview_dialog.dart';
 import 'daily_report_screen.dart';
 import 'register_screen.dart';
+import 'markdowns_screen.dart';
 import 'returns_screen.dart';
 import 'shift_closes_screen.dart';
 import 'stock_entry_screen.dart';
@@ -113,6 +114,13 @@ class _ManagerHomeState extends State<ManagerHome> {
         'Stock entry',
         () => _open(StockEntryScreen(session: _session, services: _s)),
       ),
+      if (_s.markdowns != null)
+        _NavItem(
+          'markdowns-button',
+          Icons.sell,
+          'Markdowns',
+          () => _open(MarkdownsScreen(session: _session, services: _s)),
+        ),
       if (_s.analytics != null)
         _NavItem(
           'analytics-button',

@@ -2700,6 +2700,490 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
   }
 }
 
+class $StyleMarkdownsTable extends StyleMarkdowns
+    with TableInfo<$StyleMarkdownsTable, StyleMarkdownRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StyleMarkdownsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _productIdMeta = const VerificationMeta(
+    'productId',
+  );
+  @override
+  late final GeneratedColumn<String> productId = GeneratedColumn<String>(
+    'product_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES products (id)',
+    ),
+  );
+  static const VerificationMeta _percentBpMeta = const VerificationMeta(
+    'percentBp',
+  );
+  @override
+  late final GeneratedColumn<int> percentBp = GeneratedColumn<int>(
+    'percent_bp',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _amountPaiseMeta = const VerificationMeta(
+    'amountPaise',
+  );
+  @override
+  late final GeneratedColumn<int> amountPaise = GeneratedColumn<int>(
+    'amount_paise',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _endsBeforeMeta = const VerificationMeta(
+    'endsBefore',
+  );
+  @override
+  late final GeneratedColumn<DateTime> endsBefore = GeneratedColumn<DateTime>(
+    'ends_before',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _setByMeta = const VerificationMeta('setBy');
+  @override
+  late final GeneratedColumn<String> setBy = GeneratedColumn<String>(
+    'set_by',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    productId,
+    percentBp,
+    amountPaise,
+    endsBefore,
+    setBy,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'style_markdowns';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StyleMarkdownRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('product_id')) {
+      context.handle(
+        _productIdMeta,
+        productId.isAcceptableOrUnknown(data['product_id']!, _productIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_productIdMeta);
+    }
+    if (data.containsKey('percent_bp')) {
+      context.handle(
+        _percentBpMeta,
+        percentBp.isAcceptableOrUnknown(data['percent_bp']!, _percentBpMeta),
+      );
+    }
+    if (data.containsKey('amount_paise')) {
+      context.handle(
+        _amountPaiseMeta,
+        amountPaise.isAcceptableOrUnknown(
+          data['amount_paise']!,
+          _amountPaiseMeta,
+        ),
+      );
+    }
+    if (data.containsKey('ends_before')) {
+      context.handle(
+        _endsBeforeMeta,
+        endsBefore.isAcceptableOrUnknown(data['ends_before']!, _endsBeforeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_endsBeforeMeta);
+    }
+    if (data.containsKey('set_by')) {
+      context.handle(
+        _setByMeta,
+        setBy.isAcceptableOrUnknown(data['set_by']!, _setByMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_setByMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {productId};
+  @override
+  StyleMarkdownRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StyleMarkdownRow(
+      productId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}product_id'],
+      )!,
+      percentBp: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}percent_bp'],
+      ),
+      amountPaise: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount_paise'],
+      ),
+      endsBefore: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}ends_before'],
+      )!,
+      setBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}set_by'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $StyleMarkdownsTable createAlias(String alias) {
+    return $StyleMarkdownsTable(attachedDatabase, alias);
+  }
+}
+
+class StyleMarkdownRow extends DataClass
+    implements Insertable<StyleMarkdownRow> {
+  final String productId;
+
+  /// A percentage in basis points (2000 is 20%); null when it is an amount.
+  final int? percentBp;
+
+  /// A fixed amount in paise; null when it is a percentage.
+  final int? amountPaise;
+  final DateTime endsBefore;
+  final String setBy;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const StyleMarkdownRow({
+    required this.productId,
+    this.percentBp,
+    this.amountPaise,
+    required this.endsBefore,
+    required this.setBy,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['product_id'] = Variable<String>(productId);
+    if (!nullToAbsent || percentBp != null) {
+      map['percent_bp'] = Variable<int>(percentBp);
+    }
+    if (!nullToAbsent || amountPaise != null) {
+      map['amount_paise'] = Variable<int>(amountPaise);
+    }
+    map['ends_before'] = Variable<DateTime>(endsBefore);
+    map['set_by'] = Variable<String>(setBy);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  StyleMarkdownsCompanion toCompanion(bool nullToAbsent) {
+    return StyleMarkdownsCompanion(
+      productId: Value(productId),
+      percentBp: percentBp == null && nullToAbsent
+          ? const Value.absent()
+          : Value(percentBp),
+      amountPaise: amountPaise == null && nullToAbsent
+          ? const Value.absent()
+          : Value(amountPaise),
+      endsBefore: Value(endsBefore),
+      setBy: Value(setBy),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory StyleMarkdownRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StyleMarkdownRow(
+      productId: serializer.fromJson<String>(json['productId']),
+      percentBp: serializer.fromJson<int?>(json['percentBp']),
+      amountPaise: serializer.fromJson<int?>(json['amountPaise']),
+      endsBefore: serializer.fromJson<DateTime>(json['endsBefore']),
+      setBy: serializer.fromJson<String>(json['setBy']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'productId': serializer.toJson<String>(productId),
+      'percentBp': serializer.toJson<int?>(percentBp),
+      'amountPaise': serializer.toJson<int?>(amountPaise),
+      'endsBefore': serializer.toJson<DateTime>(endsBefore),
+      'setBy': serializer.toJson<String>(setBy),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  StyleMarkdownRow copyWith({
+    String? productId,
+    Value<int?> percentBp = const Value.absent(),
+    Value<int?> amountPaise = const Value.absent(),
+    DateTime? endsBefore,
+    String? setBy,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => StyleMarkdownRow(
+    productId: productId ?? this.productId,
+    percentBp: percentBp.present ? percentBp.value : this.percentBp,
+    amountPaise: amountPaise.present ? amountPaise.value : this.amountPaise,
+    endsBefore: endsBefore ?? this.endsBefore,
+    setBy: setBy ?? this.setBy,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  StyleMarkdownRow copyWithCompanion(StyleMarkdownsCompanion data) {
+    return StyleMarkdownRow(
+      productId: data.productId.present ? data.productId.value : this.productId,
+      percentBp: data.percentBp.present ? data.percentBp.value : this.percentBp,
+      amountPaise: data.amountPaise.present
+          ? data.amountPaise.value
+          : this.amountPaise,
+      endsBefore: data.endsBefore.present
+          ? data.endsBefore.value
+          : this.endsBefore,
+      setBy: data.setBy.present ? data.setBy.value : this.setBy,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StyleMarkdownRow(')
+          ..write('productId: $productId, ')
+          ..write('percentBp: $percentBp, ')
+          ..write('amountPaise: $amountPaise, ')
+          ..write('endsBefore: $endsBefore, ')
+          ..write('setBy: $setBy, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    productId,
+    percentBp,
+    amountPaise,
+    endsBefore,
+    setBy,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StyleMarkdownRow &&
+          other.productId == this.productId &&
+          other.percentBp == this.percentBp &&
+          other.amountPaise == this.amountPaise &&
+          other.endsBefore == this.endsBefore &&
+          other.setBy == this.setBy &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class StyleMarkdownsCompanion extends UpdateCompanion<StyleMarkdownRow> {
+  final Value<String> productId;
+  final Value<int?> percentBp;
+  final Value<int?> amountPaise;
+  final Value<DateTime> endsBefore;
+  final Value<String> setBy;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const StyleMarkdownsCompanion({
+    this.productId = const Value.absent(),
+    this.percentBp = const Value.absent(),
+    this.amountPaise = const Value.absent(),
+    this.endsBefore = const Value.absent(),
+    this.setBy = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  StyleMarkdownsCompanion.insert({
+    required String productId,
+    this.percentBp = const Value.absent(),
+    this.amountPaise = const Value.absent(),
+    required DateTime endsBefore,
+    required String setBy,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : productId = Value(productId),
+       endsBefore = Value(endsBefore),
+       setBy = Value(setBy),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<StyleMarkdownRow> custom({
+    Expression<String>? productId,
+    Expression<int>? percentBp,
+    Expression<int>? amountPaise,
+    Expression<DateTime>? endsBefore,
+    Expression<String>? setBy,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (productId != null) 'product_id': productId,
+      if (percentBp != null) 'percent_bp': percentBp,
+      if (amountPaise != null) 'amount_paise': amountPaise,
+      if (endsBefore != null) 'ends_before': endsBefore,
+      if (setBy != null) 'set_by': setBy,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  StyleMarkdownsCompanion copyWith({
+    Value<String>? productId,
+    Value<int?>? percentBp,
+    Value<int?>? amountPaise,
+    Value<DateTime>? endsBefore,
+    Value<String>? setBy,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return StyleMarkdownsCompanion(
+      productId: productId ?? this.productId,
+      percentBp: percentBp ?? this.percentBp,
+      amountPaise: amountPaise ?? this.amountPaise,
+      endsBefore: endsBefore ?? this.endsBefore,
+      setBy: setBy ?? this.setBy,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (productId.present) {
+      map['product_id'] = Variable<String>(productId.value);
+    }
+    if (percentBp.present) {
+      map['percent_bp'] = Variable<int>(percentBp.value);
+    }
+    if (amountPaise.present) {
+      map['amount_paise'] = Variable<int>(amountPaise.value);
+    }
+    if (endsBefore.present) {
+      map['ends_before'] = Variable<DateTime>(endsBefore.value);
+    }
+    if (setBy.present) {
+      map['set_by'] = Variable<String>(setBy.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StyleMarkdownsCompanion(')
+          ..write('productId: $productId, ')
+          ..write('percentBp: $percentBp, ')
+          ..write('amountPaise: $amountPaise, ')
+          ..write('endsBefore: $endsBefore, ')
+          ..write('setBy: $setBy, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $VariantsTable extends Variants
     with TableInfo<$VariantsTable, VariantRow> {
   @override
@@ -11143,6 +11627,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CountersTable counters = $CountersTable(this);
   late final $CategoriesTable categories = $CategoriesTable(this);
   late final $ProductsTable products = $ProductsTable(this);
+  late final $StyleMarkdownsTable styleMarkdowns = $StyleMarkdownsTable(this);
   late final $VariantsTable variants = $VariantsTable(this);
   late final $BatchesTable batches = $BatchesTable(this);
   late final $BatchLinesTable batchLines = $BatchLinesTable(this);
@@ -11178,6 +11663,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     counters,
     categories,
     products,
+    styleMarkdowns,
     variants,
     batches,
     batchLines,
@@ -13386,6 +13872,24 @@ final class $$ProductsTableReferences
     );
   }
 
+  static MultiTypedResultKey<$StyleMarkdownsTable, List<StyleMarkdownRow>>
+  _styleMarkdownsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.styleMarkdowns,
+    aliasName: 'products__id__style_markdowns__product_id',
+  );
+
+  $$StyleMarkdownsTableProcessedTableManager get styleMarkdownsRefs {
+    final manager = $$StyleMarkdownsTableTableManager(
+      $_db,
+      $_db.styleMarkdowns,
+    ).filter((f) => f.productId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_styleMarkdownsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
   static MultiTypedResultKey<$VariantsTable, List<VariantRow>>
   _variantsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.variants,
@@ -13460,6 +13964,31 @@ class $$ProductsTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> styleMarkdownsRefs(
+    Expression<bool> Function($$StyleMarkdownsTableFilterComposer f) f,
+  ) {
+    final $$StyleMarkdownsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.styleMarkdowns,
+      getReferencedColumn: (t) => t.productId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StyleMarkdownsTableFilterComposer(
+            $db: $db,
+            $table: $db.styleMarkdowns,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 
   Expression<bool> variantsRefs(
@@ -13593,6 +14122,31 @@ class $$ProductsTableAnnotationComposer
     return composer;
   }
 
+  Expression<T> styleMarkdownsRefs<T extends Object>(
+    Expression<T> Function($$StyleMarkdownsTableAnnotationComposer a) f,
+  ) {
+    final $$StyleMarkdownsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.styleMarkdowns,
+      getReferencedColumn: (t) => t.productId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StyleMarkdownsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.styleMarkdowns,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<T> variantsRefs<T extends Object>(
     Expression<T> Function($$VariantsTableAnnotationComposer a) f,
   ) {
@@ -13632,7 +14186,11 @@ class $$ProductsTableTableManager
           $$ProductsTableUpdateCompanionBuilder,
           (ProductRow, $$ProductsTableReferences),
           ProductRow,
-          PrefetchHooks Function({bool categoryId, bool variantsRefs})
+          PrefetchHooks Function({
+            bool categoryId,
+            bool styleMarkdownsRefs,
+            bool variantsRefs,
+          })
         > {
   $$ProductsTableTableManager(_$AppDatabase db, $ProductsTable table)
     : super(
@@ -13689,62 +14247,94 @@ class $$ProductsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({categoryId = false, variantsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [if (variantsRefs) db.variants],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (categoryId) {
-                      state = state.withJoin(
-                        currentTable: table,
-                        currentColumn: table.categoryId,
-                        referencedTable: $$ProductsTableReferences
-                            ._categoryIdTable(db),
-                        referencedColumn: $$ProductsTableReferences
-                            ._categoryIdTable(db)
-                            .id,
-                      ) as T;
-                    }
+          prefetchHooksCallback:
+              ({
+                categoryId = false,
+                styleMarkdownsRefs = false,
+                variantsRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (styleMarkdownsRefs) db.styleMarkdowns,
+                    if (variantsRefs) db.variants,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (categoryId) {
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.categoryId,
+                            referencedTable: $$ProductsTableReferences
+                                ._categoryIdTable(db),
+                            referencedColumn: $$ProductsTableReferences
+                                ._categoryIdTable(db)
+                                .id,
+                          ) as T;
+                        }
 
-                    return state;
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (styleMarkdownsRefs)
+                        await $_getPrefetchedDataByColumns<
+                          ProductRow,
+                          $ProductsTable,
+                          StyleMarkdownRow,
+                          $StyleMarkdownsTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ProductsTableReferences
+                              ._styleMarkdownsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ProductsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).styleMarkdownsRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'product_id',
+                          typedResults: items,
+                        ),
+                      if (variantsRefs)
+                        await $_getPrefetchedDataByColumns<
+                          ProductRow,
+                          $ProductsTable,
+                          VariantRow,
+                          $VariantsTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ProductsTableReferences
+                              ._variantsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ProductsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).variantsRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'product_id',
+                          typedResults: items,
+                        ),
+                    ];
                   },
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (variantsRefs)
-                    await $_getPrefetchedDataByColumns<
-                      ProductRow,
-                      $ProductsTable,
-                      VariantRow,
-                      $VariantsTable
-                    >(
-                      currentTable: table,
-                      referencedTable: $$ProductsTableReferences
-                          ._variantsRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$ProductsTableReferences(db, table, p0).variantsRefs,
-                      currentColumn: 'id',
-                      referencedColumn: 'product_id',
-                      typedResults: items,
-                    ),
-                ];
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -13761,7 +14351,375 @@ typedef $$ProductsTableProcessedTableManager =
       $$ProductsTableUpdateCompanionBuilder,
       (ProductRow, $$ProductsTableReferences),
       ProductRow,
-      PrefetchHooks Function({bool categoryId, bool variantsRefs})
+      PrefetchHooks Function({
+        bool categoryId,
+        bool styleMarkdownsRefs,
+        bool variantsRefs,
+      })
+    >;
+typedef $$StyleMarkdownsTableCreateCompanionBuilder =
+    StyleMarkdownsCompanion Function({
+      required String productId,
+      Value<int?> percentBp,
+      Value<int?> amountPaise,
+      required DateTime endsBefore,
+      required String setBy,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$StyleMarkdownsTableUpdateCompanionBuilder =
+    StyleMarkdownsCompanion Function({
+      Value<String> productId,
+      Value<int?> percentBp,
+      Value<int?> amountPaise,
+      Value<DateTime> endsBefore,
+      Value<String> setBy,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+final class $$StyleMarkdownsTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $StyleMarkdownsTable, StyleMarkdownRow> {
+  $$StyleMarkdownsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ProductsTable _productIdTable(_$AppDatabase db) =>
+      db.products.createAlias('style_markdowns__product_id__products__id');
+
+  $$ProductsTableProcessedTableManager get productId {
+    final $_column = $_itemColumn<String>('product_id')!;
+
+    final manager = $$ProductsTableTableManager(
+      $_db,
+      $_db.products,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_productIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$StyleMarkdownsTableFilterComposer
+    extends Composer<_$AppDatabase, $StyleMarkdownsTable> {
+  $$StyleMarkdownsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get percentBp => $composableBuilder(
+    column: $table.percentBp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amountPaise => $composableBuilder(
+    column: $table.amountPaise,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get endsBefore => $composableBuilder(
+    column: $table.endsBefore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get setBy => $composableBuilder(
+    column: $table.setBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ProductsTableFilterComposer get productId {
+    final $$ProductsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productId,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableFilterComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$StyleMarkdownsTableOrderingComposer
+    extends Composer<_$AppDatabase, $StyleMarkdownsTable> {
+  $$StyleMarkdownsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get percentBp => $composableBuilder(
+    column: $table.percentBp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amountPaise => $composableBuilder(
+    column: $table.amountPaise,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get endsBefore => $composableBuilder(
+    column: $table.endsBefore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get setBy => $composableBuilder(
+    column: $table.setBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ProductsTableOrderingComposer get productId {
+    final $$ProductsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productId,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableOrderingComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$StyleMarkdownsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $StyleMarkdownsTable> {
+  $$StyleMarkdownsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get percentBp =>
+      $composableBuilder(column: $table.percentBp, builder: (column) => column);
+
+  GeneratedColumn<int> get amountPaise => $composableBuilder(
+    column: $table.amountPaise,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get endsBefore => $composableBuilder(
+    column: $table.endsBefore,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get setBy =>
+      $composableBuilder(column: $table.setBy, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$ProductsTableAnnotationComposer get productId {
+    final $$ProductsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productId,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$StyleMarkdownsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $StyleMarkdownsTable,
+          StyleMarkdownRow,
+          $$StyleMarkdownsTableFilterComposer,
+          $$StyleMarkdownsTableOrderingComposer,
+          $$StyleMarkdownsTableAnnotationComposer,
+          $$StyleMarkdownsTableCreateCompanionBuilder,
+          $$StyleMarkdownsTableUpdateCompanionBuilder,
+          (StyleMarkdownRow, $$StyleMarkdownsTableReferences),
+          StyleMarkdownRow,
+          PrefetchHooks Function({bool productId})
+        > {
+  $$StyleMarkdownsTableTableManager(
+    _$AppDatabase db,
+    $StyleMarkdownsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$StyleMarkdownsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$StyleMarkdownsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$StyleMarkdownsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> productId = const Value.absent(),
+                Value<int?> percentBp = const Value.absent(),
+                Value<int?> amountPaise = const Value.absent(),
+                Value<DateTime> endsBefore = const Value.absent(),
+                Value<String> setBy = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StyleMarkdownsCompanion(
+                productId: productId,
+                percentBp: percentBp,
+                amountPaise: amountPaise,
+                endsBefore: endsBefore,
+                setBy: setBy,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String productId,
+                Value<int?> percentBp = const Value.absent(),
+                Value<int?> amountPaise = const Value.absent(),
+                required DateTime endsBefore,
+                required String setBy,
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => StyleMarkdownsCompanion.insert(
+                productId: productId,
+                percentBp: percentBp,
+                amountPaise: amountPaise,
+                endsBefore: endsBefore,
+                setBy: setBy,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$StyleMarkdownsTable, StyleMarkdownRow>(table),
+                  $$StyleMarkdownsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({productId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (productId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.productId,
+                        referencedTable: $$StyleMarkdownsTableReferences
+                            ._productIdTable(db),
+                        referencedColumn: $$StyleMarkdownsTableReferences
+                            ._productIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$StyleMarkdownsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $StyleMarkdownsTable,
+      StyleMarkdownRow,
+      $$StyleMarkdownsTableFilterComposer,
+      $$StyleMarkdownsTableOrderingComposer,
+      $$StyleMarkdownsTableAnnotationComposer,
+      $$StyleMarkdownsTableCreateCompanionBuilder,
+      $$StyleMarkdownsTableUpdateCompanionBuilder,
+      (StyleMarkdownRow, $$StyleMarkdownsTableReferences),
+      StyleMarkdownRow,
+      PrefetchHooks Function({bool productId})
     >;
 typedef $$VariantsTableCreateCompanionBuilder = VariantsCompanion Function({
   required String id,
@@ -22937,6 +23895,8 @@ class $AppDatabaseManager {
       $$CategoriesTableTableManager(_db, _db.categories);
   $$ProductsTableTableManager get products =>
       $$ProductsTableTableManager(_db, _db.products);
+  $$StyleMarkdownsTableTableManager get styleMarkdowns =>
+      $$StyleMarkdownsTableTableManager(_db, _db.styleMarkdowns);
   $$VariantsTableTableManager get variants =>
       $$VariantsTableTableManager(_db, _db.variants);
   $$BatchesTableTableManager get batches =>

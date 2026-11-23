@@ -130,6 +130,36 @@ class Products extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// A markdown set ahead of time on a whole style (owner, 2026-11-23): a
+/// percentage or a fixed amount off the MRP of its unsold garments, until
+/// `endsBefore` (the India midnight that ends the last day). One per style.
+/// Bills keep their own copy of what was taken off, so changing or removing a
+/// markdown never changes a past bill. Needs the `setMarkdown` permission.
+@DataClassName('StyleMarkdownRow')
+class StyleMarkdowns extends Table {
+  TextColumn get productId => text().references(Products, #id)();
+
+  /// A percentage in basis points (2000 is 20%); null when it is an amount.
+  IntColumn get percentBp => integer().nullable()();
+
+  /// A fixed amount in paise; null when it is a percentage.
+  IntColumn get amountPaise => integer().nullable()();
+  DateTimeColumn get endsBefore => dateTime()();
+  TextColumn get setBy => text()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {productId};
+
+  @override
+  List<String> get customConstraints => [
+    'CHECK ((percent_bp IS NULL) <> (amount_paise IS NULL))',
+    'CHECK (percent_bp IS NULL OR (percent_bp > 0 AND percent_bp < 10000))',
+    'CHECK (amount_paise IS NULL OR amount_paise > 0)',
+  ];
+}
+
 /// A style in one size and color, with its current MRP.
 @DataClassName('VariantRow')
 class Variants extends Table {
@@ -478,6 +508,7 @@ class Daybook extends Table {
     Users,
     Counters,
     Categories,
+    StyleMarkdowns,
     Products,
     Variants,
     Batches,
@@ -504,7 +535,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -570,6 +601,18 @@ class AppDatabase extends _$AppDatabase {
         ).get()).any((r) => r.read<String>('name') == 'category_id');
         if (!hasCol) {
           await m.addColumn(products, products.categoryId);
+        }
+      }
+      if (from < 10 && to >= 10) {
+        // version 10: markdowns set ahead of time on a style (owner, 2026-11-23)
+        final tables = {
+          for (final r in await customSelect(
+            "SELECT name FROM sqlite_master WHERE type = 'table'",
+          ).get())
+            r.read<String>('name'),
+        };
+        if (!tables.contains('style_markdowns')) {
+          await m.createTable(styleMarkdowns);
         }
       }
       if (from < 8 && to >= 8) {

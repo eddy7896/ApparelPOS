@@ -14,6 +14,7 @@ export 'src/code128.dart';
 export 'src/credit_note.dart';
 export 'src/hangtag_artwork.dart';
 export 'src/label_layout.dart';
+export 'src/markdown_rules.dart';
 export 'src/money.dart';
 export 'src/payment.dart';
 export 'src/pick_garments.dart';
