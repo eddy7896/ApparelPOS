@@ -9,6 +9,7 @@ Purpose: index of feature modules. Each file lists status, rules, workflow, task
 | Billing and returns | 1 | [billing_and_returns.md](billing_and_returns.md) |
 | Cash close and daybook | 1 | [cash_close_and_daybook.md](cash_close_and_daybook.md) |
 | Auth and roles | 1 | [auth_and_roles.md](auth_and_roles.md) |
+| Branding and counter UX redesign | 1 | [branding_and_ux.md](branding_and_ux.md) |
 | Backup and restore | 1 | [backup_and_restore.md](backup_and_restore.md) |
 | GST toggle | 1 scaffold | [gst.md](gst.md) |
 | Sync and manager mobile | 2 | not yet written (planned at P4) |
