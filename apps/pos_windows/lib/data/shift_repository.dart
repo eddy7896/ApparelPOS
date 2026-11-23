@@ -27,6 +27,20 @@ final class ShiftAlreadyOpen implements Exception {
   String toString() => 'ShiftAlreadyOpen: $shiftId';
 }
 
+/// Thrown when a sale or return is tried while the shift is on a break (the
+/// Pause button). The break ends when the cashier signs back in.
+final class ShiftOnBreak implements Exception {
+  @override
+  String toString() => 'ShiftOnBreak: the shift is paused';
+}
+
+/// Thrown when someone tries to open a shift while another cashier's shift on
+/// the same drawer is on a break (owner, 2026-11-22).
+final class DrawerOnBreak implements Exception {
+  @override
+  String toString() => 'DrawerOnBreak: the drawer is on a break';
+}
+
 /// An open shift as the counter sees it. There is no expected cash here.
 final class ShiftInfo {
   const ShiftInfo({
@@ -50,6 +64,7 @@ final class ShiftCloseReport {
     required this.expected,
     required this.counted,
     required this.variance,
+    this.breakTime = Duration.zero,
   });
   final String shiftId;
   final String cashierName;
@@ -59,6 +74,9 @@ final class ShiftCloseReport {
   final Money expected;
   final Money counted;
   final CashVariance variance;
+
+  /// All the break time in the shift (the Pause button).
+  final Duration breakTime;
 }
 
 /// The id of [userId]'s open shift, for sales and returns made inside it.
@@ -75,7 +93,24 @@ Future<String> requireOpenShiftId(AppDatabase db, String userId) async {
   if (rows.isEmpty) {
     throw NoOpenShift();
   }
-  return rows.first.read<String>('id');
+  final id = rows.first.read<String>('id');
+  if (await _openBreakId(db, id) != null) {
+    throw ShiftOnBreak(); // no selling while paused
+  }
+  return id;
+}
+
+/// The id of the break of [shiftId] that has not ended, or null.
+Future<String?> _openBreakId(AppDatabase db, String shiftId) async {
+  final rows = await db
+      .customSelect(
+        'SELECT b.id AS id FROM shift_breaks b WHERE b.shift_id = ? '
+        'AND NOT EXISTS (SELECT 1 FROM shift_break_ends e WHERE e.break_id = b.id) '
+        'LIMIT 1',
+        variables: [Variable<String>(shiftId)],
+      )
+      .get();
+  return rows.isEmpty ? null : rows.first.read<String>('id');
 }
 
 /// Writes one daybook row (call inside the sale or return transaction).
@@ -190,6 +225,18 @@ class ShiftRepository {
         if (existing != null) {
           throw ShiftAlreadyOpen(existing.id);
         }
+        // Someone else's shift on a break holds the drawer.
+        final held = await _db
+            .customSelect(
+              'SELECT 1 FROM shift_breaks b '
+              'WHERE NOT EXISTS (SELECT 1 FROM shift_break_ends e WHERE e.break_id = b.id) '
+              'AND NOT EXISTS (SELECT 1 FROM shift_closes c WHERE c.shift_id = b.shift_id) '
+              'LIMIT 1',
+            )
+            .get();
+        if (held.isNotEmpty) {
+          throw DrawerOnBreak();
+        }
         final counter = (await _db.select(_db.counters).get()).first;
         await _db
             .into(_db.shifts)
@@ -235,6 +282,7 @@ class ShiftRepository {
         if (fresh == null || fresh.id != shift.id) {
           throw NoOpenShift();
         }
+        await _endBreakIfAny(shift.id, at);
         final opening = Money(
           (await _db
                   .customSelect(
@@ -284,6 +332,115 @@ class ShiftRepository {
     );
   }
 
+  Future<void> _endBreakIfAny(String shiftId, DateTime at) async {
+    final open = await _openBreakId(_db, shiftId);
+    if (open != null) {
+      await _db
+          .into(_db.shiftBreakEnds)
+          .insert(
+            ShiftBreakEndsCompanion.insert(
+              id: _newId(),
+              breakId: open,
+              endedAt: at,
+            ),
+          );
+    }
+  }
+
+  /// When [userId]'s shift went on a break, or null if it is not on one.
+  Future<DateTime?> breakStartedAt(String userId) async {
+    final shift = await currentShift(userId);
+    if (shift == null) {
+      return null;
+    }
+    final id = await _openBreakId(_db, shift.id);
+    if (id == null) {
+      return null;
+    }
+    final row = await _db
+        .customSelect(
+          'SELECT started_at FROM shift_breaks WHERE id = ?',
+          variables: [Variable<String>(id)],
+        )
+        .getSingle();
+    return row.read<DateTime>('started_at').toUtc();
+  }
+
+  /// The Pause button: starts a break, the shift stays open. Needs `sell`.
+  /// Pausing while already paused keeps the one break. Throws
+  /// [PermissionDenied] or [NoOpenShift].
+  Future<void> pauseShift({required Role? role, required String userId}) async {
+    require(role, Permission.sell);
+    final shift = await currentShift(userId);
+    if (shift == null) {
+      throw NoOpenShift();
+    }
+    final id = _newId();
+    final at = _now();
+    await _writer.run<void>(
+      action: 'shift.pause',
+      entityType: 'shift',
+      entityId: shift.id,
+      actor: userId,
+      body: () async {
+        if (await _openBreakId(_db, shift.id) != null) {
+          return;
+        }
+        await _db
+            .into(_db.shiftBreaks)
+            .insert(
+              ShiftBreaksCompanion.insert(
+                id: id,
+                shiftId: shift.id,
+                startedAt: at,
+              ),
+            );
+      },
+    );
+  }
+
+  /// Ends the break (the cashier signed back in). Returns false when there was
+  /// no break going. Needs `sell`. Throws [PermissionDenied].
+  Future<bool> resumeShift({
+    required Role? role,
+    required String userId,
+  }) async {
+    require(role, Permission.sell);
+    final shift = await currentShift(userId);
+    if (shift == null || await _openBreakId(_db, shift.id) == null) {
+      return false;
+    }
+    final at = _now();
+    return _writer.run<bool>(
+      action: 'shift.resume',
+      entityType: 'shift',
+      entityId: shift.id,
+      actor: userId,
+      body: () async {
+        await _endBreakIfAny(shift.id, at);
+        return true;
+      },
+    );
+  }
+
+  Future<Duration> _breakTime(String shiftId) async {
+    final rows = await _db
+        .customSelect(
+          'SELECT b.started_at AS s, e.ended_at AS e FROM shift_breaks b '
+          'LEFT JOIN shift_break_ends e ON e.break_id = b.id '
+          'WHERE b.shift_id = ?',
+          variables: [Variable<String>(shiftId)],
+        )
+        .get();
+    return totalBreakTime([
+      for (final r in rows)
+        BreakSpan(
+          start: r.read<DateTime>('s').toUtc(),
+          end: r.read<DateTime?>('e')?.toUtc(),
+        ),
+    ], _now());
+  }
+
   /// Closed shifts with expected cash and variance, newest first. Needs
   /// `viewDaybook` (manager, owner): a cashier must never see these.
   Future<List<ShiftCloseReport>> closeReports({required Role? role}) async {
@@ -298,9 +455,14 @@ class ShiftRepository {
           'ORDER BY c.closed_at DESC, c.id DESC',
         )
         .get();
+    final breaks = {
+      for (final r in rows)
+        r.read<String>('id'): await _breakTime(r.read<String>('id')),
+    };
     return [
       for (final r in rows)
         ShiftCloseReport(
+          breakTime: breaks[r.read<String>('id')]!,
           shiftId: r.read<String>('id'),
           cashierName: r.read<String>('name'),
           openedAt: r.read<DateTime>('opened_at').toUtc(),

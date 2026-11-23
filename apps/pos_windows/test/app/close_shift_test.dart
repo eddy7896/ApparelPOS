@@ -182,7 +182,9 @@ void main() {
       await open(tester);
       expect(
         tester
-            .widget<TextButton>(find.byKey(const Key('close-shift-button')))
+            .widget<ButtonStyleButton>(
+              find.byKey(const Key("close-shift-button")),
+            )
             .onPressed,
         isNotNull,
       );
@@ -197,7 +199,9 @@ void main() {
       await pump(tester);
       expect(
         tester
-            .widget<TextButton>(find.byKey(const Key('close-shift-button')))
+            .widget<ButtonStyleButton>(
+              find.byKey(const Key("close-shift-button")),
+            )
             .onPressed,
         isNull,
       );

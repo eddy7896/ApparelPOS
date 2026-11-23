@@ -40,6 +40,11 @@ class _ShiftGateState extends State<ShiftGate> {
 
   Future<void> _load() async {
     final id = widget.session.user!.userId;
+    // Signing back in after Pause ends the break (UX-3).
+    await widget.services.shifts.resumeShift(
+      role: widget.session.user!.role,
+      userId: id,
+    );
     final s = await widget.services.shifts.currentShift(id);
     final stale = s != null && await widget.services.shifts.hasStaleShift(id);
     if (mounted) {
@@ -94,6 +99,14 @@ class _ShiftGateState extends State<ShiftGate> {
       }
     } on ShiftAlreadyOpen {
       await _load();
+    } on DrawerOnBreak {
+      if (mounted) {
+        setState(
+          () => _message =
+              'The drawer is on a break. Ask the cashier who paused to '
+              'sign in and carry on or close their shift first.',
+        );
+      }
     } on PermissionDenied {
       if (mounted) {
         setState(() => _message = 'You may not open a shift.');
@@ -114,45 +127,60 @@ class _ShiftGateState extends State<ShiftGate> {
       return widget.child;
     }
     final stale = _shift != null && _stale;
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
-        child: ListView(
-          shrinkWrap: true,
-          padding: const EdgeInsets.all(24),
-          children: [
-            Text(
-              stale ? 'Close your earlier shift' : 'Open your shift',
-              key: Key(stale ? 'stale-shift-title' : 'open-shift-title'),
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              stale
-                  ? 'Your last shift was opened on an earlier day and was never closed. '
-                        'Count all the cash in the drawer by notes and coins to close it. '
-                        'Then you can open a new shift.'
-                  : 'Count the cash in the drawer by notes and coins, then open the shift.',
-            ),
-            const SizedBox(height: 16),
-            CashCountForm(
-              key: Key(stale ? 'stale-count' : 'open-count'),
-              buttonLabel: stale ? 'Close earlier shift' : 'Open shift',
-              busy: _busy,
-              onSubmit: stale ? _closeStale : _open,
-            ),
-            if (_message != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Text(
-                  _message!,
-                  key: const Key('message-banner'),
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
+    // A popup over a dimmed counter (UX-3): the register is not drawn until
+    // the drawer is counted.
+    return Stack(
+      children: [
+        const ModalBarrier(color: Colors.black54, dismissible: false),
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 460),
+            child: Material(
+              key: const Key('shift-popup'),
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(18),
+              elevation: 12,
+              child: ListView(
+                shrinkWrap: true,
+                padding: const EdgeInsets.all(24),
+                children: [
+                  Text(
+                    stale ? 'Close your earlier shift' : 'Open your shift',
+                    key: Key(stale ? 'stale-shift-title' : 'open-shift-title'),
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    stale
+                        ? 'Your last shift was opened on an earlier day and was never closed. '
+                              'Count all the cash in the drawer by notes and coins to close it. '
+                              'Then you can open a new shift.'
+                        : 'Count the cash in the drawer by notes and coins, then open the shift.',
+                  ),
+                  const SizedBox(height: 16),
+                  CashCountForm(
+                    key: Key(stale ? 'stale-count' : 'open-count'),
+                    buttonLabel: stale ? 'Close earlier shift' : 'Open shift',
+                    busy: _busy,
+                    onSubmit: stale ? _closeStale : _open,
+                  ),
+                  if (_message != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Text(
+                        _message!,
+                        key: const Key('message-banner'),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ),
+                ],
               ),
-          ],
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 }

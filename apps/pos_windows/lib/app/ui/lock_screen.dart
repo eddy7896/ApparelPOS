@@ -109,6 +109,25 @@ class _LockScreenState extends State<LockScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
+                if (widget.session.pausedName != null)
+                  Container(
+                    key: const Key('on-break-banner'),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${widget.session.pausedName} is on a break. '
+                      'The shift stays open and the drawer cash stays put. '
+                      'Sign in to carry on.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                  ),
                 Text(
                   choice == null ? 'Choose your name' : 'Hello, ${choice.name}',
                   textAlign: TextAlign.center,
