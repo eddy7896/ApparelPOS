@@ -9,6 +9,7 @@ import 'package:core_domain/core_domain.dart';
 import 'package:drift/drift.dart';
 
 import 'app_database.dart';
+import 'gst_repository.dart' show readGstSettings;
 import 'shift_repository.dart';
 
 /// Why a garment cannot go on a bill.
@@ -150,12 +151,16 @@ final class SavedBillLine {
     required this.size,
     required this.color,
     required this.priced,
+    this.tax,
   });
   final String barcode;
   final String productName;
   final String size;
   final String color;
   final PricedLine priced;
+
+  /// The GST on this garment (all zero while GST is off).
+  final LineTax? tax;
 }
 
 /// A bill that was saved.
@@ -167,6 +172,7 @@ final class SavedBill {
     required this.lines,
     required this.settlement,
     this.owed = Money.zero,
+    this.gst = const GstSettings(),
   });
   final String billId;
   final BillNumber billNumber;
@@ -176,6 +182,24 @@ final class SavedBill {
 
   /// What was left to be paid later (zero for a bill paid in full).
   final Money owed;
+
+  /// The GST settings the bill was made under (GST off when it was off).
+  final GstSettings gst;
+
+  /// The tax on the whole bill.
+  BillTax get tax => BillTax([
+    for (final l in lines)
+      l.tax ??
+          LineTax(
+            price: l.priced.finalPrice,
+            taxable: Money.zero,
+            tax: Money.zero,
+            addedOnTop: Money.zero,
+            cgst: Money.zero,
+            sgst: Money.zero,
+            rateBp: 0,
+          ),
+  ]);
   Money get total => settlement.total;
 }
 
@@ -202,6 +226,14 @@ class SalesRepository {
     require(role, Permission.viewStockAndPrices);
     final row = await _find(barcode);
     return row?.item;
+  }
+
+  /// The shop's GST settings, for showing the total at the counter. Needs
+  /// `viewStockAndPrices`. The bill itself is priced inside [saveBill], from the
+  /// stored settings, so the screen cannot set its own tax.
+  Future<GstSettings> gstSettings({required Role? role}) async {
+    require(role, Permission.viewStockAndPrices);
+    return readGstSettings(_db);
   }
 
   /// Looks up a credit note by its code. Needs `sell`. Null if there is none.
@@ -459,10 +491,22 @@ class SalesRepository {
           );
         }
 
-        final total = saved.fold<Money>(
-          Money.zero,
-          (sum, l) => sum + l.priced.finalPrice,
-        );
+        // GST (off unless the owner switched it on): the tax on each garment is
+        // worked out here, from the settings, and kept on the bill line.
+        final gst = await readGstSettings(_db);
+        final tax = billTax([for (final l in saved) l.priced.finalPrice], gst);
+        for (var i = 0; i < saved.length; i++) {
+          final l = saved[i];
+          saved[i] = SavedBillLine(
+            barcode: l.barcode,
+            productName: l.productName,
+            size: l.size,
+            color: l.color,
+            priced: l.priced,
+            tax: tax.lines[i],
+          );
+        }
+        final total = tax.total;
         final usedNotes = <(CreditNoteInfo, Money)>[];
         for (final c in creditNotes) {
           final info = await _creditNote(c.code);
@@ -540,6 +584,10 @@ class SalesRepository {
                   markdownPaise: l.priced.markdownAmount.paise,
                   discountPaise: l.priced.discountAmount.paise,
                   finalPaise: l.priced.finalPrice.paise,
+                  gstBp: Value(tax.lines[i].rateBp),
+                  taxablePaise: Value(tax.lines[i].taxable.paise),
+                  taxPaise: Value(tax.lines[i].tax.paise),
+                  extraTaxPaise: Value(tax.lines[i].addedOnTop.paise),
                 ),
               );
         }
@@ -620,6 +668,7 @@ class SalesRepository {
           lines: saved,
           settlement: settlement,
           owed: settlement.due,
+          gst: gst,
         );
       },
       // No customer details and no cost in the audit or outbox details.

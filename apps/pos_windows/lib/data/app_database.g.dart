@@ -9809,6 +9809,52 @@ class $BillLinesTable extends BillLines
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _gstBpMeta = const VerificationMeta('gstBp');
+  @override
+  late final GeneratedColumn<int> gstBp = GeneratedColumn<int>(
+    'gst_bp',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _taxablePaiseMeta = const VerificationMeta(
+    'taxablePaise',
+  );
+  @override
+  late final GeneratedColumn<int> taxablePaise = GeneratedColumn<int>(
+    'taxable_paise',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _taxPaiseMeta = const VerificationMeta(
+    'taxPaise',
+  );
+  @override
+  late final GeneratedColumn<int> taxPaise = GeneratedColumn<int>(
+    'tax_paise',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _extraTaxPaiseMeta = const VerificationMeta(
+    'extraTaxPaise',
+  );
+  @override
+  late final GeneratedColumn<int> extraTaxPaise = GeneratedColumn<int>(
+    'extra_tax_paise',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -9822,6 +9868,10 @@ class $BillLinesTable extends BillLines
     markdownPaise,
     discountPaise,
     finalPaise,
+    gstBp,
+    taxablePaise,
+    taxPaise,
+    extraTaxPaise,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -9932,6 +9982,36 @@ class $BillLinesTable extends BillLines
     } else if (isInserting) {
       context.missing(_finalPaiseMeta);
     }
+    if (data.containsKey('gst_bp')) {
+      context.handle(
+        _gstBpMeta,
+        gstBp.isAcceptableOrUnknown(data['gst_bp']!, _gstBpMeta),
+      );
+    }
+    if (data.containsKey('taxable_paise')) {
+      context.handle(
+        _taxablePaiseMeta,
+        taxablePaise.isAcceptableOrUnknown(
+          data['taxable_paise']!,
+          _taxablePaiseMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tax_paise')) {
+      context.handle(
+        _taxPaiseMeta,
+        taxPaise.isAcceptableOrUnknown(data['tax_paise']!, _taxPaiseMeta),
+      );
+    }
+    if (data.containsKey('extra_tax_paise')) {
+      context.handle(
+        _extraTaxPaiseMeta,
+        extraTaxPaise.isAcceptableOrUnknown(
+          data['extra_tax_paise']!,
+          _extraTaxPaiseMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -9985,6 +10065,22 @@ class $BillLinesTable extends BillLines
         DriftSqlType.int,
         data['${effectivePrefix}final_paise'],
       )!,
+      gstBp: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}gst_bp'],
+      )!,
+      taxablePaise: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}taxable_paise'],
+      )!,
+      taxPaise: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}tax_paise'],
+      )!,
+      extraTaxPaise: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}extra_tax_paise'],
+      )!,
     );
   }
 
@@ -10006,6 +10102,19 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
   final int markdownPaise;
   final int discountPaise;
   final int finalPaise;
+
+  /// The rate used, in basis points (500 is 5%); 0 when GST was off.
+  final int gstBp;
+
+  /// The value the tax was charged on.
+  final int taxablePaise;
+
+  /// The tax (CGST plus SGST).
+  final int taxPaise;
+
+  /// Tax added on top of the price (exclusive billing); 0 when the price
+  /// included it.
+  final int extraTaxPaise;
   const BillLineRow({
     required this.id,
     required this.billId,
@@ -10018,6 +10127,10 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
     required this.markdownPaise,
     required this.discountPaise,
     required this.finalPaise,
+    required this.gstBp,
+    required this.taxablePaise,
+    required this.taxPaise,
+    required this.extraTaxPaise,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -10033,6 +10146,10 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
     map['markdown_paise'] = Variable<int>(markdownPaise);
     map['discount_paise'] = Variable<int>(discountPaise);
     map['final_paise'] = Variable<int>(finalPaise);
+    map['gst_bp'] = Variable<int>(gstBp);
+    map['taxable_paise'] = Variable<int>(taxablePaise);
+    map['tax_paise'] = Variable<int>(taxPaise);
+    map['extra_tax_paise'] = Variable<int>(extraTaxPaise);
     return map;
   }
 
@@ -10049,6 +10166,10 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
       markdownPaise: Value(markdownPaise),
       discountPaise: Value(discountPaise),
       finalPaise: Value(finalPaise),
+      gstBp: Value(gstBp),
+      taxablePaise: Value(taxablePaise),
+      taxPaise: Value(taxPaise),
+      extraTaxPaise: Value(extraTaxPaise),
     );
   }
 
@@ -10069,6 +10190,10 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
       markdownPaise: serializer.fromJson<int>(json['markdownPaise']),
       discountPaise: serializer.fromJson<int>(json['discountPaise']),
       finalPaise: serializer.fromJson<int>(json['finalPaise']),
+      gstBp: serializer.fromJson<int>(json['gstBp']),
+      taxablePaise: serializer.fromJson<int>(json['taxablePaise']),
+      taxPaise: serializer.fromJson<int>(json['taxPaise']),
+      extraTaxPaise: serializer.fromJson<int>(json['extraTaxPaise']),
     );
   }
   @override
@@ -10086,6 +10211,10 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
       'markdownPaise': serializer.toJson<int>(markdownPaise),
       'discountPaise': serializer.toJson<int>(discountPaise),
       'finalPaise': serializer.toJson<int>(finalPaise),
+      'gstBp': serializer.toJson<int>(gstBp),
+      'taxablePaise': serializer.toJson<int>(taxablePaise),
+      'taxPaise': serializer.toJson<int>(taxPaise),
+      'extraTaxPaise': serializer.toJson<int>(extraTaxPaise),
     };
   }
 
@@ -10101,6 +10230,10 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
     int? markdownPaise,
     int? discountPaise,
     int? finalPaise,
+    int? gstBp,
+    int? taxablePaise,
+    int? taxPaise,
+    int? extraTaxPaise,
   }) => BillLineRow(
     id: id ?? this.id,
     billId: billId ?? this.billId,
@@ -10113,6 +10246,10 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
     markdownPaise: markdownPaise ?? this.markdownPaise,
     discountPaise: discountPaise ?? this.discountPaise,
     finalPaise: finalPaise ?? this.finalPaise,
+    gstBp: gstBp ?? this.gstBp,
+    taxablePaise: taxablePaise ?? this.taxablePaise,
+    taxPaise: taxPaise ?? this.taxPaise,
+    extraTaxPaise: extraTaxPaise ?? this.extraTaxPaise,
   );
   BillLineRow copyWithCompanion(BillLinesCompanion data) {
     return BillLineRow(
@@ -10137,6 +10274,14 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
       finalPaise: data.finalPaise.present
           ? data.finalPaise.value
           : this.finalPaise,
+      gstBp: data.gstBp.present ? data.gstBp.value : this.gstBp,
+      taxablePaise: data.taxablePaise.present
+          ? data.taxablePaise.value
+          : this.taxablePaise,
+      taxPaise: data.taxPaise.present ? data.taxPaise.value : this.taxPaise,
+      extraTaxPaise: data.extraTaxPaise.present
+          ? data.extraTaxPaise.value
+          : this.extraTaxPaise,
     );
   }
 
@@ -10153,7 +10298,11 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
           ..write('mrpPaise: $mrpPaise, ')
           ..write('markdownPaise: $markdownPaise, ')
           ..write('discountPaise: $discountPaise, ')
-          ..write('finalPaise: $finalPaise')
+          ..write('finalPaise: $finalPaise, ')
+          ..write('gstBp: $gstBp, ')
+          ..write('taxablePaise: $taxablePaise, ')
+          ..write('taxPaise: $taxPaise, ')
+          ..write('extraTaxPaise: $extraTaxPaise')
           ..write(')'))
         .toString();
   }
@@ -10171,6 +10320,10 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
     markdownPaise,
     discountPaise,
     finalPaise,
+    gstBp,
+    taxablePaise,
+    taxPaise,
+    extraTaxPaise,
   );
   @override
   bool operator ==(Object other) =>
@@ -10186,7 +10339,11 @@ class BillLineRow extends DataClass implements Insertable<BillLineRow> {
           other.mrpPaise == this.mrpPaise &&
           other.markdownPaise == this.markdownPaise &&
           other.discountPaise == this.discountPaise &&
-          other.finalPaise == this.finalPaise);
+          other.finalPaise == this.finalPaise &&
+          other.gstBp == this.gstBp &&
+          other.taxablePaise == this.taxablePaise &&
+          other.taxPaise == this.taxPaise &&
+          other.extraTaxPaise == this.extraTaxPaise);
 }
 
 class BillLinesCompanion extends UpdateCompanion<BillLineRow> {
@@ -10201,6 +10358,10 @@ class BillLinesCompanion extends UpdateCompanion<BillLineRow> {
   final Value<int> markdownPaise;
   final Value<int> discountPaise;
   final Value<int> finalPaise;
+  final Value<int> gstBp;
+  final Value<int> taxablePaise;
+  final Value<int> taxPaise;
+  final Value<int> extraTaxPaise;
   final Value<int> rowid;
   const BillLinesCompanion({
     this.id = const Value.absent(),
@@ -10214,6 +10375,10 @@ class BillLinesCompanion extends UpdateCompanion<BillLineRow> {
     this.markdownPaise = const Value.absent(),
     this.discountPaise = const Value.absent(),
     this.finalPaise = const Value.absent(),
+    this.gstBp = const Value.absent(),
+    this.taxablePaise = const Value.absent(),
+    this.taxPaise = const Value.absent(),
+    this.extraTaxPaise = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   BillLinesCompanion.insert({
@@ -10228,6 +10393,10 @@ class BillLinesCompanion extends UpdateCompanion<BillLineRow> {
     required int markdownPaise,
     required int discountPaise,
     required int finalPaise,
+    this.gstBp = const Value.absent(),
+    this.taxablePaise = const Value.absent(),
+    this.taxPaise = const Value.absent(),
+    this.extraTaxPaise = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        billId = Value(billId),
@@ -10252,6 +10421,10 @@ class BillLinesCompanion extends UpdateCompanion<BillLineRow> {
     Expression<int>? markdownPaise,
     Expression<int>? discountPaise,
     Expression<int>? finalPaise,
+    Expression<int>? gstBp,
+    Expression<int>? taxablePaise,
+    Expression<int>? taxPaise,
+    Expression<int>? extraTaxPaise,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -10266,6 +10439,10 @@ class BillLinesCompanion extends UpdateCompanion<BillLineRow> {
       if (markdownPaise != null) 'markdown_paise': markdownPaise,
       if (discountPaise != null) 'discount_paise': discountPaise,
       if (finalPaise != null) 'final_paise': finalPaise,
+      if (gstBp != null) 'gst_bp': gstBp,
+      if (taxablePaise != null) 'taxable_paise': taxablePaise,
+      if (taxPaise != null) 'tax_paise': taxPaise,
+      if (extraTaxPaise != null) 'extra_tax_paise': extraTaxPaise,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -10282,6 +10459,10 @@ class BillLinesCompanion extends UpdateCompanion<BillLineRow> {
     Value<int>? markdownPaise,
     Value<int>? discountPaise,
     Value<int>? finalPaise,
+    Value<int>? gstBp,
+    Value<int>? taxablePaise,
+    Value<int>? taxPaise,
+    Value<int>? extraTaxPaise,
     Value<int>? rowid,
   }) {
     return BillLinesCompanion(
@@ -10296,6 +10477,10 @@ class BillLinesCompanion extends UpdateCompanion<BillLineRow> {
       markdownPaise: markdownPaise ?? this.markdownPaise,
       discountPaise: discountPaise ?? this.discountPaise,
       finalPaise: finalPaise ?? this.finalPaise,
+      gstBp: gstBp ?? this.gstBp,
+      taxablePaise: taxablePaise ?? this.taxablePaise,
+      taxPaise: taxPaise ?? this.taxPaise,
+      extraTaxPaise: extraTaxPaise ?? this.extraTaxPaise,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -10336,6 +10521,18 @@ class BillLinesCompanion extends UpdateCompanion<BillLineRow> {
     if (finalPaise.present) {
       map['final_paise'] = Variable<int>(finalPaise.value);
     }
+    if (gstBp.present) {
+      map['gst_bp'] = Variable<int>(gstBp.value);
+    }
+    if (taxablePaise.present) {
+      map['taxable_paise'] = Variable<int>(taxablePaise.value);
+    }
+    if (taxPaise.present) {
+      map['tax_paise'] = Variable<int>(taxPaise.value);
+    }
+    if (extraTaxPaise.present) {
+      map['extra_tax_paise'] = Variable<int>(extraTaxPaise.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -10356,6 +10553,10 @@ class BillLinesCompanion extends UpdateCompanion<BillLineRow> {
           ..write('markdownPaise: $markdownPaise, ')
           ..write('discountPaise: $discountPaise, ')
           ..write('finalPaise: $finalPaise, ')
+          ..write('gstBp: $gstBp, ')
+          ..write('taxablePaise: $taxablePaise, ')
+          ..write('taxPaise: $taxPaise, ')
+          ..write('extraTaxPaise: $extraTaxPaise, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -23969,6 +24170,10 @@ typedef $$BillLinesTableCreateCompanionBuilder = BillLinesCompanion Function({
   required int markdownPaise,
   required int discountPaise,
   required int finalPaise,
+  Value<int> gstBp,
+  Value<int> taxablePaise,
+  Value<int> taxPaise,
+  Value<int> extraTaxPaise,
   Value<int> rowid,
 });
 typedef $$BillLinesTableUpdateCompanionBuilder = BillLinesCompanion Function({
@@ -23983,6 +24188,10 @@ typedef $$BillLinesTableUpdateCompanionBuilder = BillLinesCompanion Function({
   Value<int> markdownPaise,
   Value<int> discountPaise,
   Value<int> finalPaise,
+  Value<int> gstBp,
+  Value<int> taxablePaise,
+  Value<int> taxPaise,
+  Value<int> extraTaxPaise,
   Value<int> rowid,
 });
 
@@ -24094,6 +24303,26 @@ class $$BillLinesTableFilterComposer
 
   ColumnFilters<int> get finalPaise => $composableBuilder(
     column: $table.finalPaise,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get gstBp => $composableBuilder(
+    column: $table.gstBp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get taxablePaise => $composableBuilder(
+    column: $table.taxablePaise,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get taxPaise => $composableBuilder(
+    column: $table.taxPaise,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get extraTaxPaise => $composableBuilder(
+    column: $table.extraTaxPaise,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -24223,6 +24452,26 @@ class $$BillLinesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get gstBp => $composableBuilder(
+    column: $table.gstBp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get taxablePaise => $composableBuilder(
+    column: $table.taxablePaise,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get taxPaise => $composableBuilder(
+    column: $table.taxPaise,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get extraTaxPaise => $composableBuilder(
+    column: $table.extraTaxPaise,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$BillsTableOrderingComposer get billId {
     final $$BillsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -24313,6 +24562,22 @@ class $$BillLinesTableAnnotationComposer
 
   GeneratedColumn<int> get finalPaise => $composableBuilder(
     column: $table.finalPaise,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get gstBp =>
+      $composableBuilder(column: $table.gstBp, builder: (column) => column);
+
+  GeneratedColumn<int> get taxablePaise => $composableBuilder(
+    column: $table.taxablePaise,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get taxPaise =>
+      $composableBuilder(column: $table.taxPaise, builder: (column) => column);
+
+  GeneratedColumn<int> get extraTaxPaise => $composableBuilder(
+    column: $table.extraTaxPaise,
     builder: (column) => column,
   );
 
@@ -24431,6 +24696,10 @@ class $$BillLinesTableTableManager
                 Value<int> markdownPaise = const Value.absent(),
                 Value<int> discountPaise = const Value.absent(),
                 Value<int> finalPaise = const Value.absent(),
+                Value<int> gstBp = const Value.absent(),
+                Value<int> taxablePaise = const Value.absent(),
+                Value<int> taxPaise = const Value.absent(),
+                Value<int> extraTaxPaise = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => BillLinesCompanion(
                 id: id,
@@ -24444,6 +24713,10 @@ class $$BillLinesTableTableManager
                 markdownPaise: markdownPaise,
                 discountPaise: discountPaise,
                 finalPaise: finalPaise,
+                gstBp: gstBp,
+                taxablePaise: taxablePaise,
+                taxPaise: taxPaise,
+                extraTaxPaise: extraTaxPaise,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -24459,6 +24732,10 @@ class $$BillLinesTableTableManager
                 required int markdownPaise,
                 required int discountPaise,
                 required int finalPaise,
+                Value<int> gstBp = const Value.absent(),
+                Value<int> taxablePaise = const Value.absent(),
+                Value<int> taxPaise = const Value.absent(),
+                Value<int> extraTaxPaise = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => BillLinesCompanion.insert(
                 id: id,
@@ -24472,6 +24749,10 @@ class $$BillLinesTableTableManager
                 markdownPaise: markdownPaise,
                 discountPaise: discountPaise,
                 finalPaise: finalPaise,
+                gstBp: gstBp,
+                taxablePaise: taxablePaise,
+                taxPaise: taxPaise,
+                extraTaxPaise: extraTaxPaise,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

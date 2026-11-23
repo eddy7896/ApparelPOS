@@ -5,7 +5,7 @@
 // stock tables; version 2 adds the sign-in users table (P2-2); version 3 adds
 // shop settings and the size and color lists (P2-3); version 4 adds bills (P2-4b);
 // version 5 adds returns and credit notes (P2-5b); version 6 adds shifts, blind
-// closes and the daybook (P2-6b); version 7 adds breaks inside a shift (UX-3); version 8 gives every person an operator ID; version 9 adds stock categories; version 10 adds markdowns set ahead of time on a style; version 11 adds pay later (customers, what they owe, the daybook takes dues).
+// closes and the daybook (P2-6b); version 7 adds breaks inside a shift (UX-3); version 8 gives every person an operator ID; version 9 adds stock categories; version 10 adds markdowns set ahead of time on a style; version 11 adds pay later (customers, what they owe, the daybook takes dues); version 12 adds GST fields to bill lines.
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:drift_dev/api/migrations_native.dart';
@@ -19,11 +19,11 @@ void main() {
   late SchemaVerifier verifier;
   setUpAll(() => verifier = SchemaVerifier(GeneratedHelper()));
 
-  test('version 1 upgrades to the latest version (11) with the exact expected schema', () async {
+  test('version 1 upgrades to the latest version (12) with the exact expected schema', () async {
     final connection = await verifier.startAt(1);
     final db = AppDatabase(connection);
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 11);
+    await verifier.migrateAndValidate(db, 12);
   });
 
   test(
@@ -35,7 +35,7 @@ void main() {
       );
       final db = AppDatabase(schema.newConnection());
       addTearDown(db.close);
-      await verifier.migrateAndValidate(db, 11);
+      await verifier.migrateAndValidate(db, 12);
       final rows = await db.customSelect('SELECT name FROM products').get();
       expect(rows.single.read<String>('name'), 'Kurta');
       expect(
@@ -46,11 +46,11 @@ void main() {
     },
   );
 
-  test('version 2 upgrades to the latest version (11) with the exact expected schema', () async {
+  test('version 2 upgrades to the latest version (12) with the exact expected schema', () async {
     final connection = await verifier.startAt(2);
     final db = AppDatabase(connection);
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 11);
+    await verifier.migrateAndValidate(db, 12);
   });
 
   test(
@@ -62,7 +62,7 @@ void main() {
       );
       final db = AppDatabase(schema.newConnection());
       addTearDown(db.close);
-      await verifier.migrateAndValidate(db, 11);
+      await verifier.migrateAndValidate(db, 12);
       final rows = await db.customSelect('SELECT name FROM users').get();
       expect(rows.single.read<String>('name'), 'Asha');
       expect(
@@ -75,11 +75,11 @@ void main() {
     },
   );
 
-  test('version 3 upgrades to the latest version (11) with the exact expected schema', () async {
+  test('version 3 upgrades to the latest version (12) with the exact expected schema', () async {
     final connection = await verifier.startAt(3);
     final db = AppDatabase(connection);
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 11);
+    await verifier.migrateAndValidate(db, 12);
   });
 
   test('stock made in version 3 survives; bills start empty and are '
@@ -90,7 +90,7 @@ void main() {
     );
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 11);
+    await verifier.migrateAndValidate(db, 12);
     expect(
       (await db.customSelect('SELECT name FROM products').getSingle())
           .read<String>('name'),
@@ -114,11 +114,11 @@ void main() {
     expect(triggers.length, 30); // 2 for each of 15 never-edited tables
   });
 
-  test('version 4 upgrades to the latest version (11) with the exact expected schema', () async {
+  test('version 4 upgrades to the latest version (12) with the exact expected schema', () async {
     final connection = await verifier.startAt(4);
     final db = AppDatabase(connection);
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 11);
+    await verifier.migrateAndValidate(db, 12);
   });
 
   test('bills and payments made in version 4 survive, and a credit note '
@@ -139,7 +139,7 @@ void main() {
     );
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 11);
+    await verifier.migrateAndValidate(db, 12);
     final rows = await db
         .customSelect('SELECT mode, amount_paise FROM bill_payments')
         .get();
@@ -161,11 +161,11 @@ void main() {
     );
   });
 
-  test('version 5 upgrades to the latest version (11) with the exact expected schema', () async {
+  test('version 5 upgrades to the latest version (12) with the exact expected schema', () async {
     final connection = await verifier.startAt(5);
     final db = AppDatabase(connection);
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 11);
+    await verifier.migrateAndValidate(db, 12);
   });
 
   test('bills made in version 5 survive version 6 with no shift, and new '
@@ -183,7 +183,7 @@ void main() {
     );
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 11);
+    await verifier.migrateAndValidate(db, 12);
     final b = await db
         .customSelect('SELECT bill_no, shift_id FROM bills')
         .getSingle();
@@ -198,11 +198,11 @@ void main() {
     }
   });
 
-  test('version 6 upgrades to the latest version (11) with the exact expected schema', () async {
+  test('version 6 upgrades to the latest version (12) with the exact expected schema', () async {
     final connection = await verifier.startAt(6);
     final db = AppDatabase(connection);
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 11);
+    await verifier.migrateAndValidate(db, 12);
   });
 
   test('a shift open in version 6 survives version 7 with no breaks', () async {
@@ -219,7 +219,7 @@ void main() {
     );
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 11);
+    await verifier.migrateAndValidate(db, 12);
     final s = await db
         .customSelect('SELECT id, opening_paise FROM shifts')
         .getSingle();
@@ -234,11 +234,11 @@ void main() {
     }
   });
 
-  test('version 7 upgrades to the latest version (11) with the exact expected schema', () async {
+  test('version 7 upgrades to the latest version (12) with the exact expected schema', () async {
     final connection = await verifier.startAt(7);
     final db = AppDatabase(connection);
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 11);
+    await verifier.migrateAndValidate(db, 12);
   });
 
   test('people made before version 8 get operator numbers in the order they were added', () async {
@@ -255,7 +255,7 @@ void main() {
     );
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 11);
+    await verifier.migrateAndValidate(db, 12);
     final rows = await db
         .customSelect(
           'SELECT id, staff_number FROM users ORDER BY staff_number',
@@ -282,11 +282,11 @@ void main() {
     );
   });
 
-  test('version 8 upgrades to the latest version (11) with the exact expected schema', () async {
+  test('version 8 upgrades to the latest version (12) with the exact expected schema', () async {
     final connection = await verifier.startAt(8);
     final db = AppDatabase(connection);
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 11);
+    await verifier.migrateAndValidate(db, 12);
   });
 
   test('styles made before version 9 keep working with no category', () async {
@@ -297,7 +297,7 @@ void main() {
     );
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 11);
+    await verifier.migrateAndValidate(db, 12);
     final r = await db
         .customSelect('SELECT name, category_id FROM products')
         .getSingle();
@@ -312,11 +312,11 @@ void main() {
     );
   });
 
-  test('version 9 upgrades to the latest version (11) with the exact expected schema', () async {
+  test('version 9 upgrades to the latest version (12) with the exact expected schema', () async {
     final connection = await verifier.startAt(9);
     final db = AppDatabase(connection);
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 11);
+    await verifier.migrateAndValidate(db, 12);
   });
 
   test('a style gets no markdown from the upgrade, and a markdown can then be kept', () async {
@@ -327,7 +327,7 @@ void main() {
     );
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 11);
+    await verifier.migrateAndValidate(db, 12);
     expect(
       (await db
               .customSelect('SELECT COUNT(*) AS c FROM style_markdowns')
@@ -351,7 +351,7 @@ void main() {
     );
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 11);
+    await verifier.migrateAndValidate(db, 12);
     Future<void> insert(String cols, String vals) => db.customStatement(
       'INSERT INTO style_markdowns (product_id, $cols, ends_before, set_by, created_at, updated_at) '
       "VALUES ('p1', $vals, 1800000000, 'u1', 1700000000, 1700000000)",
@@ -367,11 +367,11 @@ void main() {
     await insert('amount_paise', '5000'); // a good one still goes in
   });
 
-  test('version 10 upgrades to the latest version (11) with the exact expected schema', () async {
+  test('version 10 upgrades to the latest version (12) with the exact expected schema', () async {
     final connection = await verifier.startAt(10);
     final db = AppDatabase(connection);
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 11);
+    await verifier.migrateAndValidate(db, 12);
   });
 
   test('daybook rows made before version 11 are kept, still cannot be changed, and the new kinds are accepted', () async {
@@ -391,7 +391,7 @@ void main() {
     );
     final db = AppDatabase(schema.newConnection());
     addTearDown(db.close);
-    await verifier.migrateAndValidate(db, 11);
+    await verifier.migrateAndValidate(db, 12);
     final r = await db
         .customSelect('SELECT kind, amount_paise FROM daybook')
         .getSingle();
@@ -415,4 +415,66 @@ void main() {
       throwsA(anything),
     );
   });
+
+  test('version 11 upgrades to the latest version (12) with the exact expected schema', () async {
+    final connection = await verifier.startAt(11);
+    final db = AppDatabase(connection);
+    addTearDown(db.close);
+    await verifier.migrateAndValidate(db, 12);
+  });
+
+  test(
+    'bill lines made before version 12 read as no GST, and cannot be changed',
+    () async {
+      final schema = await verifier.schemaAt(11);
+      final raw = schema.rawDatabase;
+      raw.execute(
+        "INSERT INTO users (id, name, role, credential_hash, created_at, updated_at) VALUES ('u1', 'Asha', 'CASHIER', 'x', 1700000000, 1700000000)",
+      );
+      raw.execute(
+        "INSERT INTO counters (id, name, lot_first, lot_last, current_lot, next_serial, created_at, updated_at) VALUES ('c1', 'Counter 1', 0, 499, 0, 0, 1700000000, 1700000000)",
+      );
+      raw.execute(
+        "INSERT INTO products (id, name, created_at, updated_at) VALUES ('p1', 'Kurta', 1700000000, 1700000000)",
+      );
+      raw.execute(
+        "INSERT INTO variants (id, product_id, size, color, mrp_paise, created_at, updated_at) VALUES ('v1', 'p1', 'M', 'Blue', 49900, 1700000000, 1700000000)",
+      );
+      raw.execute(
+        "INSERT INTO batches (id, supplier, lot, purchased_at, created_at, updated_at) VALUES ('ba1', 'S', 0, 1700000000, 1700000000, 1700000000)",
+      );
+      raw.execute(
+        "INSERT INTO articles (id, variant_id, batch_id, barcode_value, status, mrp_paise, created_at, updated_at) VALUES ('a1', 'v1', 'ba1', '000000000011', 'SOLD', 49900, 1700000000, 1700000000)",
+      );
+      raw.execute(
+        "INSERT INTO bills (id, bill_no, counter_id, cashier_id, total_paise, change_paise, billed_at, created_at) VALUES ('b1', '2026-27/C1/000001', 'c1', 'u1', 49900, 0, 1700000000, 1700000000)",
+      );
+      raw.execute(
+        "INSERT INTO bill_lines (id, bill_id, article_id, barcode_value, product_name, size, color, mrp_paise, markdown_paise, discount_paise, final_paise) VALUES ('l1', 'b1', 'a1', '000000000011', 'Kurta', 'M', 'Blue', 49900, 0, 0, 49900)",
+      );
+      final db = AppDatabase(schema.newConnection());
+      addTearDown(db.close);
+      await verifier.migrateAndValidate(db, 12);
+      final r = await db
+          .customSelect(
+            'SELECT final_paise, gst_bp, taxable_paise, tax_paise, extra_tax_paise FROM bill_lines',
+          )
+          .getSingle();
+      expect(r.read<int>('final_paise'), 49900);
+      for (final c in [
+        'gst_bp',
+        'taxable_paise',
+        'tax_paise',
+        'extra_tax_paise',
+      ]) {
+        expect(r.read<int>(c), 0, reason: c);
+      }
+      await expectLater(
+        db.customStatement(
+          "UPDATE bill_lines SET tax_paise = 5 WHERE id = 'l1'",
+        ),
+        throwsA(anything),
+      );
+    },
+  );
 }

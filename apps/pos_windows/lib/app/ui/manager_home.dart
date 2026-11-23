@@ -148,7 +148,7 @@ class _ManagerHomeState extends State<ManagerHome> {
         'Shift closes',
         () => _open(ShiftClosesScreen(session: _session, services: _s)),
       ),
-      if (_s.categories != null)
+      if (_s.categories != null || _s.gst != null)
         _NavItem(
           'settings-button',
           Icons.settings,

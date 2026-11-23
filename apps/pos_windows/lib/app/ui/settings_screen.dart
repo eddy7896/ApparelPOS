@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import '../../data/category_repository.dart';
 import '../services.dart';
 import '../session_controller.dart';
+import 'gst_settings_card.dart';
 import 'ui_tokens.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -46,6 +47,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _load() async {
     final repo = _repo;
     if (repo == null) {
+      // No categories in this build or test: only the GST card is shown.
+      if (mounted) {
+        setState(() => _entries = const []);
+      }
       return;
     }
     try {
@@ -217,10 +222,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                   ),
-                _categoriesCard(context, entries),
-                const SizedBox(height: 16),
-                _stylesCard(context, entries),
-                const SizedBox(height: 16),
+                if (_repo != null) ...[
+                  _categoriesCard(context, entries),
+                  const SizedBox(height: 16),
+                  _stylesCard(context, entries),
+                  const SizedBox(height: 16),
+                ],
+                if (widget.services.gst != null) ...[
+                  GstSettingsCard(
+                    session: widget.session,
+                    services: widget.services,
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 const Text(
                   "The shop's name, colors and logo are set from the owner's "
                   'phone app (Release 2).',

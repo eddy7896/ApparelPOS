@@ -63,7 +63,7 @@ Purpose: phases and task IDs. Size S <= 1 day, M <= 3 days, L <= 1 week. Phases 
 | P3-3a | Windows installer (Inno Setup, per-user, unsigned), pinned data location, CI install smoke test | M | Setup builds, installs, starts and uninstalls on the CI runner | P3-2c | doing |
 | P3-3c | Release process: changelog, feature log, release workflow that attaches the installer to a GitHub Release | M | check:changelog passes; workflow files parse; first real run is the 0.9.0 tag | P3-3a | doing |
 | P3-3b | Runbook for the owner: install, first day, laptop fails, database corrupt, restore, SmartScreen warning, go-live checklist | M | owner can follow it | P3-3a | todo |
-| P3-4 | GST toggle scaffold (settings, tax fields) | M | E-GST-1 | P2-4 | todo |
+| P3-4 | GST toggle scaffold (settings, tax fields); first step also tax on bills, the printed invoice, returns and the daily report (owner, 2026-11-23); GST reports later | L | E-GST-1; rules, database v12, screens, bill and report tests | P2-4 | first step done |
 
 ## UX redesign and branding (owner asked 2026-11-22; plan in `documentation/modules/branding_and_ux.md`)
 | ID | Task | Size | Acceptance | Depends on | Status |

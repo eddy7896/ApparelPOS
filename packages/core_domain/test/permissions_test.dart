@@ -55,15 +55,15 @@ void main() {
       }
     });
 
-    test('a manager has every permission except writing off a debt', () {
-      for (final p in Permission.values) {
-        expect(
-          can(Role.manager, p),
-          p != Permission.writeOffDebt,
-          reason: '$p',
-        );
-      }
-    });
+    test(
+      'a manager has every permission except writing off a debt and GST',
+      () {
+        const ownerOnly = {Permission.writeOffDebt, Permission.configureGst};
+        for (final p in Permission.values) {
+          expect(can(Role.manager, p), !ownerOnly.contains(p), reason: '$p');
+        }
+      },
+    );
 
     test('a cashier cannot leave a bill unpaid or write off a debt', () {
       expect(can(Role.cashier, Permission.allowPayLater), isFalse);

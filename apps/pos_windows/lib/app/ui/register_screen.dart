@@ -159,6 +159,9 @@ class _RegisterPanelState extends State<RegisterPanel> {
   /// The shop's categories and the one chosen to narrow the name search.
   List<CategoryNode> _categories = const [];
   String? _catFilter;
+
+  /// The shop's GST settings (GST off until the owner switches it on).
+  GstSettings _gst = const GstSettings();
   String? _savedCustomerName;
   String? _savedCustomerPhone;
 
@@ -173,6 +176,18 @@ class _RegisterPanelState extends State<RegisterPanel> {
       WidgetsBinding.instance.addPostFrameCallback((_) => _addNote(code));
     }
     _loadCategories();
+    _loadGst();
+  }
+
+  Future<void> _loadGst() async {
+    try {
+      final g = await _s.sales.gstSettings(role: _role);
+      if (mounted) {
+        setState(() => _gst = g);
+      }
+    } on PermissionDenied {
+      // stays off
+    }
   }
 
   Future<void> _loadCategories() async {
@@ -222,10 +237,14 @@ class _RegisterPanelState extends State<RegisterPanel> {
 
   // ---- money on screen ------------------------------------------------------
 
-  Money get _total => _lines.fold<Money>(
-    Money.zero,
-    (sum, l) => sum + (l.priced?.finalPrice ?? l.item.mrp),
-  );
+  /// The tax on the garments on the bill (nothing while GST is off), worked
+  /// out by the same rule the bill is saved with.
+  BillTax get _tax => billTax([
+    for (final l in _lines) l.priced?.finalPrice ?? l.item.mrp,
+  ], _gst);
+
+  /// What the customer pays: the prices, plus the tax when it is added on top.
+  Money get _total => _tax.total;
 
   /// How much of each credit note this bill takes, in the order added: the
   /// smaller of its balance and what is still to pay (the rest stays on it).
@@ -576,10 +595,9 @@ class _RegisterPanelState extends State<RegisterPanel> {
     final name = _customerName.text;
     final phone = _customerPhone.text;
     try {
-      if (await _refreshPrices()) {
-        _say(
-          'A markdown changed while this bill was open. Check the new total.',
-        );
+      final changed = await _refreshPrices();
+      if (changed != null) {
+        _say(changed);
         return;
       }
       final bill = await _s.sales.saveBill(
@@ -644,9 +662,19 @@ class _RegisterPanelState extends State<RegisterPanel> {
   }
 
   /// Looks every garment up again and takes in any change of markdown (one set
-  /// or ended while the bill was open). True when a price changed.
-  Future<bool> _refreshPrices() async {
-    var changed = false;
+  /// or ended while the bill was open) and of the GST settings. Returns what to
+  /// tell the cashier when a price changed, or null when nothing did.
+  Future<String?> _refreshPrices() async {
+    var markdownChanged = false;
+    final g = await _s.sales.gstSettings(role: _role);
+    final gstChanged =
+        g.enabled != _gst.enabled ||
+        g.mode != _gst.mode ||
+        g.rateBp != _gst.rateBp ||
+        g.rounding != _gst.rounding;
+    if (mounted) {
+      _gst = g;
+    }
     for (final l in _lines) {
       final fresh = await _s.sales.lookup(role: _role, barcode: l.item.barcode);
       if (fresh == null || !mounted) {
@@ -661,16 +689,22 @@ class _RegisterPanelState extends State<RegisterPanel> {
                 a.amountOff == b.amountOff;
       l.item = fresh;
       if (!same) {
-        changed = true;
+        markdownChanged = true;
         if (b != null) {
           l.discount = null;
         }
       }
     }
-    if (changed && mounted) {
+    if ((markdownChanged || gstChanged) && mounted) {
       setState(() {});
     }
-    return changed;
+    if (markdownChanged) {
+      return 'A markdown changed while this bill was open. Check the new total.';
+    }
+    if (gstChanged) {
+      return 'The GST settings changed while this bill was open. Check the new total.';
+    }
+    return null;
   }
 
   Future<void> _print() async {
@@ -1515,6 +1549,17 @@ class _RegisterPanelState extends State<RegisterPanel> {
                           color: Theme.of(context).colorScheme.onPrimary,
                         ),
                       ),
+                      if (_gst.enabled && _lines.isNotEmpty)
+                        Text(
+                          _gst.mode == GstMode.exclusive
+                              ? 'Includes GST ${formatRupees(_tax.totalTax)} added to the prices'
+                              : 'Includes GST ${formatRupees(_tax.totalTax)}',
+                          key: const Key('gst-line'),
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                        ),
                     ],
                   ),
                 ),
