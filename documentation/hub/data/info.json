@@ -2,5 +2,5 @@
   "title": "Apparel PoS Hub",
   "subtitle": "Progress, screens, architecture and decisions for the shop billing system.",
   "repo": "https://github.com/eddy7896/ApparelPOS.git",
-  "demoNote": "Demo: run flutter run -d chrome in apps/pos_windows, click Add practice users, then sign in (practice owner and practice cashier). The browser preview is for development only (data is lost on reload, nothing is encrypted or backed up, not for the shop). It covers sign-in, stock entry, the register, returns and credit notes, shifts and the blind close, and the owner's daily report; encryption, backups and the installer exist only on Windows and have not been run on a real Windows machine."
+  "demoNote": "Demo: run flutter run -d chrome in apps/pos_windows, click Add practice users (this also adds demo stock in development builds), then sign in (practice owner and practice cashier). The browser preview is for development only (data is lost on reload, nothing is encrypted or backed up, not for the shop). It covers sign-in, stock entry, the register, returns and credit notes, shifts and the blind close, the daily report, stock lookup, analytics, staff, categories, markdowns and pay later; encryption, backups and the installer exist only on Windows and have not been run on a real Windows machine."
 }

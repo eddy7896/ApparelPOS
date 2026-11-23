@@ -1,17 +1,17 @@
 {
-  "readAt": "2026-11-21 from git and gh",
+  "readAt": "2026-11-23 from git and gh",
   "status": [
     {
       "tone": "bad",
-      "text": "Branch protection is OFF on main and develop (GitHub API: Branch not protected, read 2026-11-21). Rules are enforced by CI and habit only."
+      "text": "Branch protection is OFF on main and develop (GitHub API, read 2026-11-23). Rules are enforced by CI and habit only."
     },
     {
       "tone": "warn",
-      "text": "main is 1 commit behind and 67 commits behind develop: nothing has been released since PR #2; main has a merge commit that develop lacks (back-merge needed at the next release)."
+      "text": "main is 1 commit behind and 72 commits behind develop: nothing has been released since PR #2 (release 0.9.0 is prepared, not tagged). main has a merge commit that develop lacks (back-merge needed at the next release)."
     },
     {
       "tone": "warn",
-      "text": "PR #33 (Windows installer) is open; branch-policy, build-lint-test and GitGuardian pass; the Windows job dart-flutter-windows, which builds and test-installs Setup for the first time, was still pending at the read."
+      "text": "26 pull requests (#35 to #60) are open and stacked: each is based on develop but built on the one before, so they must be merged in order, starting with #35. Nothing in them has run on a real Windows machine."
     }
   ],
   "branches": [
@@ -21,21 +21,21 @@
     },
     {
       "name": "develop",
-      "note": "integration; last updated 2026-11-21"
+      "note": "integration; PR #34 merged 2026-11-22"
     },
     {
-      "name": "feat/p3-3a-installer",
-      "note": "PR #33, open, based on develop"
+      "name": "feat/ux-1 ... feat/owner-runbook (PRs #35 to #60)",
+      "note": "open, stacked in order; the newest, feat/owner-runbook (PR #60), contains all of them"
     },
     {
       "name": "merged topic branches (still on GitHub, not deleted)",
-      "note": "every feat/p* branch from feat/p0-5-skeletons to feat/p3-2c-backup-screens, plus chore/bootstrap-project, chore/ci-windows-flutter and feat/web-dev-preview"
+      "note": "every feat/p* branch up to feat/p3-3c, plus chore/bootstrap-project, chore/ci-windows-flutter and feat/web-dev-preview"
     }
   ],
   "ledger": [
     {
       "pr": "#1",
-      "title": "P0-4: Project documents, checks and workflow",
+      "title": "P0-4: Project documents, checks and workflow are in the repository",
       "state": "merged"
     },
     {
@@ -196,6 +196,141 @@
     {
       "pr": "#33",
       "title": "P3-3a: Windows installer (Inno Setup), pinned data location, CI install test",
+      "state": "merged"
+    },
+    {
+      "pr": "#34",
+      "title": "P3-3c: Changelog, feature log and a release workflow that attaches the Windows installer",
+      "state": "merged"
+    },
+    {
+      "pr": "#35",
+      "title": "Plan: UI redesign and branding as data (UX-1 to UX-5)",
+      "state": "open"
+    },
+    {
+      "pr": "#36",
+      "title": "UX-1: Branding as data (shop name, color, logo)",
+      "state": "open"
+    },
+    {
+      "pr": "#37",
+      "title": "UX-2: Register popup, quick cash, 48 dp targets",
+      "state": "open"
+    },
+    {
+      "pr": "#38",
+      "title": "UX-3: Shift popup at sign-in, Pause and top bar buttons",
+      "state": "open"
+    },
+    {
+      "pr": "#39",
+      "title": "UX-4: Manager Mode home with a left rail and Today page",
+      "state": "open"
+    },
+    {
+      "pr": "#40",
+      "title": "UX-5: Returns popup and big refund panel",
+      "state": "open"
+    },
+    {
+      "pr": "#41",
+      "title": "Stock lookup for cashiers and managers",
+      "state": "open"
+    },
+    {
+      "pr": "#42",
+      "title": "Demo stock with the practice users (development only)",
+      "state": "open"
+    },
+    {
+      "pr": "#43",
+      "title": "Analytics for manager and owner: charts, trend reading, slow movers",
+      "state": "open"
+    },
+    {
+      "pr": "#44",
+      "title": "Staff management in Manager Mode",
+      "state": "open"
+    },
+    {
+      "pr": "#45",
+      "title": "Billing: search by item name and several of one size and color",
+      "state": "open"
+    },
+    {
+      "pr": "#46",
+      "title": "Align the app screens with the redesign mock-up",
+      "state": "open"
+    },
+    {
+      "pr": "#47",
+      "title": "Daily report: charts, headline tiles and a table view",
+      "state": "open"
+    },
+    {
+      "pr": "#48",
+      "title": "Stock lookup: clear out-of-stock and running-low, with summary and filters",
+      "state": "open"
+    },
+    {
+      "pr": "#49",
+      "title": "Cashier PIN is exactly 6 digits",
+      "state": "open"
+    },
+    {
+      "pr": "#50",
+      "title": "Register: payment card with Cash, UPI, Card and Split",
+      "state": "open"
+    },
+    {
+      "pr": "#51",
+      "title": "Operator IDs on the bill instead of staff names (schema v8)",
+      "state": "open"
+    },
+    {
+      "pr": "#52",
+      "title": "Stock categories: Settings, stock entry, lookup, billing search, analytics (schema v9)",
+      "state": "open"
+    },
+    {
+      "pr": "#53",
+      "title": "Bundle the Inter font",
+      "state": "open"
+    },
+    {
+      "pr": "#54",
+      "title": "Register: F4 hold bill, F6 new search, Esc",
+      "state": "open"
+    },
+    {
+      "pr": "#55",
+      "title": "Daily report: break time per shift",
+      "state": "open"
+    },
+    {
+      "pr": "#56",
+      "title": "Markdowns set ahead of time on a style, applied by the register (P2-4e, schema v10)",
+      "state": "open"
+    },
+    {
+      "pr": "#57",
+      "title": "Pay later (udhaar) 1 of 2: rules, database v11, payments, returns, write-off (P2-4d)",
+      "state": "open"
+    },
+    {
+      "pr": "#58",
+      "title": "Pay later (udhaar) 2 of 2: register choice, Pay later page, returns and report screens (P2-4d)",
+      "state": "open"
+    },
+    {
+      "pr": "#59",
+      "title": "GST, switched off: owner-only setup, tax on bills and printed invoice (P3-4, schema v12)",
+      "state": "open"
+    },
+    {
+      "pr": "#60",
+      "title": "Owner's runbook (P3-3b)",
       "state": "open"
     }
   ],
@@ -204,14 +339,15 @@
     "The owner merges and releases; the agent only opens pull requests."
   ],
   "ownerActions": [
-    "PR #33 (Windows installer): when its Windows job is green, merge it, then download the ApparelPoS-Setup file from that CI run and try it on a spare Windows computer. Tell me what Windows shows.",
-    "Choose the real shop or company name and send an icon if you have one. The name decides the data folder on Windows and must never change after go-live (ADR-0018).",
-    "Try the app on a real Windows machine, end to end: install, owner set-up, recovery key (write it on paper), stock entry and hangtag print, billing, returns, shift open and close, daily report, backups to a USB drive and a folder, and a restore on a spare computer. Tell me what you see.",
-    "Print a hangtag sheet, a bill and a credit note slip on a real printer and scan the barcodes. Tell us the printer and scanner models.",
+    "Merge pull requests #35 to #60 in order (each builds on the one before), then tell me \"merged proceed\"; I then prepare the Release 0.9.0 pull request. I never merge or tag.",
+    "Confirm my assumptions, listed in the pull requests: low stock 2 or fewer; slow mover 30+ days and under 25% sold; trend threshold 5%; markdown end date required; a return offsets only its own pay-later bill; GST rules (all unverified).",
+    "Take every GST rule to your CA before switching GST on (Settings, GST, owner only). It is off by default.",
+    "Decide what bills and hangtags should say until the phone app exists: the shop name, colour and logo cannot be set on the laptop yet. Also choose the real shop or company name (it fixes the data folder; ADR-0018) and send an icon if you have one.",
+    "Follow documentation/owner_runbook.md once on a real Windows laptop, end to end, and tell me what is wrong. Print a hangtag sheet, a bill and a credit note slip on a real printer and scan the tags. Tell us the printer and scanner models.",
+    "Do a restore test: restore a backup on a second computer using only the paper recovery key.",
     "Accept or reject the SQLCipher community licence (ADR-0003 point 7).",
     "Switch on branch protection for main and develop; require branch-policy, build-lint-test and dart-flutter-windows.",
-    "Review ADR-0006, ADR-0013, ADR-0014 and ADR-0018 (Proposed).",
-    "Confirm earlier assistant choices (see the module documents): return and credit note choices, shift choices, the daily report profit definition, backup labels and limits.",
-    "Choose what comes next: P3-3b the runbook (recommended), P3-4 GST setup, P2-4d pay later (udhaar) or P2-4e markdown at the register."
+    "Review ADR-0003 (amended twice: owner-only write-off and GST), ADR-0006, ADR-0013, ADR-0014 and ADR-0018 (Proposed).",
+    "Not built, say if you want them next: GST reports, an owner password reset, the shop name on the laptop, Release 2 (second counter, phone app)."
   ]
 }
