@@ -26,6 +26,7 @@ export 'src/return_rules.dart';
 export 'src/shift_rules.dart';
 export 'src/staff_rules.dart';
 export 'src/shop_time.dart';
+export 'src/stock_level.dart';
 
 /// Version marker so the skeleton has something to test. Real rules start in P1-1.
 const String coreDomainSkeletonVersion = '0.0.1';

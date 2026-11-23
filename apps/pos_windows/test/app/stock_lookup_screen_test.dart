@@ -11,6 +11,7 @@ import 'package:pos_windows/app/app.dart';
 import 'package:pos_windows/app/label_printer.dart';
 import 'package:pos_windows/app/services.dart';
 import 'package:pos_windows/app/session_controller.dart';
+import 'package:pos_windows/app/ui/ui_tokens.dart';
 import 'package:pos_windows/data/app_database.dart';
 import 'package:pos_windows/data/auth_service.dart';
 import 'package:pos_windows/data/report_repository.dart';
@@ -223,7 +224,7 @@ void main() {
       await type(tester, 'kurta');
       expect(find.byKey(const Key('style-Denim Jeans')), findsNothing);
       expect(textOf(tester, 'count-Cotton Kurta-M-Blue'), '3 in stock');
-      expect(textOf(tester, 'count-Cotton Kurta-L-Blue'), 'None left');
+      expect(textOf(tester, 'count-Cotton Kurta-L-Blue'), 'Out of stock');
       expect(find.text('₹499.00'), findsOneWidget);
       expect(find.text('₹549.00'), findsOneWidget);
     });
@@ -250,6 +251,200 @@ void main() {
       await type(tester, 'kurta');
       expect(textOf(tester, 'count-Cotton Kurta-M-Blue'), '3 in stock');
       expect(find.textContaining('234'), findsNothing);
+    });
+  });
+
+  group('out of stock and running low, made obvious', () {
+    testWidgets(
+      'an out-of-stock size and color is red, with the words, a block icon and a struck-through name',
+      (tester) async {
+        await open(tester);
+        await goToLookup(tester);
+        await type(tester, 'kurta');
+        final tile = tester.widget<Container>(
+          find.byKey(const Key('variant-Cotton Kurta-L-Blue')),
+        );
+        expect((tile.decoration as BoxDecoration).color, UiColors.dangerSoft);
+        expect(textOf(tester, 'count-Cotton Kurta-L-Blue'), 'Out of stock');
+        expect(
+          find.descendant(
+            of: find.byKey(const Key('variant-Cotton Kurta-L-Blue')),
+            matching: find.byIcon(Icons.block),
+          ),
+          findsOneWidget,
+        );
+        final name = tester.widget<Text>(
+          find.descendant(
+            of: find.byKey(const Key('variant-Cotton Kurta-L-Blue')),
+            matching: find.text('L · Blue'),
+          ),
+        );
+        expect(name.style?.decoration, TextDecoration.lineThrough);
+        final ok = tester.widget<Container>(
+          find.byKey(const Key('variant-Cotton Kurta-M-Blue')),
+        );
+        expect(
+          (ok.decoration as BoxDecoration).color,
+          isNot(UiColors.dangerSoft),
+        );
+        expect(
+          find.descendant(
+            of: find.byKey(const Key('variant-Cotton Kurta-M-Blue')),
+            matching: find.byIcon(Icons.block),
+          ),
+          findsNothing,
+        );
+      },
+    );
+
+    testWidgets('one or two left is amber and says Only N left', (
+      tester,
+    ) async {
+      await open(tester);
+      await goToLookup(tester);
+      await type(tester, 'denim');
+      expect(textOf(tester, 'count-Denim Jeans-L-Black'), 'Only 1 left');
+      expect(textOf(tester, 'style-total-Denim Jeans'), 'Only 1 left');
+      final tile = tester.widget<Container>(
+        find.byKey(const Key('variant-Denim Jeans-L-Black')),
+      );
+      expect((tile.decoration as BoxDecoration).color, UiColors.amberSoft);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('variant-Denim Jeans-L-Black')),
+          matching: find.byIcon(Icons.warning_amber_rounded),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a style with nothing left says Out of stock on its header', (
+      tester,
+    ) async {
+      await db.customStatement(
+        "UPDATE articles SET status = 'SOLD' WHERE variant_id IN (SELECT v.id FROM variants v JOIN products p ON p.id = v.product_id WHERE p.name = 'Denim Jeans')",
+      );
+      await open(tester);
+      await goToLookup(tester);
+      await type(tester, 'denim');
+      expect(textOf(tester, 'style-total-Denim Jeans'), 'Out of stock');
+    });
+
+    testWidgets(
+      'a summary counts the sizes and colors that are out and running low',
+      (tester) async {
+        await open(tester);
+        await goToLookup(tester);
+        expect(
+          textOf(tester, 'lookup-summary-text'),
+          '1 size and color is out of stock, 1 running low',
+        );
+      },
+    );
+
+    testWidgets('the summary is amber, not red, when nothing is out but something is low', (tester) async {
+      await db.customStatement("UPDATE articles SET status = 'IN_STOCK'");
+      await db.customStatement(
+        "INSERT INTO articles (id, barcode_value, variant_id, batch_id, mrp_paise, status, created_at, updated_at) SELECT 'x1', '999900000001', variant_id, batch_id, mrp_paise, 'IN_STOCK', created_at, updated_at FROM articles LIMIT 1",
+      );
+      await open(tester);
+      await goToLookup(tester);
+      // Cotton Kurta L Blue is back to 1 (low) so the summary is the amber one, not red
+      final box = tester.widget<Container>(
+        find.byKey(const Key('lookup-summary')),
+      );
+      expect((box.decoration as BoxDecoration).color, UiColors.amberSoft);
+    });
+
+    testWidgets(
+      'filter chips show counts: all, in stock, running low, out of stock',
+      (tester) async {
+        await open(tester);
+        await goToLookup(tester);
+        expect(find.text('All (3)'), findsOneWidget);
+        expect(find.text('In stock (2)'), findsOneWidget);
+        expect(find.text('Running low (1)'), findsOneWidget);
+        expect(find.text('Out of stock (1)'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Out of stock shows only what is out, hiding the styles that have none',
+      (tester) async {
+        await open(tester);
+        await goToLookup(tester);
+        await tester.tap(find.byKey(const Key('filter-out')));
+        await tester.pump();
+        expect(
+          find.byKey(const Key('variant-Cotton Kurta-L-Blue')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('variant-Cotton Kurta-M-Blue')),
+          findsNothing,
+        );
+        expect(find.byKey(const Key('style-Denim Jeans')), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'Running low shows only what is running low; In stock hides what is out',
+      (tester) async {
+        await open(tester);
+        await goToLookup(tester);
+        await tester.tap(find.byKey(const Key('filter-low')));
+        await tester.pump();
+        expect(
+          find.byKey(const Key('variant-Denim Jeans-L-Black')),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('style-Cotton Kurta')), findsNothing);
+        await tester.tap(find.byKey(const Key('filter-in')));
+        await tester.pump();
+        expect(
+          find.byKey(const Key('variant-Cotton Kurta-L-Blue')),
+          findsNothing,
+        );
+        expect(
+          find.byKey(const Key('variant-Cotton Kurta-M-Blue')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('variant-Denim Jeans-L-Black')),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'a filter with nothing to show says so, and All brings it back',
+      (tester) async {
+        await open(tester);
+        await goToLookup(tester);
+        await type(tester, 'denim');
+        await tester.tap(find.byKey(const Key('filter-out')));
+        await tester.pump();
+        expect(find.byKey(const Key('filter-empty')), findsOneWidget);
+        await tester.tap(find.byKey(const Key('filter-all')));
+        await tester.pump();
+        expect(find.byKey(const Key('style-Denim Jeans')), findsOneWidget);
+      },
+    );
+
+    testWidgets('the filter stays when the search changes', (tester) async {
+      await open(tester);
+      await goToLookup(tester);
+      await tester.tap(find.byKey(const Key('filter-out')));
+      await tester.pump();
+      await type(tester, 'kurta');
+      expect(
+        find.byKey(const Key('variant-Cotton Kurta-M-Blue')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const Key('variant-Cotton Kurta-L-Blue')),
+        findsOneWidget,
+      );
     });
   });
 }
