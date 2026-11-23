@@ -86,3 +86,10 @@ test('run as a script it prints what the release workflow reads (notes and the p
   assert.equal(out('--prerelease', '0.9.0').trim(), 'true');
   assert.match(out('--notes', '0.9.0'), /Windows/);
 });
+
+test('1.0.0 is a full release, not a pre-release, and has notes', () => {
+  const script = new URL('./changelog.mjs', import.meta.url).pathname;
+  const out = (...args) => execFileSync(process.execPath, [script, ...args], { encoding: 'utf8' });
+  assert.equal(out('--prerelease', '1.0.0').trim(), 'false');
+  assert.match(out('--notes', '1.0.0'), /Release 1/);
+});

@@ -352,11 +352,11 @@ void main() {
         final lines = (await report(d23, d23)).invoicesCsv().split('\r\n');
         expect(
           lines[0],
-          'Invoice no,Date,Customer,GST rate,Taxable value,CGST,SGST,Total tax,Invoice total',
+          'Invoice no,Date,Customer,Customer GSTIN,GST rate,Taxable value,CGST,SGST,Total tax,Invoice total',
         );
         expect(
           lines[1],
-          '2026-27/C1/000001,23/11/2026,"Ravi, Kumar",5%,475.24,11.88,11.88,23.76,499.00',
+          '2026-27/C1/000001,23/11/2026,"Ravi, Kumar",,5%,475.24,11.88,11.88,23.76,499.00',
         );
         expect(lines.length, 2);
       },
@@ -412,6 +412,218 @@ void main() {
     });
   });
 
+  group('sales by HSN code', () {
+    Future<void> hsnOf(String style, String hsn, {int? rate}) async {
+      final id =
+          (await db
+                  .customSelect(
+                    'SELECT id FROM products WHERE name = ?',
+                    variables: [Variable<String>(style)],
+                  )
+                  .getSingle())
+              .read<String>('id');
+      await gst.setStyleGst(
+        role: Role.owner,
+        actorId: 'o',
+        styleId: id,
+        hsn: hsn,
+        changeRate: rate != null,
+        rateBp: rate,
+      );
+    }
+
+    test('garments, taxable value and tax for each code and rate', () async {
+      await hsnOf('Cotton Kurta', '6109');
+      await save(good());
+      await sell([kurta[0], kurta[1], jeans[0]], 49900 * 2 + 129900);
+      final r = await report(d23, d23);
+      expect(r.byHsn.map((h) => (h.hsn, h.rateBp, h.quantity)), [
+        ('', 500, 1),
+        ('6109', 500, 2),
+      ]);
+      final k = r.byHsn[1];
+      expect(k.taxable, Money(47524 * 2));
+      expect(k.tax, Money(2376 * 2));
+    });
+
+    test('the same code at two rates is two lines', () async {
+      await hsnOf('Cotton Kurta', '6109');
+      await save(good());
+      await sell([kurta[0]], 49900);
+      await hsnOf('Cotton Kurta', '6109', rate: 1200);
+      await sell([kurta[1]], 49900);
+      final r = await report(d23, d23);
+      expect(r.byHsn.map((h) => (h.hsn, h.rateBp)), [
+        ('6109', 500),
+        ('6109', 1200),
+      ]);
+    });
+
+    test('returns come off the code they were sold under', () async {
+      await hsnOf('Cotton Kurta', '6109');
+      await save(good());
+      await sell([kurta[0], kurta[1]], 99800);
+      await returns.saveReturn(
+        role: Role.cashier,
+        cashierId: 'cashier-1',
+        items: [ReturnItemInput(kurta[0], ReturnOutcome.restock)],
+        refundMode: RefundMode.cash,
+      );
+      final h = (await report(d23, d23)).byHsn.single;
+      expect((h.quantity, h.returnedQuantity, h.netQuantity), (2, 1, 1));
+      expect(h.netTax, Money(2376));
+      expect(h.netTaxable, Money(47524));
+    });
+
+    test('a code set after the sale does not move the sale', () async {
+      await save(good());
+      await sell([kurta[0]], 49900);
+      await hsnOf('Cotton Kurta', '6109');
+      expect((await report(d23, d23)).byHsn.single.hsn, '');
+    });
+
+    test('the CSV says No HSN for a style without a code', () async {
+      await save(good());
+      await sell([kurta[0]], 49900);
+      final lines = (await report(d23, d23)).hsnCsv().split('\r\n');
+      expect(lines[0], startsWith('HSN code,GST rate,Garments sold'));
+      expect(lines[1], 'No HSN,5%,1,475.24,23.76,0,0.00,0.00,475.24,23.76');
+    });
+
+    test('no tax, no lines', () async {
+      await sell([kurta[0]], 49900);
+      expect((await report(d23, d23)).byHsn, isEmpty);
+    });
+  });
+
+  group('sales to business customers', () {
+    Future<void> sellToBusiness(String gstin, {String name = 'Shah Traders'}) =>
+        sales.saveBill(
+          role: Role.cashier,
+          cashierId: 'cashier-1',
+          lines: [BillLineInput(kurta[0])],
+          payments: [Payment(PaymentMode.cash, Money(49900))],
+          customerName: name,
+          customerGstin: gstin,
+        );
+
+    test('only invoices with a customer GSTIN, with the GSTIN', () async {
+      await save(good());
+      await sell([kurta[1]], 49900);
+      await sellToBusiness('29abcde1234f1z5');
+      final r = await report(d23, d23);
+      expect(r.invoices.length, 2);
+      expect(r.businessInvoices.length, 1);
+      final b = r.businessInvoices.single;
+      expect(b.customerGstin, '29ABCDE1234F1Z5');
+      expect(b.customer, 'Shah Traders');
+    });
+
+    test('its CSV and the invoice register carry the GSTIN', () async {
+      await save(good());
+      await sellToBusiness('29ABCDE1234F1Z5');
+      final r = await report(d23, d23);
+      final lines = r.businessCsv().split('\r\n');
+      expect(
+        lines[0],
+        'Customer GSTIN,Customer,Invoice no,Date,Taxable value,CGST,SGST,Invoice total',
+      );
+      expect(
+        lines[1],
+        '29ABCDE1234F1Z5,Shah Traders,2026-27/C1/000001,23/11/2026,475.24,11.88,11.88,499.00',
+      );
+      expect(r.invoicesCsv(), contains('29ABCDE1234F1Z5'));
+    });
+
+    test('none at all gives just the header', () async {
+      await save(good());
+      await sell([kurta[0]], 49900);
+      final r = await report(d23, d23);
+      expect(r.businessInvoices, isEmpty);
+      expect(r.businessCsv().split('\r\n').length, 1);
+    });
+  });
+
+  group('purchases and input tax', () {
+    Future<void> buy({
+      String supplier = 'Sharma Textiles',
+      String gstin = '27ABCDE1234F1Z5',
+      String invoice = 'INV/17',
+      int tax = 150000,
+      int cost = 100000,
+      String style = 'Linen Shirt',
+      Role role = Role.owner,
+    }) => stock.receivePurchase(
+      role: role,
+      draft: PurchaseDraft(
+        supplier: supplier,
+        style: style,
+        supplierGstin: gstin,
+        invoiceNo: invoice,
+        inputTax: Money(tax),
+        lines: [
+          PurchaseLine(
+            size: 'M',
+            color: 'White',
+            quantity: 3,
+            cost: Money(cost),
+            mrp: Money(cost * 2),
+          ),
+        ],
+      ),
+    );
+
+    test(
+      'lists each purchase with its supplier, invoice, goods value and tax',
+      () async {
+        await buy();
+        final r = await report(d23, d23);
+        final p = r.purchases.last;
+        expect(p.supplier, 'Sharma Textiles');
+        expect(p.supplierGstin, '27ABCDE1234F1Z5');
+        expect(p.invoiceNo, 'INV/17');
+        expect(p.inputTax, Money(150000));
+        expect(p.goodsValue, Money(300000)); // 3 x 1,000.00
+        expect(p.day.compareTo(d23), 0);
+      },
+    );
+
+    test('totals the input tax and what is left after it', () async {
+      await save(good());
+      await sell([kurta[0]], 49900);
+      final before = (await report(d23, d23)).inputTax;
+      await buy(tax: 1000);
+      await buy(tax: 2500, style: 'Silk Saree');
+      final r = await report(d23, d23);
+      expect(r.inputTax, before + Money(3500));
+      expect(r.netTaxAfterInput, Money(2376) - r.inputTax);
+    });
+
+    test('a purchase outside the range is left out', () async {
+      await buy();
+      expect((await report(d24, d25)).purchases, isEmpty);
+    });
+
+    test('the CSV has the header and a line each', () async {
+      await buy();
+      final lines = (await report(d23, d23)).purchasesCsv().split('\r\n');
+      expect(
+        lines[0],
+        'Date,Supplier,Supplier GSTIN,Supplier invoice no,Goods value,Input tax',
+      );
+      expect(
+        lines.last,
+        '23/11/2026,Sharma Textiles,27ABCDE1234F1Z5,INV/17,3000.00,1500.00',
+      );
+    });
+
+    test('a purchase with no GST details still appears, with no tax', () async {
+      await buy(gstin: '', invoice: '', tax: 0);
+      final p = (await report(d23, d23)).purchases.last;
+      expect((p.supplierGstin, p.invoiceNo, p.inputTax), ('', '', Money.zero));
+    });
+  });
+
   group('who may read it', () {
     test('manager and owner; a cashier and nobody are refused', () async {
       await report(d23, d23, role: Role.manager);
@@ -428,11 +640,11 @@ void main() {
       await expectLater(report(d24, d23), throwsArgumentError);
     });
 
-    test('the code never reads cost', () {
+    test('the goods value of a purchase (cost) is read only after the cost permission check', () {
       final text = File('lib/data/gst_report_repository.dart')
           .readAsStringSync();
-      expect(text.contains('batch_lines'), isFalse);
-      expect(text.contains('unit_cost'), isFalse);
+      expect(text, contains('can(role, Permission.viewCost)'));
+      expect(RegExp('batch_lines').allMatches(text).length, 1);
     });
   });
 }

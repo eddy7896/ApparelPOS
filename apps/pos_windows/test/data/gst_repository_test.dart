@@ -533,6 +533,381 @@ void main() {
     });
   });
 
+  group('HSN codes and own rates (P3-4, unverified until the CA confirms)', () {
+    Future<String> styleId(String name) async =>
+        (await db
+                .customSelect(
+                  'SELECT id FROM products WHERE name = ?',
+                  variables: [Variable<String>(name)],
+                )
+                .getSingle())
+            .read<String>('id');
+
+    test('a style has no HSN and no own rate to begin with', () async {
+      final all = await gst.styles(role: Role.manager);
+      expect(all.map((s) => s.name), ['Cotton Kurta', 'Denim Jeans']);
+      expect(all.every((s) => s.hsn.isEmpty && s.rateBp == null), isTrue);
+    });
+
+    test('a manager sets an HSN code; only the owner sets a rate', () async {
+      final id = await styleId('Cotton Kurta');
+      await gst.setStyleGst(
+        role: Role.manager,
+        actorId: 'm',
+        styleId: id,
+        hsn: '6109',
+      );
+      expect((await gst.styles(role: Role.owner)).first.hsn, '6109');
+      await expectLater(
+        gst.setStyleGst(
+          role: Role.manager,
+          actorId: 'm',
+          styleId: id,
+          hsn: '6109',
+          changeRate: true,
+          rateBp: 1200,
+        ),
+        throwsA(isA<PermissionDenied>()),
+      );
+      await gst.setStyleGst(
+        role: Role.owner,
+        actorId: 'o',
+        styleId: id,
+        hsn: '6109',
+        changeRate: true,
+        rateBp: 1200,
+      );
+      final s = (await gst.styles(role: Role.owner)).first;
+      expect((s.hsn, s.rateBp), ('6109', 1200));
+    });
+
+    test('changing only the HSN leaves the rate; clearing sends it back to the shop rate', () async {
+      final id = await styleId('Cotton Kurta');
+      await gst.setStyleGst(
+        role: Role.owner,
+        actorId: 'o',
+        styleId: id,
+        hsn: '6109',
+        changeRate: true,
+        rateBp: 1200,
+      );
+      await gst.setStyleGst(
+        role: Role.manager,
+        actorId: 'm',
+        styleId: id,
+        hsn: '610910',
+      );
+      expect((await gst.styles(role: Role.owner)).first.rateBp, 1200);
+      await gst.setStyleGst(
+        role: Role.owner,
+        actorId: 'o',
+        styleId: id,
+        hsn: '',
+        changeRate: true,
+        rateBp: null,
+      );
+      final s = (await gst.styles(role: Role.owner)).first;
+      expect((s.hsn, s.rateBp), ('', null));
+    });
+
+    test(
+      'bad codes, bad rates, unknown styles and cashiers are refused',
+      () async {
+        final id = await styleId('Cotton Kurta');
+        for (final bad in ['61', '6109x', '123456789']) {
+          await expectLater(
+            gst.setStyleGst(
+              role: Role.owner,
+              actorId: 'o',
+              styleId: id,
+              hsn: bad,
+            ),
+            throwsA(isA<InvalidStyleGst>()),
+            reason: bad,
+          );
+        }
+        await expectLater(
+          gst.setStyleGst(
+            role: Role.owner,
+            actorId: 'o',
+            styleId: id,
+            hsn: '',
+            changeRate: true,
+            rateBp: 5001,
+          ),
+          throwsA(isA<InvalidStyleGst>()),
+        );
+        await expectLater(
+          gst.setStyleGst(
+            role: Role.owner,
+            actorId: 'o',
+            styleId: 'nope',
+            hsn: '6109',
+          ),
+          throwsA(isA<UnknownStyleGst>()),
+        );
+        await expectLater(
+          gst.setStyleGst(
+            role: Role.cashier,
+            actorId: 'c',
+            styleId: id,
+            hsn: '6109',
+          ),
+          throwsA(isA<PermissionDenied>()),
+        );
+        await expectLater(
+          gst.styles(role: Role.cashier),
+          throwsA(isA<PermissionDenied>()),
+        );
+      },
+    );
+
+    test('stock entry sets them with the purchase', () async {
+      await stock.receivePurchase(
+        role: Role.owner,
+        draft: PurchaseDraft(
+          supplier: 'S',
+          style: 'Linen Shirt',
+          hsn: '6205',
+          styleGstBp: 1200,
+          supplierGstin: '27abcde1234f1z5',
+          invoiceNo: ' INV/17 ',
+          inputTax: Money(150000),
+          lines: [
+            PurchaseLine(
+              size: 'M',
+              color: 'White',
+              quantity: 1,
+              cost: Money(30000),
+              mrp: Money(89900),
+            ),
+          ],
+        ),
+      );
+      final p = await db
+          .customSelect(
+            "SELECT hsn, gst_bp FROM products WHERE name = 'Linen Shirt'",
+          )
+          .getSingle();
+      expect((p.read<String?>('hsn'), p.read<int?>('gst_bp')), ('6205', 1200));
+      final b = await db
+          .customSelect(
+            "SELECT supplier_gstin, invoice_no, input_tax_paise FROM batches WHERE supplier = 'S' ORDER BY rowid DESC LIMIT 1",
+          )
+          .getSingle();
+      expect(b.read<String>('supplier_gstin'), '27ABCDE1234F1Z5');
+      expect(b.read<String>('invoice_no'), 'INV/17');
+      expect(b.read<int>('input_tax_paise'), 150000);
+    });
+
+    test('a manager cannot set a style rate at stock entry', () async {
+      await expectLater(
+        stock.receivePurchase(
+          role: Role.manager,
+          draft: PurchaseDraft(
+            supplier: 'S',
+            style: 'Cotton Kurta',
+            styleGstBp: 1200,
+            lines: [
+              PurchaseLine(
+                size: 'L',
+                color: 'Blue',
+                quantity: 1,
+                cost: Money(1),
+                mrp: Money(2),
+              ),
+            ],
+          ),
+        ),
+        throwsA(isA<PermissionDenied>()),
+      );
+    });
+
+    test('a purchase without GST details leaves the style as it was', () async {
+      final id = await styleId('Cotton Kurta');
+      await gst.setStyleGst(
+        role: Role.owner,
+        actorId: 'o',
+        styleId: id,
+        hsn: '6109',
+        changeRate: true,
+        rateBp: 1200,
+      );
+      await stock.receivePurchase(
+        role: Role.owner,
+        draft: PurchaseDraft(
+          supplier: 'S',
+          style: 'Cotton Kurta',
+          lines: [
+            PurchaseLine(
+              size: 'L',
+              color: 'Blue',
+              quantity: 1,
+              cost: Money(1),
+              mrp: Money(2),
+            ),
+          ],
+        ),
+      );
+      final s = (await gst.styles(role: Role.owner)).first;
+      expect((s.hsn, s.rateBp), ('6109', 1200));
+    });
+
+    test('a bad HSN or supplier GSTIN stops the purchase', () async {
+      await expectLater(
+        stock.receivePurchase(
+          role: Role.owner,
+          draft: PurchaseDraft(
+            supplier: 'S',
+            style: 'X',
+            hsn: '12',
+            supplierGstin: 'nope',
+            lines: [
+              PurchaseLine(
+                size: 'M',
+                color: 'Blue',
+                quantity: 1,
+                cost: Money(1),
+                mrp: Money(2),
+              ),
+            ],
+          ),
+        ),
+        throwsA(isA<InvalidPurchase>()),
+      );
+    });
+
+    test('a bill uses the style rate, keeps the HSN, and an unchanged style keeps the shop rate', () async {
+      await gst.setStyleGst(
+        role: Role.owner,
+        actorId: 'o',
+        styleId: await styleId('Cotton Kurta'),
+        hsn: '6109',
+        changeRate: true,
+        rateBp: 1200,
+      );
+      await save(good());
+      await sell([kurta[0], jeans[0]], 179800);
+      final rows = await db
+          .customSelect(
+            'SELECT hsn, gst_bp, tax_paise FROM bill_lines ORDER BY rowid',
+          )
+          .get();
+      expect(rows[0].read<String>('hsn'), '6109');
+      expect(rows[0].read<int>('gst_bp'), 1200);
+      expect(
+        rows[0].read<int>('tax_paise'),
+        49900 - (49900 * 10000 * 2 + 11200) ~/ (11200 * 2),
+      );
+      expect(rows[1].read<String>('hsn'), '');
+      expect(rows[1].read<int>('gst_bp'), 500);
+    });
+
+    test(
+      'changing the style code later does not change a bill already made',
+      () async {
+        final id = await styleId('Cotton Kurta');
+        await gst.setStyleGst(
+          role: Role.owner,
+          actorId: 'o',
+          styleId: id,
+          hsn: '6109',
+          changeRate: true,
+          rateBp: 1200,
+        );
+        await save(good());
+        await sell([kurta[0]], 49900);
+        await gst.setStyleGst(
+          role: Role.owner,
+          actorId: 'o',
+          styleId: id,
+          hsn: '6110',
+          changeRate: true,
+          rateBp: 500,
+        );
+        final r = await db
+            .customSelect('SELECT hsn, gst_bp FROM bill_lines')
+            .getSingle();
+        expect((r.read<String>('hsn'), r.read<int>('gst_bp')), ('6109', 1200));
+      },
+    );
+
+    test('with GST off no HSN is kept on the bill', () async {
+      await gst.setStyleGst(
+        role: Role.owner,
+        actorId: 'o',
+        styleId: await styleId('Cotton Kurta'),
+        hsn: '6109',
+      );
+      await sell([kurta[0]], 49900);
+      expect(
+        (await db.customSelect('SELECT hsn FROM bill_lines').getSingle())
+            .read<String>('hsn'),
+        '',
+      );
+    });
+
+    test('a style with its own rate of zero carries no tax', () async {
+      await gst.setStyleGst(
+        role: Role.owner,
+        actorId: 'o',
+        styleId: await styleId('Cotton Kurta'),
+        hsn: '',
+        changeRate: true,
+        rateBp: 0,
+      );
+      await save(good());
+      final bill = await sell([kurta[0]], 49900);
+      expect(bill.tax.totalTax, Money.zero);
+    });
+  });
+
+  group('a business customer GSTIN on a bill', () {
+    Future<SavedBill> sellTo(String? gstin, {int pay = 49900}) =>
+        sales.saveBill(
+          role: Role.cashier,
+          cashierId: 'cashier-1',
+          lines: [BillLineInput(kurta[0])],
+          payments: [Payment(PaymentMode.cash, Money(pay))],
+          customerGstin: gstin,
+        );
+
+    test('is kept in capitals while GST is on', () async {
+      await save(good());
+      final bill = await sellTo(' 29abcde1234f1z5 ');
+      expect(bill.customerGstin, '29ABCDE1234F1Z5');
+      expect(
+        (await db.customSelect('SELECT customer_gstin FROM bills').getSingle())
+            .read<String>('customer_gstin'),
+        '29ABCDE1234F1Z5',
+      );
+    });
+
+    test('is not kept while GST is off', () async {
+      final bill = await sellTo('29ABCDE1234F1Z5');
+      expect(bill.customerGstin, isNull);
+      expect(
+        (await db.customSelect('SELECT customer_gstin FROM bills').getSingle())
+            .read<String?>('customer_gstin'),
+        isNull,
+      );
+    });
+
+    test(
+      'a GSTIN that is not the right shape stops the bill; blank is fine',
+      () async {
+        await save(good());
+        await expectLater(sellTo('nope'), throwsA(isA<InvalidBill>()));
+        expect(
+          (await db.customSelect('SELECT COUNT(*) AS c FROM bills').getSingle())
+              .read<int>('c'),
+          0,
+        );
+        expect((await sellTo('  ')).customerGstin, isNull);
+      },
+    );
+  });
+
   group('never reads cost', () {
     test('the GST code does not touch cost', () {
       final text = File('lib/data/gst_repository.dart').readAsStringSync();

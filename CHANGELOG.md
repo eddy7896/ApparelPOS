@@ -4,7 +4,23 @@ All notable changes to Apparel PoS. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
-Nothing yet. Planned next: GST reports that need new data (HSN codes, customer GSTIN, purchases) and Release 2 (sync, cloud, owner mobile app).
+Planned next: Release 2 (sync, cloud, owner mobile app).
+
+## [1.0.0] - 2026-11-23
+
+**Release 1, the Windows counter app, is complete**: everything in 0.9.0 plus GST (switched off), reports for the CA, and the test data below. The owner chose to call it 1.0.0 now.
+
+**Be clear about what 1.0.0 does not yet have behind it:** it has still **never been run on a real shop laptop**, never printed on paper, and every GST rule is unverified until your CA confirms it. ADR-0018 said the version would move to 1.0.0 after the owner had run the go-live checks; those are still to do. Follow `documentation/owner_runbook.md` (install, the recovery key, the restore test, a dry-run day) before the shop depends on it, and tell the assistant what is wrong.
+
+### Added
+- GST, the rest of the data and reports (still unverified until your CA confirms): an HSN code and an optional own GST rate on each style (Stock entry and Settings; the rate is the owner's to set), an optional customer GSTIN at the register for business buyers, and a supplier GSTIN, invoice number and tax paid on each purchase. The GST reports now also show sales by HSN code, sales to business customers and purchases with input tax, and the export for the CA is six CSV files. The tax on a bill uses each style's own rate. Database version 13.
+- The owner's runbook now says how to restore on a new computer exactly as the screen words it, and that a hangtag can only be printed right after a purchase is saved.
+
+### Changed
+- Development builds only: Add practice users now also seeds made-up GST details (GST on, a test GSTIN, HSN codes, one style with its own 12% rate, supplier GSTIN and input tax) so the GST bill and reports can be tried at once. Never runs in a release build.
+
+### Fixed
+- The GST reports no longer fail when a net figure is negative (a return in a later range than its sale, or more input tax than tax charged).
 
 ## [0.9.0] - 2026-11-23
 
@@ -96,5 +112,6 @@ The first release: a release candidate of **Release 1, the Windows counter app**
 3. Choose the USB drive and the second folder for backups (Manager Mode, Backups) and press **Back up now**.
 4. To remove the program, uninstall it from Windows Settings. The shop's data stays and comes back if you install again.
 
-[Unreleased]: https://github.com/eddy7896/ApparelPOS/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/eddy7896/ApparelPOS/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/eddy7896/ApparelPOS/releases/tag/v1.0.0
 [0.9.0]: https://github.com/eddy7896/ApparelPOS/releases/tag/v0.9.0

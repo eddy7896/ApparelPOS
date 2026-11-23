@@ -50,6 +50,13 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
   final _style = TextEditingController();
   final _defaultCost = TextEditingController();
   final _defaultMrp = TextEditingController();
+
+  // GST details of the purchase (all optional; only with the GST service).
+  final _hsn = TextEditingController();
+  final _styleRate = TextEditingController();
+  final _supplierGstin = TextEditingController();
+  final _invoiceNo = TextEditingController();
+  final _inputTax = TextEditingController();
   final _rows = <String, _Row>{};
   var _sizes = <String>[];
   var _colors = <String>[];
@@ -81,7 +88,17 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
 
   @override
   void dispose() {
-    for (final c in [_supplier, _style, _defaultCost, _defaultMrp]) {
+    for (final c in [
+      _supplier,
+      _style,
+      _defaultCost,
+      _defaultMrp,
+      _hsn,
+      _styleRate,
+      _supplierGstin,
+      _invoiceNo,
+      _inputTax,
+    ]) {
       c.dispose();
     }
     for (final r in _rows.values) {
@@ -326,10 +343,35 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
         ),
       );
     }
+    // GST details: a rate typed as a percentage (5 or 12.5); the tax paid in
+    // rupees. A box that is not a number is an error.
+    int? styleRate;
+    if (_styleRate.text.trim().isNotEmpty) {
+      styleRate = parsePriceCut(
+        '${_styleRate.text.trim().replaceAll('%', '')}%',
+      )?.basisPoints;
+      if (styleRate == null) {
+        errors.add('Type the GST rate as a percentage, such as 12.');
+      }
+    }
+    var inputTax = Money.zero;
+    if (_inputTax.text.trim().isNotEmpty) {
+      final t = parseRupees(_inputTax.text);
+      if (t == null) {
+        errors.add('The tax paid is not a valid rupee amount.');
+      } else {
+        inputTax = t;
+      }
+    }
     final draft = PurchaseDraft(
       supplier: _supplier.text,
       style: _style.text,
       lines: lines,
+      hsn: _hsn.text,
+      styleGstBp: styleRate,
+      supplierGstin: _supplierGstin.text,
+      invoiceNo: _invoiceNo.text,
+      inputTax: inputTax,
     );
     for (final issue in checkPurchase(draft)) {
       final label = issue.lineIndex == null
@@ -350,6 +392,16 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
           if (!parseProblem.contains(issue.lineIndex)) {
             warnings.add('Check: the MRP is below the cost for $label.');
           }
+        case PurchaseProblem.badHsn:
+          errors.add('The HSN code must be 4 to 8 digits.');
+        case PurchaseProblem.badSupplierGstin:
+          errors.add(
+            'The supplier GSTIN does not look right (15 letters and digits).',
+          );
+        case PurchaseProblem.invoiceNoTooLong:
+          errors.add('The supplier invoice number is too long.');
+        case PurchaseProblem.badStyleRate:
+          errors.add('The GST rate must be between 0% and 50%.');
         case PurchaseProblem.negativeMoney:
         case PurchaseProblem.blankSize:
         case PurchaseProblem.blankColor:
@@ -498,10 +550,68 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
     );
   }
 
+  /// Optional GST details: the style's HSN code (and, for the owner, its own
+  /// rate), and the supplier's GSTIN, invoice number and the tax paid. Left
+  /// empty, nothing about the style changes.
+  Widget _gstDetails() {
+    Widget box(String key, String label, TextEditingController c, double w) =>
+        SizedBox(
+          width: w,
+          child: TextField(
+            key: Key(key),
+            controller: c,
+            decoration: InputDecoration(labelText: label),
+            onChanged: (_) => setState(() {}),
+          ),
+        );
+    return Column(
+      key: const Key('gst-details'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'GST details (optional; unverified until your CA confirms)',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 4),
+        Wrap(
+          spacing: 16,
+          runSpacing: 8,
+          children: [
+            box('hsn-field', 'HSN code of this style', _hsn, 200),
+            if (can(_role, Permission.configureGst))
+              box(
+                'style-rate-field',
+                'Own GST rate % (if not the shop rate)',
+                _styleRate,
+                260,
+              ),
+            box('supplier-gstin-field', 'Supplier GSTIN', _supplierGstin, 240),
+            box('invoice-no-field', 'Supplier invoice no', _invoiceNo, 200),
+            box(
+              'input-tax-field',
+              'Tax paid on this purchase (₹)',
+              _inputTax,
+              240,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   void _reset() {
     setState(() {
       _supplier.clear();
       _style.clear();
+      for (final c in [
+        _hsn,
+        _styleRate,
+        _supplierGstin,
+        _invoiceNo,
+        _inputTax,
+      ]) {
+        c.clear();
+      }
       _categoryId = null;
       _categoryTouched = false;
       _setting = true;
@@ -573,6 +683,10 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
                 if (widget.services.categories != null) ...[
                   const SizedBox(height: 12),
                   _categoryPicker(),
+                ],
+                if (widget.services.gst != null) ...[
+                  const SizedBox(height: 12),
+                  _gstDetails(),
                 ],
                 const SizedBox(height: 16),
                 _chips(

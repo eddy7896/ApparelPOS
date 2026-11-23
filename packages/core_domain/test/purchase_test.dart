@@ -106,6 +106,66 @@ void main() {
     });
   });
 
+  group('GST details of a purchase (unverified until the CA confirms)', () {
+    PurchaseDraft with_({
+      String hsn = '',
+      int? rate,
+      String gstin = '',
+      String invoice = '',
+      int tax = 0,
+    }) => PurchaseDraft(
+      supplier: 'S',
+      style: 'Cotton Kurta',
+      lines: [line('M', 'Blue', 1)],
+      hsn: hsn,
+      styleGstBp: rate,
+      supplierGstin: gstin,
+      invoiceNo: invoice,
+      inputTax: Money(tax),
+    );
+
+    test('all of them are optional', () {
+      expect(checkPurchase(with_()), isEmpty);
+      expect(
+        checkPurchase(
+          with_(
+            hsn: '6109',
+            rate: 1200,
+            gstin: '27abcde1234f1z5',
+            invoice: 'INV/2026/17',
+            tax: 12000,
+          ),
+        ),
+        isEmpty,
+      );
+    });
+    test('an HSN code that is not 4 to 8 digits is refused', () {
+      expect(problems(with_(hsn: '61')), {PurchaseProblem.badHsn});
+      expect(problems(with_(hsn: '6109x')), {PurchaseProblem.badHsn});
+      expect(problems(with_(hsn: '610910000')), {PurchaseProblem.badHsn});
+    });
+    test('a supplier GSTIN must be GSTIN-shaped when typed', () {
+      expect(problems(with_(gstin: 'nope')), {
+        PurchaseProblem.badSupplierGstin,
+      });
+    });
+    test('the invoice number has a length limit', () {
+      expect(problems(with_(invoice: 'x' * 40)), isEmpty);
+      expect(problems(with_(invoice: 'x' * 41)), {
+        PurchaseProblem.invoiceNoTooLong,
+      });
+    });
+    test('the style rate is 0 to 50%', () {
+      expect(problems(with_(rate: 0)), isEmpty);
+      expect(problems(with_(rate: 5000)), isEmpty);
+      expect(problems(with_(rate: 5001)), {PurchaseProblem.badStyleRate});
+      expect(problems(with_(rate: -1)), {PurchaseProblem.badStyleRate});
+    });
+    test('tax paid cannot be negative', () {
+      expect(problems(with_(tax: -1)), {PurchaseProblem.negativeMoney});
+    });
+  });
+
   group('planPurchase', () {
     final cursor = LotCursor.start(LotRange(0, 499));
 

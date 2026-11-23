@@ -1,5 +1,5 @@
 ; Inno Setup script for the Apparel PoS counter app (ADR-0018).
-; Built on the Windows CI runner and by hand: ISCC /DAppVersion=0.9.0 installer\apparel_pos.iss
+; Built on the Windows CI runner and by hand: ISCC /DAppVersion=1.0.0 installer\apparel_pos.iss
 ; Per-user install (no administrator password), unsigned for now, and removing the
 ; program never touches the shop's data (it lives in the user's AppData folder,
 ; outside the install folder).

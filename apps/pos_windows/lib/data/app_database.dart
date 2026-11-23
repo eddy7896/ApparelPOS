@@ -123,6 +123,11 @@ class Products extends Table {
 
   /// The category this style is in (none until the shop sets it).
   TextColumn get categoryId => text().nullable().references(Categories, #id)();
+
+  /// GST (P3-4, unverified until the CA confirms): the style's HSN code, and a
+  /// GST rate of its own in basis points when it differs from the shop's.
+  TextColumn get hsn => text().nullable()();
+  IntColumn get gstBp => integer().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -185,6 +190,12 @@ class Variants extends Table {
 class Batches extends Table {
   TextColumn get id => text()();
   TextColumn get supplier => text()();
+
+  /// The supplier's GSTIN and invoice number, and the tax paid on this
+  /// purchase (for the input tax report; unverified until the CA confirms).
+  TextColumn get supplierGstin => text().nullable()();
+  TextColumn get invoiceNo => text().nullable()();
+  IntColumn get inputTaxPaise => integer().withDefault(const Constant(0))();
   IntColumn get lot => integer().check(lot.isBetweenValues(0, 999))();
   DateTimeColumn get purchasedAt => dateTime()();
   TextColumn get createdBy => text().nullable()();
@@ -277,6 +288,9 @@ class Bills extends Table {
   TextColumn get shiftId => text().nullable().references(Shifts, #id)();
   TextColumn get customerName => text().nullable()();
   TextColumn get customerPhone => text().nullable()();
+
+  /// A business customer's GSTIN, kept only while GST is on (P3-4).
+  TextColumn get customerGstin => text().nullable()();
   IntColumn get totalPaise =>
       integer().check(totalPaise.isBiggerOrEqualValue(0))();
   IntColumn get changePaise =>
@@ -310,6 +324,9 @@ class BillLines extends Table {
   // GST (P3-4; unverified until the CA confirms): the tax on this garment as it
   // was on the day of the bill. All zero while GST is off, and for every bill
   // made before version 12. `finalPaise + extraTaxPaise` is what was paid.
+  /// The style's HSN code on the day of the bill ('' when it had none).
+  TextColumn get hsn => text().withDefault(const Constant(''))();
+
   /// The rate used, in basis points (500 is 5%); 0 when GST was off.
   IntColumn get gstBp => integer().withDefault(const Constant(0))();
 
@@ -640,7 +657,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -706,6 +723,37 @@ class AppDatabase extends _$AppDatabase {
         ).get()).any((r) => r.read<String>('name') == 'category_id');
         if (!hasCol) {
           await m.addColumn(products, products.categoryId);
+        }
+      }
+      if (from < 13 && to >= 13) {
+        // version 13: HSN codes and own rates on styles, the customer GSTIN on
+        // a bill, the HSN on each bill line, and the supplier GSTIN, invoice
+        // number and tax paid on a purchase (P3-4; GST stays off).
+        Future<Set<String>> cols(String t) async => (await customSelect(
+          'PRAGMA table_info($t)',
+        ).get()).map((r) => r.read<String>('name')).toSet();
+        final prod = await cols('products');
+        if (!prod.contains('hsn')) {
+          await m.addColumn(products, products.hsn);
+        }
+        if (!prod.contains('gst_bp')) {
+          await m.addColumn(products, products.gstBp);
+        }
+        final bat = await cols('batches');
+        if (!bat.contains('supplier_gstin')) {
+          await m.addColumn(batches, batches.supplierGstin);
+        }
+        if (!bat.contains('invoice_no')) {
+          await m.addColumn(batches, batches.invoiceNo);
+        }
+        if (!bat.contains('input_tax_paise')) {
+          await m.addColumn(batches, batches.inputTaxPaise);
+        }
+        if (!(await cols('bills')).contains('customer_gstin')) {
+          await m.addColumn(bills, bills.customerGstin);
+        }
+        if (!(await cols('bill_lines')).contains('hsn')) {
+          await m.addColumn(billLines, billLines.hsn);
         }
       }
       if (from < 12 && to >= 12) {

@@ -13,6 +13,11 @@ import '../services.dart';
 import '../session_controller.dart';
 import 'ui_tokens.dart';
 
+/// Rupees with a minus sign when negative (a return in a later range than its
+/// sale, or more input tax than tax charged, gives a negative net).
+String _money(Money m) =>
+    m.paise < 0 ? '-${formatRupees(Money(-m.paise))}' : formatRupees(m);
+
 class GstReportScreen extends StatefulWidget {
   const GstReportScreen({
     super.key,
@@ -110,6 +115,9 @@ class _GstReportScreenState extends State<GstReportScreen> {
       'gst-invoices-$span.csv': r.invoicesCsv(),
       'gst-returns-$span.csv': r.returnsCsv(),
       'gst-summary-$span.csv': r.summaryCsv(),
+      'gst-hsn-$span.csv': r.hsnCsv(),
+      'gst-business-customers-$span.csv': r.businessCsv(),
+      'gst-purchases-$span.csv': r.purchasesCsv(),
     };
     try {
       for (final e in files.entries) {
@@ -205,9 +213,8 @@ class _GstReportScreenState extends State<GstReportScreen> {
             child: const Text(
               'These figures come from the tax kept on each bill. Which reports '
               'and columns your CA needs is unverified: show them this page and '
-              'the exported files before you rely on them. Not built yet: sales '
-              'by HSN code, sales to business customers with a GSTIN, purchases '
-              'and input tax.',
+              'the exported files before you rely on them. How input tax is set '
+              'off against the tax on sales is for your CA to decide.',
               style: TextStyle(color: UiColors.amberInk),
             ),
           ),
@@ -296,14 +303,16 @@ class _GstReportScreenState extends State<GstReportScreen> {
               runSpacing: 12,
               children: [
                 _tile('GST invoices', '${r.invoices.length}', 'tile-invoices'),
-                _tile('Taxable value', formatRupees(r.taxable), 'tile-taxable'),
-                _tile('Tax charged', formatRupees(r.tax), 'tile-tax'),
+                _tile('Taxable value', _money(r.taxable), 'tile-taxable'),
+                _tile('Tax charged', _money(r.tax), 'tile-tax'),
+                _tile('Tax returned', _money(r.returnedTax), 'tile-returned'),
+                _tile('Net tax', _money(r.netTax), 'tile-net'),
+                _tile('Input tax paid', _money(r.inputTax), 'tile-input'),
                 _tile(
-                  'Tax returned',
-                  formatRupees(r.returnedTax),
-                  'tile-returned',
+                  'Net after input tax',
+                  _money(r.netTaxAfterInput),
+                  'tile-after-input',
                 ),
-                _tile('Net tax', formatRupees(r.netTax), 'tile-net'),
               ],
             ),
             if (r.billsWithoutGst > 0)
@@ -329,10 +338,10 @@ class _GstReportScreenState extends State<GstReportScreen> {
               for (final x in r.byRate)
                 _row([
                   _rate(x.rateBp),
-                  formatRupees(x.taxable),
-                  formatRupees(x.tax),
-                  formatRupees(x.returnedTax),
-                  formatRupees(x.netTax),
+                  _money(x.taxable),
+                  _money(x.tax),
+                  _money(x.returnedTax),
+                  _money(x.netTax),
                 ], key: 'rate-${x.rateBp}'),
             ]),
             _section('Day by day', [
@@ -350,10 +359,71 @@ class _GstReportScreenState extends State<GstReportScreen> {
                 _row([
                   shopDayText(d.day),
                   '${d.invoices}',
-                  formatRupees(d.tax),
-                  formatRupees(d.returnedTax),
-                  formatRupees(d.netTax),
+                  _money(d.tax),
+                  _money(d.returnedTax),
+                  _money(d.netTax),
                 ], key: 'day-${shopDayText(d.day)}'),
+            ]),
+            _section('Sales by HSN code', [
+              if (r.byHsn.isEmpty)
+                const Text('No tax in this range.', key: Key('no-hsn')),
+              if (r.byHsn.isNotEmpty)
+                _row([
+                  'HSN',
+                  'Garments',
+                  'Taxable',
+                  'Tax',
+                  'Net tax',
+                ], head: true),
+              for (final h in r.byHsn)
+                _row([
+                  '${h.hsn.isEmpty ? 'No HSN' : h.hsn}  ${_rate(h.rateBp)}',
+                  '${h.netQuantity}',
+                  _money(h.netTaxable),
+                  _money(h.tax),
+                  _money(h.netTax),
+                ], key: 'hsn-${h.hsn.isEmpty ? 'none' : h.hsn}-${h.rateBp}'),
+            ]),
+            _section('Sales to business customers', [
+              if (r.businessInvoices.isEmpty)
+                const Text(
+                  'No sales with a customer GSTIN.',
+                  key: Key('no-business'),
+                ),
+              if (r.businessInvoices.isNotEmpty)
+                _row([
+                  'Customer GSTIN',
+                  'Taxable',
+                  'CGST',
+                  'SGST',
+                  'Total',
+                ], head: true),
+              for (final i in r.businessInvoices)
+                _row([
+                  '${i.customerGstin}  ${i.billNo}',
+                  _money(i.taxable),
+                  _money(i.cgst),
+                  _money(i.sgst),
+                  _money(i.total),
+                ], key: 'business-${i.billNo}'),
+            ]),
+            _section('Purchases and input tax', [
+              if (r.purchases.isEmpty)
+                const Text(
+                  'No purchases in this range.',
+                  key: Key('no-purchases'),
+                ),
+              if (r.purchases.isNotEmpty)
+                _row(['Purchase', 'Goods value', 'Input tax'], head: true),
+              for (var i = 0; i < r.purchases.length; i++)
+                _row([
+                  '${shopDayText(r.purchases[i].day)}  ${r.purchases[i].supplier}'
+                      '${r.purchases[i].invoiceNo.isEmpty ? '' : '  ${r.purchases[i].invoiceNo}'}',
+                  r.purchases[i].goodsValue == null
+                      ? ''
+                      : _money(r.purchases[i].goodsValue!),
+                  _money(r.purchases[i].inputTax),
+                ], key: 'purchase-$i'),
             ]),
             _section('Invoice register', [
               if (r.invoices.isEmpty)
@@ -373,10 +443,10 @@ class _GstReportScreenState extends State<GstReportScreen> {
                 _row([
                   '${i.billNo}  ${shopDayText(i.day)}'
                       '${i.customer.isEmpty ? '' : '  ${i.customer}'}',
-                  formatRupees(i.taxable),
-                  formatRupees(i.cgst),
-                  formatRupees(i.sgst),
-                  formatRupees(i.total),
+                  _money(i.taxable),
+                  _money(i.cgst),
+                  _money(i.sgst),
+                  _money(i.total),
                 ], key: 'invoice-${i.billNo}'),
             ]),
             _section('Returns register', [
@@ -396,10 +466,10 @@ class _GstReportScreenState extends State<GstReportScreen> {
               for (var i = 0; i < r.returns.length; i++)
                 _row([
                   '${shopDayText(r.returns[i].day)}  of ${r.returns[i].billNos}',
-                  formatRupees(r.returns[i].taxable),
-                  formatRupees(r.returns[i].cgst),
-                  formatRupees(r.returns[i].sgst),
-                  formatRupees(r.returns[i].refund),
+                  _money(r.returns[i].taxable),
+                  _money(r.returns[i].cgst),
+                  _money(r.returns[i].sgst),
+                  _money(r.returns[i].refund),
                 ], key: 'return-$i'),
             ]),
           ],

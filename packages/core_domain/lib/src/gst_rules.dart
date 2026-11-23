@@ -57,6 +57,8 @@ enum GstInvoiceField {
   shopGstin('shop_gstin', 'Shop GSTIN'),
   customerName('customer_name', 'Customer name'),
   customerPhone('customer_phone', 'Customer phone'),
+  customerGstin('customer_gstin', 'Customer GSTIN (business buyers)'),
+  hsnCode('hsn_code', 'HSN code'),
   unitPrice('unit_price', 'MRP of each garment'),
   discount('discount', 'Markdown and discount'),
   taxableValue('taxable_value', 'Taxable value'),
@@ -86,6 +88,8 @@ const Set<GstInvoiceField> defaultGstInvoiceFields = {
   GstInvoiceField.shopGstin,
   GstInvoiceField.customerName,
   GstInvoiceField.customerPhone,
+  GstInvoiceField.customerGstin,
+  GstInvoiceField.hsnCode,
   GstInvoiceField.discount,
   GstInvoiceField.taxableValue,
   GstInvoiceField.gstRate,
@@ -155,6 +159,13 @@ const int maxGstAddressLength = 200;
 bool isGstinShaped(String text) =>
     RegExp(r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$')
         .hasMatch(text.trim().toUpperCase());
+
+/// A customer's GSTIN as it will be kept (capitals), or null when it is not
+/// GSTIN-shaped.
+String? cleanGstin(String? text) {
+  final t = (text ?? '').trim().toUpperCase();
+  return isGstinShaped(t) ? t : null;
+}
 
 /// The first reason [s] cannot be switched on, or null. Only checked when
 /// switching on; switched off, anything may be kept.
@@ -247,16 +258,35 @@ final class BillTax {
 int _divHalfUp(int numerator, int denominator) =>
     (numerator * 2 + denominator) ~/ (denominator * 2);
 
+/// The largest HSN code length (a typo guard; real codes are 4, 6 or 8 digits).
+const int maxHsnLength = 8;
+
+/// An HSN code typed by the owner: 4 to 8 digits, or null when it is not one
+/// (unverified; the CA confirms the codes that apply to the shop's garments).
+String? cleanHsn(String? text) {
+  final t = (text ?? '').trim();
+  return RegExp(r'^[0-9]{4,8}$').hasMatch(t) ? t : null;
+}
+
 /// The tax on [prices] (each after markdown and discount, none negative).
 /// With GST off ([settings].enabled false) there is no tax and nothing is added.
-BillTax billTax(List<Money> prices, GstSettings settings) {
+/// [ownRatesBp] gives a garment's own rate (a style may have one); a null or
+/// missing entry uses the shop's rate. Per-bill rounding is worked out once for
+/// each rate, over the garments at that rate.
+BillTax billTax(
+  List<Money> prices,
+  GstSettings settings, {
+  List<int?>? ownRatesBp,
+}) {
   for (final p in prices) {
     if (p.paise < 0) {
       throw ArgumentError.value(p, 'prices', 'must not be negative');
     }
   }
-  final bp = settings.rateBp;
-  if (!settings.enabled || bp <= 0) {
+  if (ownRatesBp != null && ownRatesBp.length != prices.length) {
+    throw ArgumentError('ownRatesBp must have one entry for each price');
+  }
+  if (!settings.enabled) {
     return BillTax([
       for (final p in prices)
         LineTax(
@@ -269,6 +299,37 @@ BillTax billTax(List<Money> prices, GstSettings settings) {
           rateBp: 0,
         ),
     ]);
+  }
+  int rateOf(int i) => ownRatesBp?[i] ?? settings.rateBp;
+  final lines = List<LineTax?>.filled(prices.length, null);
+  final rates = {for (var i = 0; i < prices.length; i++) rateOf(i)};
+  for (final bp in rates) {
+    final idx = [
+      for (var i = 0; i < prices.length; i++)
+        if (rateOf(i) == bp) i,
+    ];
+    final group = _taxAtRate([for (final i in idx) prices[i]], settings, bp);
+    for (var k = 0; k < idx.length; k++) {
+      lines[idx[k]] = group[k];
+    }
+  }
+  return BillTax([for (final l in lines) l!]);
+}
+
+List<LineTax> _taxAtRate(List<Money> prices, GstSettings settings, int bp) {
+  if (bp <= 0) {
+    return [
+      for (final p in prices)
+        LineTax(
+          price: p,
+          taxable: Money.zero,
+          tax: Money.zero,
+          addedOnTop: Money.zero,
+          cgst: Money.zero,
+          sgst: Money.zero,
+          rateBp: 0,
+        ),
+    ];
   }
   final inclusive = settings.mode == GstMode.inclusive;
   int taxOf(int paise) => inclusive
@@ -312,7 +373,7 @@ BillTax billTax(List<Money> prices, GstSettings settings) {
     }
     taxes.addAll(shares);
   }
-  return BillTax([
+  return [
     for (var i = 0; i < prices.length; i++)
       () {
         final tax = Money(taxes[i]);
@@ -327,7 +388,7 @@ BillTax billTax(List<Money> prices, GstSettings settings) {
           rateBp: bp,
         );
       }(),
-  ]);
+  ];
 }
 
 const _ones = [

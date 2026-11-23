@@ -200,6 +200,10 @@ class StockRepository {
     String? categoryId,
   }) async {
     require(role, Permission.enterStock);
+    if (draft.styleGstBp != null) {
+      // A style's own GST rate is a tax setting: the owner's alone.
+      require(role, Permission.configureGst);
+    }
     final problems = checkPurchase(draft).where((i) => !i.isWarning).toList();
     if (problems.isNotEmpty) {
       throw InvalidPurchase(problems);
@@ -241,6 +245,20 @@ class StockRepository {
             ),
           );
         }
+        final hsn = cleanHsn(draft.hsn);
+        if (hsn != null || draft.styleGstBp != null) {
+          await (_db.update(
+            _db.products,
+          )..where((p) => p.id.equals(productId))).write(
+            ProductsCompanion(
+              hsn: hsn == null ? const Value.absent() : Value(hsn),
+              gstBp: draft.styleGstBp == null
+                  ? const Value.absent()
+                  : Value(draft.styleGstBp),
+              updatedAt: Value(at),
+            ),
+          );
+        }
         final variantIds = <int, String>{};
         for (var i = 0; i < plan.lines.length; i++) {
           variantIds[i] = await _upsertVariant(productId, plan.lines[i], at);
@@ -254,6 +272,13 @@ class StockRepository {
                 supplier: plan.supplier,
                 lot: plan.lot,
                 purchasedAt: at,
+                supplierGstin: Value(cleanGstin(draft.supplierGstin)),
+                invoiceNo: Value(
+                  draft.invoiceNo.trim().isEmpty
+                      ? null
+                      : draft.invoiceNo.trim(),
+                ),
+                inputTaxPaise: Value(draft.inputTax.paise),
                 createdBy: Value(actor),
                 createdAt: at,
                 updatedAt: at,
