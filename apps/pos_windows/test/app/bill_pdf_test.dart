@@ -308,6 +308,58 @@ void main() {
       },
     );
 
+    test(
+      'the HSN column and the customer GSTIN print when switched on and known',
+      () {
+        final b = gstBill(base, [Payment(PaymentMode.cash, Money(194900))]);
+        final withCodes = SavedBill(
+          billId: b.billId,
+          billNumber: b.billNumber,
+          billedAt: b.billedAt,
+          lines: b.lines,
+          settlement: b.settlement,
+          gst: b.gst,
+          customerGstin: '29ABCDE1234F1Z5',
+          hsns: const ['6109', ''],
+        );
+        final sheet = describeBill(
+          bill: withCodes,
+          shopName: 'S',
+          operatorCode: 'OP001',
+          customerName: 'Shah Traders',
+        );
+        expect(sheet.showHsn, isTrue);
+        expect(sheet.rows.map((r) => r.hsn), ['6109', '']);
+        expect(sheet.customer, 'Shah Traders, GSTIN 29ABCDE1234F1Z5');
+      },
+    );
+
+    test('no HSN column when no garment has a code, or the field is off', () {
+      final b = gstBill(base, [Payment(PaymentMode.cash, Money(194900))]);
+      expect(
+        describeBill(bill: b, shopName: 'S', operatorCode: 'OP001').showHsn,
+        isFalse,
+      );
+      final codes = SavedBill(
+        billId: b.billId,
+        billNumber: b.billNumber,
+        billedAt: b.billedAt,
+        lines: b.lines,
+        settlement: b.settlement,
+        gst: base.copyWith(fields: {GstInvoiceField.shopGstin}),
+        customerGstin: '29ABCDE1234F1Z5',
+        hsns: const ['6109', '6109'],
+      );
+      final sheet = describeBill(
+        bill: codes,
+        shopName: 'S',
+        operatorCode: 'OP001',
+        customerName: 'Shah',
+      );
+      expect(sheet.showHsn, isFalse);
+      expect(sheet.customer, isNull);
+    });
+
     test('a bill made with GST off keeps the plain look', () {
       final sheet = describeBill(
         bill: gstBill(const GstSettings(), [

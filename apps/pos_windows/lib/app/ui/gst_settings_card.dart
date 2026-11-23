@@ -37,6 +37,7 @@ class _GstSettingsCardState extends State<GstSettingsCard> {
   bool _good = false;
 
   GstRepository get _repo => widget.services.gst!;
+  List<StyleGst> _styleCodes = const [];
   Role? get _role => widget.session.user?.role;
   bool get _canEdit => can(_role, Permission.configureGst);
 
@@ -61,10 +62,14 @@ class _GstSettingsCardState extends State<GstSettingsCard> {
 
   Future<void> _load() async {
     final s = await _repo.settings(role: _role);
+    final styles = can(_role, Permission.enterStock)
+        ? await _repo.styles(role: _role)
+        : const <StyleGst>[];
     if (!mounted) {
       return;
     }
     setState(() {
+      _styleCodes = styles;
       _saved = s;
       _enabled = s.enabled;
       _mode = s.mode;
@@ -167,11 +172,94 @@ class _GstSettingsCardState extends State<GstSettingsCard> {
               )
             else
               ..._form(context),
+            if (saved != null && _styleCodes.isNotEmpty) ..._styleSection(),
           ],
         ),
       ),
     );
   }
+
+  Future<void> _editStyle(StyleGst s) async {
+    final result = await showDialog<(String, bool, int?)>(
+      context: context,
+      builder: (_) => _StyleGstDialog(style: s, canRate: _canEdit),
+    );
+    if (result == null) {
+      return;
+    }
+    try {
+      await _repo.setStyleGst(
+        role: _role,
+        actorId: widget.session.user!.userId,
+        styleId: s.id,
+        hsn: result.$1,
+        changeRate: result.$2,
+        rateBp: result.$3,
+      );
+      await _load();
+      setState(() {
+        _message = '${s.name}: saved.';
+        _good = true;
+      });
+    } on InvalidStyleGst {
+      setState(() {
+        _message = 'The HSN code must be 4 to 8 digits and the rate 0% to 50%.';
+        _good = false;
+      });
+    } on PermissionDenied {
+      setState(() {
+        _message = 'You may not change that.';
+        _good = false;
+      });
+    }
+  }
+
+  /// Each style's HSN code and own rate (the rate is the owner's to change).
+  List<Widget> _styleSection() => [
+    const SizedBox(height: 20),
+    const Text(
+      'HSN code and own rate of each style',
+      style: TextStyle(fontWeight: FontWeight.w700),
+    ),
+    const SizedBox(height: 4),
+    const Text(
+      'A style with no code prints no HSN and shows as "No HSN" in the GST '
+      'reports. A style with its own rate uses it instead of the shop rate.',
+    ),
+    const SizedBox(height: 8),
+    for (final s in _styleCodes)
+      Padding(
+        key: Key('style-gst-${s.name}'),
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Expanded(child: Text(s.name)),
+            Text(
+              '${s.hsn.isEmpty ? 'No HSN' : 'HSN ${s.hsn}'}'
+              '${s.rateBp == null ? '' : ', own rate ${markdownLabel(PriceCut.percentBp(s.rateBp!))}'}',
+              key: Key('style-gst-text-${s.name}'),
+            ),
+            const SizedBox(width: 12),
+            OutlinedButton(
+              key: Key('style-gst-edit-${s.name}'),
+              onPressed: () => _editStyle(s),
+              child: const Text('Edit'),
+            ),
+          ],
+        ),
+      ),
+    if (_message != null && !_canEdit)
+      Container(
+        key: const Key('gst-message'),
+        margin: const EdgeInsets.only(top: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: _good ? UiColors.successSoft : UiColors.dangerSoft,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(_message!),
+      ),
+  ];
 
   List<Widget> _form(BuildContext context) => [
     SwitchListTile(
@@ -311,4 +399,104 @@ class _GstSettingsCardState extends State<GstSettingsCard> {
         ),
       ),
   ];
+}
+
+/// Edits a style's HSN code and (for the owner) its own rate.
+class _StyleGstDialog extends StatefulWidget {
+  const _StyleGstDialog({required this.style, required this.canRate});
+  final StyleGst style;
+  final bool canRate;
+
+  @override
+  State<_StyleGstDialog> createState() => _StyleGstDialogState();
+}
+
+class _StyleGstDialogState extends State<_StyleGstDialog> {
+  late final _hsn = TextEditingController(text: widget.style.hsn);
+  late final _rate = TextEditingController(
+    text: widget.style.rateBp == null
+        ? ''
+        : markdownLabel(PriceCut.percentBp(widget.style.rateBp!))
+              .replaceAll('%', ''),
+  );
+  String? _error;
+
+  @override
+  void dispose() {
+    _hsn.dispose();
+    _rate.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    final hsnText = _hsn.text.trim();
+    if (hsnText.isNotEmpty && cleanHsn(hsnText) == null) {
+      setState(() => _error = 'The HSN code must be 4 to 8 digits.');
+      return;
+    }
+    int? bp;
+    var change = false;
+    if (widget.canRate) {
+      final t = _rate.text.trim().replaceAll('%', '');
+      if (t.isNotEmpty) {
+        bp = parsePriceCut('$t%')?.basisPoints;
+        if (bp == null || bp > maxGstRateBp) {
+          setState(
+            () => _error = 'Type the rate as a percentage between 0 and 50.',
+          );
+          return;
+        }
+      }
+      change = bp != widget.style.rateBp;
+    }
+    Navigator.of(context).pop((hsnText, change, bp));
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: Text('GST codes for ${widget.style.name}'),
+    content: SizedBox(
+      width: 420,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            key: const Key('style-hsn'),
+            controller: _hsn,
+            decoration: const InputDecoration(
+              labelText: 'HSN code (4 to 8 digits, empty for none)',
+            ),
+          ),
+          if (widget.canRate)
+            TextField(
+              key: const Key('style-rate'),
+              controller: _rate,
+              decoration: const InputDecoration(
+                labelText: 'Own GST rate % (empty uses the shop rate)',
+              ),
+            ),
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                _error!,
+                key: const Key('style-gst-error'),
+                style: const TextStyle(color: UiColors.dangerInk),
+              ),
+            ),
+        ],
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.of(context).pop(),
+        child: const Text('Cancel'),
+      ),
+      FilledButton(
+        key: const Key('style-gst-save'),
+        onPressed: _save,
+        child: const Text('Save'),
+      ),
+    ],
+  );
 }

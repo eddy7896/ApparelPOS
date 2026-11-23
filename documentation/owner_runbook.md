@@ -64,7 +64,11 @@ Written for the shop owner, not for a programmer. Short steps, plain words. The 
 4. Never change a tag's price by hand: the price on the bill comes from the system.
 
 ## 6. GST
-GST is **off**. Your CA must confirm every rule (rate, whether prices include tax, rounding, invoice fields) before you switch it on in **Settings > GST** (owner only). Switching it on changes **new** bills only. The GST reports are not built yet.
+GST is **off**. Your CA must confirm every rule (rate, whether prices include tax, rounding, invoice fields) before you switch it on in **Settings > GST** (owner only). Switching it on changes **new** bills only.
+- **HSN codes:** type a style's HSN code in Stock entry (GST details) or later in Settings, GST. A style with a different tax rate gets its **own rate** (owner only). A style with no code shows as "No HSN" in the reports.
+- **Business buyers:** with GST on, the register has a **Customer GSTIN** box; fill it when a shop buys from you so the invoice and the report carry it.
+- **Purchases:** in Stock entry, type the supplier's GSTIN, their invoice number and the **tax you paid** on the purchase, so the report can total your input tax.
+- **Reports:** Manager Mode, **GST reports**: pick the days, look at the invoices, returns, tax by rate and by HSN code, sales to business buyers and purchases, then **Export for the CA** writes six spreadsheet files into a folder. How input tax is set off is your CA's decision.
 
 ## 7. When something goes wrong
 | What happened | What to do |
@@ -73,7 +77,7 @@ GST is **off**. Your CA must confirm every rule (rate, whether prices include ta
 | A manager forgot their password | The owner gives them a new password in Staff. |
 | **The owner forgot the password** | There is no reset yet. Ask the programmer **before** doing anything else. Do not reinstall. (not built) |
 | The screen is locked and nobody knows why | It locks after 5 minutes of no use, on Pause and on Ctrl+L. Sign in again. A bill in progress is forgotten when the counter locks. |
-| A barcode will not scan | Type the 12 digits, or type part of the item name. If the tag is damaged, print a new one from Stock entry. (check: that a tag can be printed again for stock already entered) |
+| A barcode will not scan | Type the 12 digits, or type part of the item name. If the tag is damaged or will not scan, sell the garment by typing the 12 digits under the bars, or search by name. **Hangtags can only be printed right after a purchase is saved; there is no way yet to print a tag again later** (not built). |
 | The scanner types but nothing happens | Click the scan box (F2), try again. The scanner must send Enter after the digits. |
 | The printer does nothing | Bills and hangtags print through the normal Windows print dialog. Check that printer works from another program. |
 | Wrong item sold, or a mistake on a bill | Do a **return** for the garment and make a new bill. Bills cannot be edited. |
@@ -84,9 +88,9 @@ GST is **off**. Your CA must confirm every rule (rate, whether prices include ta
 | The app says the database cannot be opened | Do not delete anything. Restore from the latest backup (below), or call the programmer. |
 
 **A new laptop (or after Windows is reinstalled)**
-1. Install Apparel PoS (section 2). On the first screen choose **restore from a backup**.
+1. Install Apparel PoS (section 2). On the first screen choose **This is a new computer: restore from a backup** (the link under the owner form).
 2. Pick the newest backup file (`apparel-pos-YYYYMMDD-HHMMSS.backup`) from the USB drive or the second folder.
-3. Type your **recovery key** (the paper). The screen may also ask you to type the word RESTORE to be sure. (check: the first-launch wording)
+3. Type your **recovery key** (the paper) and, to be sure, the word **RESTORE** in the box.
 4. Restart the app. Sign in as usual. Check the last day's report matches what you remember.
 5. Set the two backup places again in **Backups**.
 
@@ -108,4 +112,4 @@ Tick each one **on the real laptop with the real printer and scanner**.
 - [ ] Wrote the laptop's Windows password somewhere safe too.
 
 ## 9. Not built yet (so do not rely on it)
-Second counter or second laptop; the owner's phone and web dashboard; the shop name, colour and logo on the laptop; an owner password reset; GST reports; printing on a thermal receipt printer; a receipt for a pay-later payment; hold bill that survives a lock.
+Second counter or second laptop; the owner's phone and web dashboard; the shop name, colour and logo on the laptop; an owner password reset; a GST filing integration; printing on a thermal receipt printer; printing a hangtag again after the purchase is saved; a receipt for a pay-later payment; hold bill that survives a lock.

@@ -16,6 +16,7 @@ import 'package:pos_windows/app/session_controller.dart';
 import 'package:pos_windows/data/app_database.dart';
 import 'package:pos_windows/data/auth_service.dart';
 import 'package:pos_windows/data/category_repository.dart';
+import 'package:pos_windows/data/gst_repository.dart';
 import 'package:pos_windows/data/report_repository.dart';
 import 'package:pos_windows/data/returns_repository.dart';
 import 'package:pos_windows/data/sales_repository.dart';
@@ -72,6 +73,7 @@ void main() {
     bool shopName = true,
     bool goToStock = true,
     bool withCategories = false,
+    bool withGst = false,
   }) async {
     tester.view.physicalSize = const Size(1400, 2600);
     tester.view.devicePixelRatio = 1;
@@ -97,6 +99,7 @@ void main() {
       reports: ReportRepository(db),
       auth: auth,
       categories: withCategories ? CategoryRepository(db, newId: newId) : null,
+      gst: withGst ? GstRepository(db, newId: newId) : null,
       printer: printer,
       fonts: () async => LabelFonts(
         regular: File('assets/fonts/NotoSans-Regular.ttf').readAsBytesSync(),
@@ -347,6 +350,109 @@ void main() {
         findsOneWidget,
       );
     });
+
+    testWidgets('no GST boxes without the GST service', (tester) async {
+      await open(tester);
+      expect(find.byKey(const Key('gst-details')), findsNothing);
+    });
+
+    testWidgets('the owner sees every GST box, a manager has no rate box', (
+      tester,
+    ) async {
+      await open(tester, withGst: true);
+      expect(find.byKey(const Key('gst-details')), findsOneWidget);
+      for (final k in [
+        'hsn-field',
+        'style-rate-field',
+        'supplier-gstin-field',
+        'invoice-no-field',
+        'input-tax-field',
+      ]) {
+        expect(find.byKey(Key(k)), findsOneWidget, reason: k);
+      }
+    });
+
+    testWidgets('a manager has no own-rate box', (tester) async {
+      await open(tester, withGst: true, role: Role.manager);
+      expect(find.byKey(const Key('hsn-field')), findsOneWidget);
+      expect(find.byKey(const Key('style-rate-field')), findsNothing);
+    });
+
+    testWidgets('the GST details are saved with the purchase', (tester) async {
+      await open(tester, withGst: true);
+      await fillValid(tester);
+      await type(tester, 'hsn-field', '6109');
+      await type(tester, 'style-rate-field', '12');
+      await type(tester, 'supplier-gstin-field', '27abcde1234f1z5');
+      await type(tester, 'invoice-no-field', 'INV/17');
+      await type(tester, 'input-tax-field', '1500');
+      await tester.tap(find.byKey(const Key('save-purchase')));
+      await settle(tester);
+      expect(find.byKey(const Key('saved-dialog')), findsOneWidget);
+      final p = await tester.runAsync(
+        () => db
+            .customSelect(
+              "SELECT hsn, gst_bp FROM products WHERE name = 'Cotton Kurta'",
+            )
+            .getSingle(),
+      );
+      expect((p!.read<String?>('hsn'), p.read<int?>('gst_bp')), ('6109', 1200));
+      final b = await tester.runAsync(
+        () => db
+            .customSelect(
+              'SELECT supplier_gstin, invoice_no, input_tax_paise FROM batches',
+            )
+            .getSingle(),
+      );
+      expect(b!.read<String>('supplier_gstin'), '27ABCDE1234F1Z5');
+      expect(b.read<String>('invoice_no'), 'INV/17');
+      expect(b.read<int>('input_tax_paise'), 150000);
+    });
+
+    testWidgets('left empty, nothing is stored', (tester) async {
+      await open(tester, withGst: true);
+      await fillValid(tester);
+      await tester.tap(find.byKey(const Key('save-purchase')));
+      await settle(tester);
+      final p = await tester.runAsync(
+        () => db.customSelect('SELECT hsn, gst_bp FROM products').getSingle(),
+      );
+      expect((p!.read<String?>('hsn'), p.read<int?>('gst_bp')), (null, null));
+    });
+
+    testWidgets(
+      'a bad HSN, supplier GSTIN, rate or tax stops the save with a message',
+      (tester) async {
+        await open(tester, withGst: true);
+        await fillValid(tester);
+        await type(tester, 'hsn-field', '12');
+        expect(
+          find.text('The HSN code must be 4 to 8 digits.'),
+          findsOneWidget,
+        );
+        expect(saveEnabled(tester), isFalse);
+        await type(tester, 'hsn-field', '');
+        await type(tester, 'supplier-gstin-field', 'nope');
+        expect(
+          find.textContaining('supplier GSTIN does not look right'),
+          findsOneWidget,
+        );
+        await type(tester, 'supplier-gstin-field', '');
+        await type(tester, 'style-rate-field', 'abc');
+        expect(
+          find.text('Type the GST rate as a percentage, such as 12.'),
+          findsOneWidget,
+        );
+        await type(tester, 'style-rate-field', '');
+        await type(tester, 'input-tax-field', 'x');
+        expect(
+          find.text('The tax paid is not a valid rupee amount.'),
+          findsOneWidget,
+        );
+        await type(tester, 'input-tax-field', '');
+        expect(saveEnabled(tester), isTrue);
+      },
+    );
 
     testWidgets('the chosen category is saved on the style', (tester) async {
       await open(tester, withCategories: true, goToStock: false);

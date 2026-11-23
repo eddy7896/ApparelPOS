@@ -5,6 +5,7 @@
 // confirm). The database part is `StockRepository` in the app.
 
 import 'barcode.dart';
+import 'gst_rules.dart';
 import 'money.dart';
 
 /// One cell of the grid.
@@ -33,11 +34,29 @@ final class PurchaseDraft {
     required this.supplier,
     required this.style,
     required this.lines,
+    this.hsn = '',
+    this.styleGstBp,
+    this.supplierGstin = '',
+    this.invoiceNo = '',
+    this.inputTax = Money.zero,
   });
 
   final String supplier;
   final String style;
   final List<PurchaseLine> lines;
+
+  /// The style's HSN code (4 to 8 digits), or empty to leave it as it is.
+  final String hsn;
+
+  /// The style's own GST rate in basis points, or null to leave it as it is.
+  final int? styleGstBp;
+
+  /// The supplier's GSTIN and the supplier invoice number, both optional, and
+  /// the tax paid on the purchase (for the input tax report; unverified until
+  /// the CA confirms).
+  final String supplierGstin;
+  final String invoiceNo;
+  final Money inputTax;
 }
 
 enum PurchaseProblem {
@@ -50,6 +69,10 @@ enum PurchaseProblem {
   duplicateLine,
   negativeMoney,
   tooManyForOneLot,
+  badHsn,
+  badSupplierGstin,
+  invoiceNoTooLong,
+  badStyleRate,
 
   /// A warning, not a problem: the owner may still sell below cost.
   mrpBelowCost,
@@ -68,6 +91,9 @@ final class PurchaseIssue {
   @override
   String toString() => 'PurchaseIssue($problem, line $lineIndex)';
 }
+
+/// The longest supplier invoice number kept.
+const int maxInvoiceNoLength = 40;
 
 /// The most garments one lot can hold (serials 0000 to 9999).
 const int garmentsPerLot = Barcode.maxSerial + 1;
@@ -116,6 +142,23 @@ List<PurchaseIssue> checkPurchase(PurchaseDraft draft) {
   }
   if (total > garmentsPerLot) {
     issues.add(const PurchaseIssue(PurchaseProblem.tooManyForOneLot));
+  }
+  if (_clean(draft.hsn).isNotEmpty && cleanHsn(draft.hsn) == null) {
+    issues.add(const PurchaseIssue(PurchaseProblem.badHsn));
+  }
+  if (_clean(draft.supplierGstin).isNotEmpty &&
+      cleanGstin(draft.supplierGstin) == null) {
+    issues.add(const PurchaseIssue(PurchaseProblem.badSupplierGstin));
+  }
+  if (_clean(draft.invoiceNo).length > maxInvoiceNoLength) {
+    issues.add(const PurchaseIssue(PurchaseProblem.invoiceNoTooLong));
+  }
+  final rate = draft.styleGstBp;
+  if (rate != null && (rate < 0 || rate > maxGstRateBp)) {
+    issues.add(const PurchaseIssue(PurchaseProblem.badStyleRate));
+  }
+  if (draft.inputTax.paise < 0) {
+    issues.add(const PurchaseIssue(PurchaseProblem.negativeMoney));
   }
   return issues;
 }

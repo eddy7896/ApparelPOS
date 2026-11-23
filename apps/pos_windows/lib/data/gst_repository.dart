@@ -5,6 +5,7 @@
 // touches a bill already made (ADR-0007 point 3 and 5). The rules are in
 // core_domain (gst_rules). No cost is read here.
 import 'package:core_domain/core_domain.dart';
+import 'package:drift/drift.dart' show OrderingTerm, Value;
 
 import 'app_database.dart';
 
@@ -38,14 +39,46 @@ Future<GstSettings> readGstSettings(AppDatabase db) async {
   );
 }
 
+/// A style with its HSN code and own GST rate (both optional).
+final class StyleGst {
+  const StyleGst({
+    required this.id,
+    required this.name,
+    required this.hsn,
+    required this.rateBp,
+  });
+  final String id;
+  final String name;
+
+  /// '' when none.
+  final String hsn;
+
+  /// The style's own rate in basis points, or null for the shop's rate.
+  final int? rateBp;
+}
+
+/// Thrown when an HSN code is not 4 to 8 digits, or a rate is out of range.
+final class InvalidStyleGst implements Exception {
+  @override
+  String toString() => 'InvalidStyleGst';
+}
+
+/// Thrown when the style does not exist.
+final class UnknownStyleGst implements Exception {
+  @override
+  String toString() => 'UnknownStyleGst';
+}
+
 class GstRepository {
   GstRepository(
     this._db, {
     required String Function() newId,
     DateTime Function()? now,
-  }) : _writer = AuditedWriter(_db, now: now, newId: newId);
+  }) : _now = now ?? (() => DateTime.now().toUtc()),
+       _writer = AuditedWriter(_db, now: now, newId: newId);
 
   final AppDatabase _db;
+  final DateTime Function() _now;
   final AuditedWriter _writer;
 
   /// The settings. Needs `viewStockAndPrices` (the counter needs the rate and
@@ -53,6 +86,68 @@ class GstRepository {
   Future<GstSettings> settings({required Role? role}) async {
     require(role, Permission.viewStockAndPrices);
     return readGstSettings(_db);
+  }
+
+  /// Every style with its HSN code and own rate, by name. Needs `enterStock`.
+  Future<List<StyleGst>> styles({required Role? role}) async {
+    require(role, Permission.enterStock);
+    final rows = await (_db.select(
+      _db.products,
+    )..orderBy([(p) => OrderingTerm.asc(p.name)])).get();
+    return [
+      for (final p in rows)
+        StyleGst(id: p.id, name: p.name, hsn: p.hsn ?? '', rateBp: p.gstBp),
+    ];
+  }
+
+  /// Sets a style's HSN code ([hsn] empty clears it) and, when [changeRate] is
+  /// true, its own rate ([rateBp] null goes back to the shop's rate). The HSN
+  /// needs `enterStock`; the rate is a tax setting and needs `configureGst`
+  /// (owner). Past bills keep what they had. Throws [PermissionDenied],
+  /// [InvalidStyleGst] or [UnknownStyleGst].
+  Future<void> setStyleGst({
+    required Role? role,
+    required String actorId,
+    required String styleId,
+    required String hsn,
+    bool changeRate = false,
+    int? rateBp,
+  }) async {
+    require(role, Permission.enterStock);
+    if (changeRate) {
+      require(role, Permission.configureGst);
+    }
+    final clean = hsn.trim().isEmpty ? null : cleanHsn(hsn);
+    if (hsn.trim().isNotEmpty && clean == null) {
+      throw InvalidStyleGst();
+    }
+    if (changeRate && rateBp != null && (rateBp < 0 || rateBp > maxGstRateBp)) {
+      throw InvalidStyleGst();
+    }
+    await _writer.run<void>(
+      action: 'style.gst',
+      entityType: 'style',
+      entityId: styleId,
+      actor: actorId,
+      details: {'hsn': clean, if (changeRate) 'rateBp': rateBp},
+      body: () async {
+        final exists = await (_db.select(
+          _db.products,
+        )..where((p) => p.id.equals(styleId))).getSingleOrNull();
+        if (exists == null) {
+          throw UnknownStyleGst();
+        }
+        await (_db.update(
+          _db.products,
+        )..where((p) => p.id.equals(styleId))).write(
+          ProductsCompanion(
+            hsn: Value(clean),
+            gstBp: changeRate ? Value(rateBp) : const Value.absent(),
+            updatedAt: Value(_now()),
+          ),
+        );
+      },
+    );
   }
 
   /// Saves the settings. Owner only (`configureGst`). Switching on needs a good

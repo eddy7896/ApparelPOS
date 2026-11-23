@@ -20,6 +20,7 @@ final class BillSheetRow {
     this.taxable = '',
     this.rate = '',
     this.tax = '',
+    this.hsn = '',
   });
   final String description;
   final String mrp;
@@ -33,6 +34,7 @@ final class BillSheetRow {
   final String taxable;
   final String rate;
   final String tax;
+  final String hsn;
 }
 
 /// Everything the bill says, as text.
@@ -53,6 +55,7 @@ final class BillSheet {
     this.showServedBy = true,
     this.showMrp = true,
     this.showOff = true,
+    this.showHsn = false,
     this.showTaxable = false,
     this.showRate = false,
     this.showTax = false,
@@ -95,6 +98,7 @@ final class BillSheet {
   final bool showServedBy;
   final bool showMrp;
   final bool showOff;
+  final bool showHsn;
   final bool showTaxable;
   final bool showRate;
   final bool showTax;
@@ -153,10 +157,18 @@ BillSheet describeBill({
         customerPhone.trim().isNotEmpty &&
         prints(GstInvoiceField.customerPhone))
       customerPhone.trim(),
+    if (g.enabled &&
+        bill.customerGstin != null &&
+        g.prints(GstInvoiceField.customerGstin))
+      'GSTIN ${bill.customerGstin}',
   ];
   final change = bill.settlement.change;
   final showOff = prints(GstInvoiceField.discount);
   final showMrp = !g.enabled || g.prints(GstInvoiceField.unitPrice);
+  final showHsn =
+      g.enabled &&
+      g.prints(GstInvoiceField.hsnCode) &&
+      bill.hsns.any((h) => h.isNotEmpty);
   final showTaxable = g.enabled && g.prints(GstInvoiceField.taxableValue);
   final showRate = g.enabled && g.prints(GstInvoiceField.gstRate);
   final showTax = g.enabled && g.prints(GstInvoiceField.taxPerItem);
@@ -181,6 +193,7 @@ BillSheet describeBill({
             // What this garment cost the customer: with tax added on top it
             // includes the tax.
             price: formatRupees(t.paid),
+            hsn: showHsn && i < bill.hsns.length ? bill.hsns[i] : '',
             taxable: showTaxable ? formatRupees(t.taxable) : '',
             rate: showRate ? rateText(t.rateBp) : '',
             tax: showTax ? formatRupees(t.tax) : '',
@@ -204,6 +217,7 @@ BillSheet describeBill({
     showServedBy: prints(GstInvoiceField.servedBy),
     showMrp: showMrp,
     showOff: showOff,
+    showHsn: showHsn,
     showTaxable: showTaxable,
     showRate: showRate,
     showTax: showTax,
@@ -254,6 +268,7 @@ Future<Uint8List> buildBillPdf(
         (title: 'Item', flex: 5, of: (r) => r.description),
         if (sheet.showMrp) (title: 'MRP', flex: 2, of: (r) => r.mrp),
         if (sheet.showOff) (title: 'Off', flex: 2, of: (r) => r.off),
+        if (sheet.showHsn) (title: 'HSN', flex: 2, of: (r) => r.hsn),
         if (sheet.showTaxable)
           (title: 'Taxable', flex: 2, of: (r) => r.taxable),
         if (sheet.showRate) (title: 'GST', flex: 1.4, of: (r) => r.rate),

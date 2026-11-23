@@ -4,7 +4,14 @@ All notable changes to Apparel PoS. The format follows [Keep a Changelog](https:
 
 ## [Unreleased]
 
-Nothing yet. Planned next: GST reports that need new data (HSN codes, customer GSTIN, purchases) and Release 2 (sync, cloud, owner mobile app).
+### Added
+- GST, the rest of the data and reports (still unverified until your CA confirms): an HSN code and an optional own GST rate on each style (Stock entry and Settings; the rate is the owner's to set), an optional customer GSTIN at the register for business buyers, and a supplier GSTIN, invoice number and tax paid on each purchase. The GST reports now also show sales by HSN code, sales to business customers and purchases with input tax, and the export for the CA is six CSV files. The tax on a bill uses each style's own rate. Database version 13.
+- The owner's runbook now says how to restore on a new computer exactly as the screen words it, and that a hangtag can only be printed right after a purchase is saved.
+
+### Fixed
+- The GST reports no longer fail when a net figure is negative (a return in a later range than its sale, or more input tax than tax charged).
+
+Planned next: Release 2 (sync, cloud, owner mobile app).
 
 ## [0.9.0] - 2026-11-23
 

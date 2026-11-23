@@ -312,6 +312,115 @@ void main() {
     });
   });
 
+  group('HSN, business customers and purchases', () {
+    testWidgets('each has its own section with its figures', (tester) async {
+      await tester.runAsync(() async {
+        await turnOnGst();
+        await gst.setStyleGst(
+          role: Role.owner,
+          actorId: ownerId,
+          styleId:
+              (await db
+                      .customSelect(
+                        "SELECT id FROM products WHERE name = 'Cotton Kurta'",
+                      )
+                      .getSingle())
+                  .read<String>('id'),
+          hsn: '6109',
+        );
+        await sales.saveBill(
+          role: Role.cashier,
+          cashierId: cashierId,
+          lines: [BillLineInput(kurta[0])],
+          payments: [Payment(PaymentMode.cash, Money(49900))],
+          customerName: 'Shah Traders',
+          customerGstin: '29ABCDE1234F1Z5',
+        );
+        await stock.receivePurchase(
+          role: Role.owner,
+          draft: PurchaseDraft(
+            supplier: 'Sharma Textiles',
+            style: 'Silk Saree',
+            supplierGstin: '27ABCDE1234F1Z5',
+            invoiceNo: 'INV/9',
+            inputTax: Money(250000),
+            lines: [
+              PurchaseLine(
+                size: 'M',
+                color: 'Blue',
+                quantity: 2,
+                cost: Money(100000),
+                mrp: Money(300000),
+              ),
+            ],
+          ),
+        );
+      });
+      await open(tester);
+      Future<void> see(String key) => tester.scrollUntilVisible(
+        find.byKey(Key(key)),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await see('hsn-6109-500');
+      expect(find.byKey(const Key('hsn-6109-500')), findsOneWidget);
+      await see('business-2026-27/C1/000001');
+      expect(
+        find.byKey(const Key('business-2026-27/C1/000001')),
+        findsOneWidget,
+      );
+      expect(find.textContaining('29ABCDE1234F1Z5'), findsWidgets);
+      expect(textOf(tester, 'tile-input'), '₹2,500.00');
+      expect(
+        textOf(tester, 'tile-after-input'),
+        '-₹2,476.24'.replaceFirst('-₹', '-₹'),
+      );
+      await see('purchase-2');
+      expect(find.textContaining('Sharma Textiles'), findsOneWidget);
+    });
+
+    testWidgets(
+      'a return in a later range than its sale shows a minus, not a crash',
+      (tester) async {
+        await tester.runAsync(() async {
+          await turnOnGst();
+          final earlier = SalesRepository(
+            db,
+            newId: newId,
+            now: () => DateTime.now().toUtc().subtract(const Duration(days: 3)),
+          );
+          await earlier.saveBill(
+            role: Role.cashier,
+            cashierId: cashierId,
+            lines: [BillLineInput(kurta[0])],
+            payments: [Payment(PaymentMode.cash, Money(49900))],
+          );
+          await ReturnsRepository(db, newId: newId).saveReturn(
+            role: Role.cashier,
+            cashierId: cashierId,
+            items: [ReturnItemInput(kurta[0], ReturnOutcome.restock)],
+            refundMode: RefundMode.cash,
+          );
+        });
+        await open(tester);
+        await tapKey(tester, 'gst-range-today');
+        expect(textOf(tester, 'tile-net'), '-₹23.76');
+        expect(textOf(tester, 'tile-after-input'), '-₹23.76');
+      },
+    );
+
+    testWidgets('empty sections say so', (tester) async {
+      await open(tester);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('no-business')),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.byKey(const Key('no-hsn')), findsOneWidget);
+      expect(find.byKey(const Key('no-business')), findsOneWidget);
+    });
+  });
+
   group('the range', () {
     testWidgets('Last month is empty, Today and This month bring it back', (
       tester,
@@ -346,9 +455,7 @@ void main() {
   });
 
   group('the export', () {
-    testWidgets('writes the three files into the chosen folder', (
-      tester,
-    ) async {
+    testWidgets('writes the six files into the chosen folder', (tester) async {
       await tester.runAsync(() async {
         await turnOnGst();
         await sell([kurta[0]], 49900, customer: 'Ravi, Kumar');
@@ -358,21 +465,24 @@ void main() {
       pickedFolder = dir.path;
       await open(tester);
       await tapKey(tester, 'gst-export');
-      for (var k = 0; k < 4; k++) {
+      for (var k = 0; k < 10; k++) {
         await pump(tester);
       }
-      expect(find.textContaining('Saved 3 files'), findsOneWidget);
+      expect(find.textContaining('Saved 6 files'), findsOneWidget);
       final names =
           dir
               .listSync()
               .map((e) => e.path.split(Platform.pathSeparator).last)
               .toList()
             ..sort();
-      expect(names.length, 3);
-      expect(names[0], startsWith('gst-invoices-'));
-      expect(names[1], startsWith('gst-returns-'));
-      expect(names[2], startsWith('gst-summary-'));
-      final inv = File('${dir.path}${Platform.pathSeparator}${names[0]}')
+      expect(names.length, 6);
+      expect(names[0], startsWith('gst-business-customers-'));
+      expect(names[1], startsWith('gst-hsn-'));
+      expect(names[2], startsWith('gst-invoices-'));
+      expect(names[3], startsWith('gst-purchases-'));
+      expect(names[4], startsWith('gst-returns-'));
+      expect(names[5], startsWith('gst-summary-'));
+      final inv = File('${dir.path}${Platform.pathSeparator}${names[2]}')
           .readAsBytesSync();
       expect(inv.sublist(0, 3), [0xEF, 0xBB, 0xBF]);
       final text = utf8.decode(inv.sublist(3));

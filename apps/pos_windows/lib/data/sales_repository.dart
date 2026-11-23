@@ -66,6 +66,8 @@ final class SaleItem {
     required this.status,
     this.soldOnBill,
     this.markdown,
+    this.gstBp,
+    this.hsn = '',
   });
   final String articleId;
   final String barcode;
@@ -80,6 +82,11 @@ final class SaleItem {
   /// running today and leaves something to pay. The register shows it and the
   /// bill takes it; a marked-down garment takes no cashier discount.
   final PriceCut? markdown;
+
+  /// The style's own GST rate in basis points, or null for the shop's rate; and
+  /// its HSN code ('' when none). Used only while GST is on.
+  final int? gstBp;
+  final String hsn;
 }
 
 /// One garment to bill: its barcode, an optional markdown (manager or owner
@@ -173,6 +180,8 @@ final class SavedBill {
     required this.settlement,
     this.owed = Money.zero,
     this.gst = const GstSettings(),
+    this.customerGstin,
+    this.hsns = const [],
   });
   final String billId;
   final BillNumber billNumber;
@@ -185,6 +194,12 @@ final class SavedBill {
 
   /// The GST settings the bill was made under (GST off when it was off).
   final GstSettings gst;
+
+  /// A business customer's GSTIN when one was given and GST was on.
+  final String? customerGstin;
+
+  /// The HSN code of each line ('' when none), in line order.
+  final List<String> hsns;
 
   /// The tax on the whole bill.
   BillTax get tax => BillTax([
@@ -276,7 +291,8 @@ class SalesRepository {
         .customSelect(
           'SELECT a.id AS id, a.barcode_value AS barcode, a.mrp_paise AS mrp, '
           'a.status AS status, p.name AS name, v.size AS size, v.color AS color, '
-          'm.percent_bp AS mbp, m.amount_paise AS mamt '
+          'm.percent_bp AS mbp, m.amount_paise AS mamt, '
+          'p.gst_bp AS gbp, p.hsn AS hsn '
           'FROM articles a '
           'JOIN variants v ON v.id = a.variant_id '
           'JOIN products p ON p.id = v.product_id '
@@ -321,6 +337,8 @@ class SalesRepository {
         status: status,
         soldOnBill: billNo,
         markdown: effectiveMarkdown(stored, mrp),
+        gstBp: r.read<int?>('gbp'),
+        hsn: r.read<String?>('hsn') ?? '',
       ),
     );
   }
@@ -342,6 +360,7 @@ class SalesRepository {
     String? discountApprovedBy,
     List<CreditNoteUseInput> creditNotes = const [],
     PayLaterInput? payLater,
+    String? customerGstin,
   }) async {
     require(role, Permission.sell);
     String? laterName;
@@ -404,6 +423,12 @@ class SalesRepository {
         require(role, Permission.setMarkdown);
       }
     }
+    final buyerGstin = (customerGstin ?? '').trim().isEmpty
+        ? null
+        : cleanGstin(customerGstin);
+    if ((customerGstin ?? '').trim().isNotEmpty && buyerGstin == null) {
+      throw InvalidBill('the customer GSTIN is not in the usual shape');
+    }
     final name = payLater == null ? _cleanName(customerName) : laterName;
     final phone = payLater == null
         ? _cleanPhone(customerPhone)
@@ -420,6 +445,8 @@ class SalesRepository {
       actor: cashierId,
       body: () async {
         final saved = <SavedBillLine>[];
+        final ownRates = <int?>[];
+        final hsns = <String>[];
         final articleIds = <String>[];
         for (final input in lines) {
           final found = await _find(input.barcode);
@@ -480,6 +507,8 @@ class SalesRepository {
             );
           }
           articleIds.add(item.articleId);
+          ownRates.add(item.gstBp);
+          hsns.add(item.hsn);
           saved.add(
             SavedBillLine(
               barcode: item.barcode,
@@ -494,7 +523,11 @@ class SalesRepository {
         // GST (off unless the owner switched it on): the tax on each garment is
         // worked out here, from the settings, and kept on the bill line.
         final gst = await readGstSettings(_db);
-        final tax = billTax([for (final l in saved) l.priced.finalPrice], gst);
+        final tax = billTax(
+          [for (final l in saved) l.priced.finalPrice],
+          gst,
+          ownRatesBp: [for (final r in ownRates) r],
+        );
         for (var i = 0; i < saved.length; i++) {
           final l = saved[i];
           saved[i] = SavedBillLine(
@@ -561,6 +594,7 @@ class SalesRepository {
                 shiftId: Value(shiftId),
                 customerName: Value(name),
                 customerPhone: Value(phone),
+                customerGstin: Value(gst.enabled ? buyerGstin : null),
                 totalPaise: total.paise,
                 changePaise: settlement.change.paise,
                 billedAt: at,
@@ -584,6 +618,7 @@ class SalesRepository {
                   markdownPaise: l.priced.markdownAmount.paise,
                   discountPaise: l.priced.discountAmount.paise,
                   finalPaise: l.priced.finalPrice.paise,
+                  hsn: Value(gst.enabled ? hsns[i] : ''),
                   gstBp: Value(tax.lines[i].rateBp),
                   taxablePaise: Value(tax.lines[i].taxable.paise),
                   taxPaise: Value(tax.lines[i].tax.paise),
@@ -669,6 +704,8 @@ class SalesRepository {
           settlement: settlement,
           owed: settlement.due,
           gst: gst,
+          customerGstin: gst.enabled ? buyerGstin : null,
+          hsns: hsns,
         );
       },
       // No customer details and no cost in the audit or outbox details.

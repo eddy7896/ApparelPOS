@@ -85,6 +85,7 @@ class _Held {
     required this.notes,
     required this.customerName,
     required this.customerPhone,
+    required this.customerGstin,
     required this.approver,
     required this.method,
     required this.laterApprover,
@@ -94,6 +95,7 @@ class _Held {
   final List<CreditNoteInfo> notes;
   final String customerName;
   final String customerPhone;
+  final String customerGstin;
   final Approver? approver;
   final _PayMethod method;
   final Approver? laterApprover;
@@ -139,6 +141,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
   final _card = TextEditingController();
   final _customerName = TextEditingController();
   final _customerPhone = TextEditingController();
+  final _customerGstin = TextEditingController();
   final _lines = <_Line>[];
   final _notes = <CreditNoteInfo>[];
   final _held = <_Held>[];
@@ -226,6 +229,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
       _card,
       _customerName,
       _customerPhone,
+      _customerGstin,
     ]) {
       c.dispose();
     }
@@ -239,9 +243,11 @@ class _RegisterPanelState extends State<RegisterPanel> {
 
   /// The tax on the garments on the bill (nothing while GST is off), worked
   /// out by the same rule the bill is saved with.
-  BillTax get _tax => billTax([
-    for (final l in _lines) l.priced?.finalPrice ?? l.item.mrp,
-  ], _gst);
+  BillTax get _tax => billTax(
+    [for (final l in _lines) l.priced?.finalPrice ?? l.item.mrp],
+    _gst,
+    ownRatesBp: [for (final l in _lines) l.item.gstBp],
+  );
 
   /// What the customer pays: the prices, plus the tax when it is added on top.
   Money get _total => _tax.total;
@@ -614,6 +620,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
         ],
         customerName: name,
         customerPhone: phone,
+        customerGstin: _gst.enabled ? _customerGstin.text : null,
         discountApproverRole: _approver?.role,
         discountApprovedBy: _approver?.userId,
         payLater: _leavesOwed
@@ -666,6 +673,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
   /// tell the cashier when a price changed, or null when nothing did.
   Future<String?> _refreshPrices() async {
     var markdownChanged = false;
+    var ratesChanged = false;
     final g = await _s.sales.gstSettings(role: _role);
     final gstChanged =
         g.enabled != _gst.enabled ||
@@ -687,6 +695,9 @@ class _RegisterPanelState extends State<RegisterPanel> {
           : b != null &&
                 a.basisPoints == b.basisPoints &&
                 a.amountOff == b.amountOff;
+      if (fresh.gstBp != l.item.gstBp && _gst.enabled) {
+        ratesChanged = true;
+      }
       l.item = fresh;
       if (!same) {
         markdownChanged = true;
@@ -695,13 +706,13 @@ class _RegisterPanelState extends State<RegisterPanel> {
         }
       }
     }
-    if ((markdownChanged || gstChanged) && mounted) {
+    if ((markdownChanged || gstChanged || ratesChanged) && mounted) {
       setState(() {});
     }
     if (markdownChanged) {
       return 'A markdown changed while this bill was open. Check the new total.';
     }
-    if (gstChanged) {
+    if (gstChanged || ratesChanged) {
       return 'The GST settings changed while this bill was open. Check the new total.';
     }
     return null;
@@ -743,6 +754,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
       notes: List.of(_notes),
       customerName: _customerName.text,
       customerPhone: _customerPhone.text,
+      customerGstin: _customerGstin.text,
       approver: _approver,
       method: _method,
       laterApprover: _laterApprover,
@@ -767,6 +779,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
       _notes.addAll(h.notes);
       _customerName.text = h.customerName;
       _customerPhone.text = h.customerPhone;
+      _customerGstin.text = h.customerGstin;
       _approver = h.approver;
       _laterApprover = h.laterApprover;
       _method = h.method;
@@ -808,6 +821,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
         _card,
         _customerName,
         _customerPhone,
+        _customerGstin,
       ]) {
         c.clear();
       }
@@ -1819,6 +1833,18 @@ class _RegisterPanelState extends State<RegisterPanel> {
                     ),
                   ],
                 ),
+                if (_gst.enabled)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: TextField(
+                      key: const Key('customer-gstin'),
+                      controller: _customerGstin,
+                      textCapitalization: TextCapitalization.characters,
+                      decoration: const InputDecoration(
+                        labelText: 'Customer GSTIN (business buyers, optional)',
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
