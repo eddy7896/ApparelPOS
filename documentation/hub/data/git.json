@@ -3,33 +3,29 @@
   "status": [
     {
       "tone": "bad",
-      "text": "Branch protection is OFF on main and develop (GitHub API, read 2026-11-23). Rules are enforced by CI and habit only."
+      "text": "Branch protection is still OFF on main and develop (GitHub API, read 2026-11-23). Rules are enforced by CI and habit only."
     },
     {
       "tone": "warn",
-      "text": "main is 1 commit behind and 72 commits behind develop: nothing has been released since PR #2 (release 0.9.0 is prepared, not tagged). main has a merge commit that develop lacks (back-merge needed at the next release)."
+      "text": "Release 1.0.0 is on GitHub (tag v1.0.0, not a pre-release): installer, zip and SHA256SUMS. It has NEVER been run on a real shop laptop or printed on paper, and every GST rule is unverified until the CA confirms it. 0.9.0 (pre-release) was made first; its release run failed once (the release script did not start on Windows) and was fixed by hotfix #65."
     },
     {
       "tone": "warn",
-      "text": "27 pull requests (#35 to #61) are open and stacked: each is based on develop but built on the one before, so they must be merged in order, starting with #35. Nothing in them has run on a real Windows machine."
+      "text": "Everything is merged: main has release 1.0.0; this hub refresh is one small pull request that also brings main's last merge commit back to develop."
     }
   ],
   "branches": [
     {
       "name": "main",
-      "note": "releases; last updated 2026-11-17"
+      "note": "releases; v0.9.0 and v1.0.0 tagged here"
     },
     {
       "name": "develop",
-      "note": "integration; PR #34 merged 2026-11-22"
-    },
-    {
-      "name": "feat/ux-1 ... feat/gst-reports (PRs #35 to #61)",
-      "note": "open, stacked in order; the newest, feat/gst-reports (PR #61), contains all of them"
+      "note": "integration; everything through #71 is merged"
     },
     {
       "name": "merged topic branches (still on GitHub, not deleted)",
-      "note": "every feat/p* branch up to feat/p3-3c, plus chore/bootstrap-project, chore/ci-windows-flutter and feat/web-dev-preview"
+      "note": "every feat/, chore/ and hotfix/ branch used so far"
     }
   ],
   "ledger": [
@@ -206,137 +202,187 @@
     {
       "pr": "#35",
       "title": "Plan: UI redesign and branding as data (UX-1 to UX-5)",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#36",
       "title": "UX-1: Branding as data (shop name, color, logo)",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#37",
       "title": "UX-2: Register popup, quick cash, 48 dp targets",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#38",
       "title": "UX-3: Shift popup at sign-in, Pause and top bar buttons",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#39",
       "title": "UX-4: Manager Mode home with a left rail and Today page",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#40",
       "title": "UX-5: Returns popup and big refund panel",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#41",
       "title": "Stock lookup for cashiers and managers",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#42",
       "title": "Demo stock with the practice users (development only)",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#43",
       "title": "Analytics for manager and owner: charts, trend reading, slow movers",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#44",
       "title": "Staff management in Manager Mode",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#45",
       "title": "Billing: search by item name and several of one size and color",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#46",
       "title": "Align the app screens with the redesign mock-up",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#47",
       "title": "Daily report: charts, headline tiles and a table view",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#48",
       "title": "Stock lookup: clear out-of-stock and running-low, with summary and filters",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#49",
       "title": "Cashier PIN is exactly 6 digits",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#50",
       "title": "Register: payment card with Cash, UPI, Card and Split",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#51",
       "title": "Operator IDs on the bill instead of staff names (schema v8)",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#52",
       "title": "Stock categories: Settings, stock entry, lookup, billing search, analytics (schema v9)",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#53",
       "title": "Bundle the Inter font",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#54",
       "title": "Register: F4 hold bill, F6 new search, Esc",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#55",
       "title": "Daily report: break time per shift",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#56",
       "title": "Markdowns set ahead of time on a style, applied by the register (P2-4e, schema v10)",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#57",
       "title": "Pay later (udhaar) 1 of 2: rules, database v11, payments, returns, write-off (P2-4d)",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#58",
       "title": "Pay later (udhaar) 2 of 2: register choice, Pay later page, returns and report screens (P2-4d)",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#59",
       "title": "GST, switched off: owner-only setup, tax on bills and printed invoice (P3-4, schema v12)",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#60",
       "title": "Owner's runbook (P3-3b)",
-      "state": "open"
+      "state": "merged"
     },
     {
       "pr": "#61",
       "title": "GST reports: registers, tax by rate and day, CSV export for the CA (P3-4 second step)",
-      "state": "open"
+      "state": "merged"
+    },
+    {
+      "pr": "#62",
+      "title": "Release 0.9.0 prep: changelog and feature log",
+      "state": "closed"
+    },
+    {
+      "pr": "#63",
+      "title": "Release 0.9.0 prep: changelog and feature log",
+      "state": "merged"
+    },
+    {
+      "pr": "#64",
+      "title": "Release 0.9.0",
+      "state": "merged"
+    },
+    {
+      "pr": "#65",
+      "title": "Hotfix: release scripts did not run on Windows",
+      "state": "merged"
+    },
+    {
+      "pr": "#66",
+      "title": "Back-merge main into develop after release 0.9.0",
+      "state": "merged"
+    },
+    {
+      "pr": "#67",
+      "title": "Refresh the Project Hub after release 0.9.0",
+      "state": "closed"
+    },
+    {
+      "pr": "#68",
+      "title": "GST complete: HSN, own rate, customer GSTIN, purchase tax and the remaining reports (P3-4, schema v13)",
+      "state": "merged"
+    },
+    {
+      "pr": "#69",
+      "title": "Development builds: seeded GST details for testing",
+      "state": "merged"
+    },
+    {
+      "pr": "#70",
+      "title": "Release 1.0.0 prep: version, changelog",
+      "state": "merged"
+    },
+    {
+      "pr": "#71",
+      "title": "Release 1.0.0",
+      "state": "merged"
     }
   ],
   "rules": [
@@ -344,15 +390,14 @@
     "The owner merges and releases; the agent only opens pull requests."
   ],
   "ownerActions": [
-    "Merge pull requests #35 to #61 in order (each builds on the one before), then tell me \"merged proceed\"; I then prepare the Release 0.9.0 pull request. I never merge or tag.",
-    "Confirm my assumptions, listed in the pull requests: low stock 2 or fewer; slow mover 30+ days and under 25% sold; trend threshold 5%; markdown end date required; a return offsets only its own pay-later bill; GST rules (all unverified).",
-    "Take every GST rule to your CA before switching GST on (Settings, GST, owner only). It is off by default.",
-    "Decide what bills and hangtags should say until the phone app exists: the shop name, colour and logo cannot be set on the laptop yet. Also choose the real shop or company name (it fixes the data folder; ADR-0018) and send an icon if you have one.",
-    "Follow documentation/owner_runbook.md once on a real Windows laptop, end to end, and tell me what is wrong. Print a hangtag sheet, a bill and a credit note slip on a real printer and scan the tags. Tell us the printer and scanner models.",
-    "Do a restore test: restore a backup on a second computer using only the paper recovery key.",
+    "Install ApparelPoS-Setup-1.0.0.exe on the real shop laptop (check its SHA-256 against SHA256SUMS.txt; click More info, then Run anyway) and follow documentation/owner_runbook.md section 8 end to end: recovery key on paper twice, the two backup places, the restore test on a second computer, test bills, returns, a dry-run day. Tell me what is wrong.",
+    "Print a hangtag sheet, a bill and a credit note slip on the real printer and scan the tags. Tell us the printer and scanner models.",
+    "Decide what bills and hangtags say until the phone app exists (the shop name, colour and logo cannot be set on the laptop yet). Choose the real shop or company name (it fixes the data folder; ADR-0018) and send an icon.",
+    "Take every GST rule to your CA before switching GST on (Settings, GST, owner only); it is off by default. Ask which GST reports they need and whether input tax should be set off the way the report shows it.",
+    "Confirm my assumptions, listed in the pull requests: low stock 2 or fewer; slow mover 30+ days and under 25% sold; trend 5%; markdown last day required; a return offsets only its own pay-later bill.",
     "Accept or reject the SQLCipher community licence (ADR-0003 point 7).",
     "Switch on branch protection for main and develop; require branch-policy, build-lint-test and dart-flutter-windows.",
-    "Review ADR-0003 (amended twice: owner-only write-off and GST), ADR-0006, ADR-0013, ADR-0014 and ADR-0018 (Proposed).",
-    "Not built, say if you want them next: HSN, business-customer and purchase GST reports (need new data), an owner password reset, the shop name on the laptop, Release 2 (second counter, phone app)."
+    "Review ADR-0003 (amended twice), ADR-0006, ADR-0013, ADR-0014 and ADR-0018 (Proposed; point 6 amended).",
+    "Plan Release 2 with me: sync and cloud (Firebase), the owner's phone app and web dashboard, a second counter. Open questions are listed in documentation/system_context.md and the plan's P4. Also say if you want an owner password reset, hangtag reprint, or the shop name on the laptop first."
   ]
 }
