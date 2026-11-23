@@ -779,6 +779,37 @@ void main() {
       );
       expect(a!.read<String>('details'), contains(managerId));
     });
+    testWidgets(
+      'a held bill keeps its manager approval for when it is resumed',
+      (tester) async {
+        await open(tester);
+        await scan(tester, barcodes[0]);
+        await discount(tester, barcodes[0], '20%');
+        await tester.enterText(
+          find.byKey(const Key('approver-password')),
+          managerPassword,
+        );
+        await tester.tap(find.byKey(const Key('approver-ok')));
+        await pump(tester);
+        await tester.tap(find.byKey(const Key('hold-bill')));
+        await pump(tester);
+        await tester.tap(find.byKey(const Key('held-resume-0')));
+        await pump(tester);
+        expect(textOf(tester, 'total-text'), '₹399.20');
+        await tester.tap(find.byKey(const Key('exact-cash')));
+        await tester.pump();
+        await tapRunAsync(tester, 'complete-bill');
+        expect(find.byKey(const Key('saved-title')), findsOneWidget);
+        final a = await tester.runAsync(
+          () => db
+              .customSelect(
+                "SELECT details FROM audit_log WHERE action = 'sale.bill'",
+              )
+              .getSingle(),
+        );
+        expect(a!.read<String>('details'), contains(managerId));
+      },
+    );
   });
 
   group('after the bill', () {
