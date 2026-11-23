@@ -54,7 +54,7 @@ void main() {
     final sheet = describeBill(
       bill: bill(settlement: settlement),
       shopName: 'Sample Apparel',
-      cashierName: 'Asha',
+      operatorCode: 'OP001',
       customerName: ' Ravi ',
       customerPhone: '9876543210',
     );
@@ -62,9 +62,20 @@ void main() {
       expect(sheet.shopName, 'Sample Apparel');
       expect(sheet.billNo, '2026-27/C1/000007');
       expect(sheet.dateText, '20-11-2026 15:30'); // India time
-      expect(sheet.cashierName, 'Asha');
+      expect(sheet.operatorCode, 'OP001');
       expect(sheet.customer, 'Ravi, 9876543210');
     });
+    test(
+      'the header says who served by operator ID, and no name is printed',
+      () {
+        final lines = billHeaderLines(sheet);
+        expect(lines, contains('Served by: OP001'));
+        expect(lines.any((l) => l.contains('Asha')), isFalse);
+        expect(lines.any((l) => l.toLowerCase().contains('cashier')), isFalse);
+        expect(lines, contains('Bill no: 2026-27/C1/000007'));
+        expect(lines, contains('Customer: Ravi, 9876543210'));
+      },
+    );
     test('rows show MRP, what came off, and the price', () {
       expect(sheet.rows[0].description, 'Cotton Kurta M Blue');
       expect(sheet.rows[0].mrp, '₹499.00');
@@ -86,7 +97,7 @@ void main() {
           ]),
         ),
         shopName: null,
-        cashierName: 'Asha',
+        operatorCode: 'OP001',
       );
       expect(s.customer, isNull);
       expect(s.changeText, isNull);
@@ -101,7 +112,7 @@ void main() {
           ]),
         ),
         shopName: null,
-        cashierName: 'Asha',
+        operatorCode: 'OP001',
       );
       expect(s.payments, ['Cash ₹948.10', 'Credit note ₹1,000.00']);
     });
@@ -121,7 +132,7 @@ void main() {
       final sheet = describeBill(
         bill: bill(settlement: settlement),
         shopName: 'Sample Apparel',
-        cashierName: 'Asha',
+        operatorCode: 'OP001',
       );
       final bytes = await buildBillPdf(sheet, fonts);
       expect(latin1.decode(bytes.sublist(0, 5)), '%PDF-');
@@ -149,7 +160,7 @@ void main() {
       final sheet = describeBill(
         bill: bill(lines: many, settlement: s),
         shopName: 'Sample Apparel',
-        cashierName: 'Asha',
+        operatorCode: 'OP001',
       );
       final bytes = await buildBillPdf(sheet, fonts);
       expect(

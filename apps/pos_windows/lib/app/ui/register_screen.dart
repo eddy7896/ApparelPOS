@@ -536,7 +536,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
       final sheet = describeBill(
         bill: bill,
         shopName: await _s.stock.shopName(),
-        cashierName: widget.session.user!.name,
+        operatorCode: widget.session.user!.staffCode,
         customerName: _savedCustomerName,
         customerPhone: _savedCustomerPhone,
       );

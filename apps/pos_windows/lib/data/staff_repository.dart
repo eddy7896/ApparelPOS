@@ -38,11 +38,15 @@ final class StaffMember {
     required this.name,
     required this.role,
     required this.active,
+    this.staffCode = 'OP---',
   });
   final String id;
   final String name;
   final Role role;
   final bool active;
+
+  /// The operator ID printed on bills (never the name).
+  final String staffCode;
 }
 
 class StaffRepository {
@@ -75,6 +79,7 @@ class StaffRepository {
           name: u.name,
           role: Role.fromDb(u.role),
           active: u.active,
+          staffCode: AuthService.codeOf(u.staffNumber),
         ),
     ];
   }

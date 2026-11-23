@@ -5,7 +5,7 @@ import 'dart:io';
 
 import 'package:core_domain/core_domain.dart';
 import 'package:core_domain/credential_hasher.dart';
-import 'package:drift/drift.dart' show driftRuntimeOptions;
+import 'package:drift/drift.dart' show Value, driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -35,6 +35,7 @@ void main() {
   late String managerHash;
   late String ashaHash;
   var n = 0;
+  var staffNo = 0;
   String newId() => 'id-${++n}';
 
   setUpAll(() {
@@ -54,6 +55,7 @@ void main() {
             name: name,
             role: role.dbValue,
             credentialHash: hash,
+            staffNumber: Value(++staffNo),
             createdAt: DateTime.utc(2026, 11, 20),
             updatedAt: DateTime.utc(2026, 11, 20),
           ),
@@ -64,6 +66,7 @@ void main() {
   setUp(() async {
     db = AppDatabase(NativeDatabase.memory());
     n = 0;
+    staffNo = 0;
     auth = AuthService(db, newId: newId);
     shifts = ShiftRepository(db, newId: newId);
     session = SessionController(auth: auth);
@@ -156,6 +159,9 @@ void main() {
     await pump(tester);
   }
 
+  String textOf2(WidgetTester tester, String key) =>
+      tester.widget<Text>(find.byKey(Key(key))).data!;
+
   String messageText(WidgetTester tester) {
     final w = tester.widget<Container>(find.byKey(const Key('staff-message')));
     return ((w.child) as Text).data!;
@@ -186,6 +192,41 @@ void main() {
     ) async {
       await open(tester);
       expect(find.textContaining('waits for Release 2'), findsOneWidget);
+    });
+  });
+
+  group('operator IDs (owner, 2026-11-23)', () {
+    testWidgets(
+      'every person shows their operator ID, in the order they were added',
+      (tester) async {
+        await open(tester);
+        expect(find.text('OP001'), findsOneWidget);
+        expect(find.text('OP002'), findsOneWidget);
+        expect(find.text('OP003'), findsOneWidget);
+        expect(textOf2(tester, 'code-Meera'), 'OP001');
+        expect(textOf2(tester, 'code-Kabir'), 'OP002');
+        expect(textOf2(tester, 'code-Asha'), 'OP003');
+      },
+    );
+
+    testWidgets(
+      'a new person gets the next ID and the screen says it replaces the name on bills',
+      (tester) async {
+        await open(tester);
+        expect(find.textContaining('printed on the customer'), findsOneWidget);
+        await tapAndWait(tester, 'add-cashier-button');
+        await fillAdd(tester, name: 'Ravi', secret: '135792');
+        expect(textOf2(tester, 'code-Ravi'), 'OP004');
+      },
+    );
+
+    testWidgets('someone turned off keeps their ID', (tester) async {
+      await open(tester);
+      await tapAndWait(tester, 'turn-off-Asha');
+      await tester.tap(find.byKey(const Key('turn-off-confirm')));
+      await tester.pump();
+      await pump(tester);
+      expect(textOf2(tester, 'code-Asha'), 'OP003');
     });
   });
 

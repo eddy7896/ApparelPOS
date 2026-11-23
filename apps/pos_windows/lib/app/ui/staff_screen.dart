@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import '../../data/auth_service.dart';
 import '../../data/staff_repository.dart';
 import '../services.dart';
+import 'ui_tokens.dart';
 import '../session_controller.dart';
 
 String _roleLabel(Role r) => switch (r) {
@@ -244,8 +245,10 @@ class _StaffScreenState extends State<StaffScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'A second counter (another laptop) waits for Release 2, when '
-                  'staff and stock can be shared between counters.',
+                  'Each person has an operator ID. It is printed on the '
+                  "customer's bill instead of their name. A second counter "
+                  '(another laptop) waits for Release 2, when staff and stock '
+                  'can be shared between counters.',
                 ),
                 if (_message != null)
                   Container(
@@ -291,6 +294,17 @@ class _StaffScreenState extends State<StaffScreen> {
                     self ? '${p.name} (you)' : p.name,
                     style: Theme.of(context).textTheme.titleMedium
                         ?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Text(
+                    p.staffCode,
+                    key: Key('code-${p.name}'),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: UiColors.inkSoft,
+                    ),
                   ),
                 ),
                 Chip(label: Text(_roleLabel(p.role))),
