@@ -17,7 +17,7 @@ Purpose: the single home of product behaviour. Tags: [ASSUMED] owner has not con
 
 ## Billing
 8. A scanned barcode must be IN_STOCK; the same barcode cannot be added twice. [GUARD]
-9. Price comes from the variant's MRP, then a markdown, which is either a percentage or a fixed amount (owner picks each time, decided 2026-11-18). A marked-down garment takes no cashier discount. Each garment keeps the MRP printed on its own tag (owner, 2026-11-20). Promos are out of release 1. [DESIGN]
+9. Price comes from the variant's MRP, then a markdown, which is either a percentage or a fixed amount (owner picks each time, decided 2026-11-18). A marked-down garment takes no cashier discount. A markdown is set ahead of time by a manager or the owner on a whole style (Manager Mode, Markdowns page) and runs until a last day; the register applies it, nobody types it at the counter (owner, 2026-11-23). Each garment keeps the MRP printed on its own tag (owner, 2026-11-20). Promos are out of release 1. [DESIGN]
 10. Customer name and phone are optional at checkout. [ADR-0011]
 11. Payment types: cash, UPI (QR and manual reference), card (manual reference).
 

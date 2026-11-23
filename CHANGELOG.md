@@ -5,13 +5,14 @@ All notable changes to Apparel PoS. The format follows [Keep a Changelog](https:
 ## [Unreleased]
 
 ### Added
+- Markdowns: a manager or the owner sets a percentage or an amount off a whole style until a last day (Manager Mode, Markdowns). The register applies it by itself and a marked-down garment takes no cashier discount. Database version 10.
 - Daily report: each closed shift shows its break time.
 - Register: F4 puts a bill aside (Hold bill) so another customer can be served, with Resume or drop for each held bill; F6 starts a fresh search; Esc closes the bill-done popup or the name list. A held bill is kept only in memory.
 
 ### Changed
 - The app's text uses the Inter font, bundled with the app so every laptop looks the same; the bill and hangtag PDFs still use Noto Sans.
 
-Nothing yet. Planned next: the owner's runbook (P3-3b), GST setup (P3-4, off by default, rules unverified until the CA confirms), pay later (P2-4d), markdown at the register (P2-4e). Release 2 (sync, cloud, owner mobile app) is not started.
+Nothing yet. Planned next: the owner's runbook (P3-3b), GST setup (P3-4, off by default, rules unverified until the CA confirms), pay later (P2-4d). Release 2 (sync, cloud, owner mobile app) is not started.
 
 ## [0.9.0] - 2026-11-22
 

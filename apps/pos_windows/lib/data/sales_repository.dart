@@ -64,6 +64,7 @@ final class SaleItem {
     required this.mrp,
     required this.status,
     this.soldOnBill,
+    this.markdown,
   });
   final String articleId;
   final String barcode;
@@ -73,6 +74,11 @@ final class SaleItem {
   final Money mrp;
   final ArticleStatus status;
   final String? soldOnBill;
+
+  /// The markdown the shop set ahead of time on this garment's style, if one is
+  /// running today and leaves something to pay. The register shows it and the
+  /// bill takes it; a marked-down garment takes no cashier discount.
+  final PriceCut? markdown;
 }
 
 /// One garment to bill: its barcode, an optional markdown (manager or owner
@@ -216,12 +222,14 @@ class SalesRepository {
     final rows = await _db
         .customSelect(
           'SELECT a.id AS id, a.barcode_value AS barcode, a.mrp_paise AS mrp, '
-          'a.status AS status, p.name AS name, v.size AS size, v.color AS color '
+          'a.status AS status, p.name AS name, v.size AS size, v.color AS color, '
+          'm.percent_bp AS mbp, m.amount_paise AS mamt '
           'FROM articles a '
           'JOIN variants v ON v.id = a.variant_id '
           'JOIN products p ON p.id = v.product_id '
+          'LEFT JOIN style_markdowns m ON m.product_id = p.id AND m.ends_before > ? '
           'WHERE a.barcode_value = ?',
-          variables: [Variable<String>(barcode)],
+          variables: [Variable<DateTime>(_now()), Variable<String>(barcode)],
         )
         .get();
     if (rows.isEmpty) {
@@ -241,6 +249,14 @@ class SalesRepository {
           .get();
       billNo = b.isEmpty ? null : b.single.read<String>('no');
     }
+    final bp = r.read<int?>('mbp');
+    final amt = r.read<int?>('mamt');
+    final mrp = Money(r.read<int>('mrp'));
+    final stored = bp != null
+        ? PriceCut.percentBp(bp)
+        : amt != null
+        ? PriceCut.amount(Money(amt))
+        : null;
     return _Found(
       SaleItem(
         articleId: r.read<String>('id'),
@@ -248,9 +264,10 @@ class SalesRepository {
         productName: r.read<String>('name'),
         size: r.read<String>('size'),
         color: r.read<String>('color'),
-        mrp: Money(r.read<int>('mrp')),
+        mrp: mrp,
         status: status,
         soldOnBill: billNo,
+        markdown: effectiveMarkdown(stored, mrp),
       ),
     );
   }
@@ -360,7 +377,7 @@ class SalesRepository {
           }
           final priced = priceLine(
             mrp: item.mrp,
-            markdown: input.markdown,
+            markdown: input.markdown ?? item.markdown,
             cashierDiscount: discount,
           );
           // The garment is marked sold only if it is still in stock right now.

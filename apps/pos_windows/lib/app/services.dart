@@ -6,6 +6,7 @@ import '../data/analytics_repository.dart';
 import '../data/auth_service.dart';
 import '../data/brand.dart';
 import '../data/category_repository.dart';
+import '../data/markdown_repository.dart';
 import '../data/backup/backup_models.dart';
 import '../data/recovery_key_repository.dart';
 import '../data/report_repository.dart';
@@ -34,6 +35,7 @@ class AppServices {
     this.analytics,
     this.staff,
     this.categories,
+    this.markdowns,
     this.brand,
     this.brandPreview = kDebugMode,
     this.backup,
@@ -57,6 +59,10 @@ class AppServices {
   /// Stock categories (null in tests that do not need them: the pickers,
   /// filters and Settings page are then hidden).
   final CategoryRepository? categories;
+
+  /// Markdowns set ahead of time on a style (null in tests that do not need
+  /// them: the Markdowns page is then hidden).
+  final MarkdownRepository? markdowns;
 
   /// Adding and managing staff (null in tests that do not need it: the menu
   /// item that opens it is then hidden).

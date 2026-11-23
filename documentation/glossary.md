@@ -10,7 +10,7 @@ Purpose: one definition per term.
 | Blind close | Cash close where the cashier enters denominations and does not see the expected amount | |
 | Counter | One billing station with its own local database and `counterId` | till, terminal |
 | Lot | A 3-digit number in the barcode; each counter owns a range of lots so counters never issue the same barcode | batch (a purchase entry; one lot is used at a time) |
-| Markdown | A price reduction below MRP set by the owner, as a percentage or a fixed amount. A marked-down garment takes no cashier discount | discount (that is the cashier's counter reduction) |
+| Markdown | A price reduction below MRP set ahead of time by a manager or the owner on a whole style, as a percentage or a fixed amount, until a last day. The register applies it. A marked-down garment takes no cashier discount | discount (that is the cashier's counter reduction) |
 | Permission matrix | The single table in `core_domain` of which role may do which action; anything not listed is denied | hiding buttons as security |
 | Hangtag | The sticker or tag on a garment showing shop name, style, size, color, MRP and the barcode | label (acceptable), price tag |
 | Lockout | A temporary block on one account after too many wrong PINs or passwords; each later lockout is longer | ban |

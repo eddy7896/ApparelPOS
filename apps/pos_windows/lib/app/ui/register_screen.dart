@@ -54,12 +54,20 @@ enum _PayMethod { cash, upi, card, split }
 
 class _Line {
   _Line(this.item);
-  final SaleItem item;
+  SaleItem item;
   PriceCut? discount;
+
+  /// True when the shop marked this garment's style down (set in Stock, not
+  /// typed here); such a garment takes no cashier discount.
+  bool get markedDown => item.markdown != null;
 
   PricedLine? get priced {
     try {
-      return priceLine(mrp: item.mrp, cashierDiscount: discount);
+      return priceLine(
+        mrp: item.mrp,
+        markdown: item.markdown,
+        cashierDiscount: markedDown ? null : discount,
+      );
     } on PriceCutTooLarge {
       return null;
     }
@@ -481,6 +489,9 @@ class _RegisterPanelState extends State<RegisterPanel> {
   // ---- discounts ------------------------------------------------------------
 
   Future<void> _editDiscount(_Line line) async {
+    if (line.markedDown) {
+      return;
+    }
     final text = await showDialog<String>(
       context: context,
       builder: (_) => const _DiscountDialog(),
@@ -545,6 +556,12 @@ class _RegisterPanelState extends State<RegisterPanel> {
     final name = _customerName.text;
     final phone = _customerPhone.text;
     try {
+      if (await _refreshPrices()) {
+        _say(
+          'A markdown changed while this bill was open. Check the new total.',
+        );
+        return;
+      }
       final bill = await _s.sales.saveBill(
         role: _role,
         cashierId: widget.session.user!.userId,
@@ -577,6 +594,8 @@ class _RegisterPanelState extends State<RegisterPanel> {
             ? '${e.barcode} was sold${e.soldOnBill == null ? '' : ' on bill ${e.soldOnBill}'}. Remove it and try again.'
             : '${e.barcode} cannot be sold. Remove it and try again.',
       );
+    } on DiscountNotAllowed {
+      _say('A marked-down garment takes no cashier discount.');
     } on DiscountNeedsManager {
       _say('A discount needs the manager. Re-enter it to ask for approval.');
     } on BillNotPaid catch (e) {
@@ -590,6 +609,36 @@ class _RegisterPanelState extends State<RegisterPanel> {
         setState(() => _busy = false);
       }
     }
+  }
+
+  /// Looks every garment up again and takes in any change of markdown (one set
+  /// or ended while the bill was open). True when a price changed.
+  Future<bool> _refreshPrices() async {
+    var changed = false;
+    for (final l in _lines) {
+      final fresh = await _s.sales.lookup(role: _role, barcode: l.item.barcode);
+      if (fresh == null || !mounted) {
+        continue;
+      }
+      final a = l.item.markdown;
+      final b = fresh.markdown;
+      final same = a == null
+          ? b == null
+          : b != null &&
+                a.basisPoints == b.basisPoints &&
+                a.amountOff == b.amountOff;
+      l.item = fresh;
+      if (!same) {
+        changed = true;
+        if (b != null) {
+          l.discount = null;
+        }
+      }
+    }
+    if (changed && mounted) {
+      setState(() {});
+    }
+    return changed;
   }
 
   Future<void> _print() async {
@@ -1127,6 +1176,8 @@ class _RegisterPanelState extends State<RegisterPanel> {
   Widget _lineTile(_Line l) {
     final priced = l.priced;
     final off = priced == null ? Money.zero : priced.discountAmount;
+    final markdownOff = priced == null ? Money.zero : priced.markdownAmount;
+    final markdown = l.item.markdown;
     final scheme = Theme.of(context).colorScheme;
     final initial = l.item.productName.isEmpty
         ? '?'
@@ -1169,7 +1220,9 @@ class _RegisterPanelState extends State<RegisterPanel> {
                   ),
                 ),
                 Text(
-                  off.paise == 0
+                  markdown != null && markdownOff.paise > 0
+                      ? 'MRP ${formatRupees(l.item.mrp)}   markdown ${markdownLabel(markdown)} -${formatRupees(markdownOff)}   ${l.item.barcode}'
+                      : off.paise == 0
                       ? 'MRP ${formatRupees(l.item.mrp)}   ${l.item.barcode}'
                       : 'MRP ${formatRupees(l.item.mrp)}   off -${formatRupees(off)}   ${l.item.barcode}',
                   style: const TextStyle(
@@ -1187,23 +1240,40 @@ class _RegisterPanelState extends State<RegisterPanel> {
               icon: const Icon(Icons.add_circle_outline),
               onPressed: () => _addAnother(l),
             ),
-          OutlinedButton(
-            key: Key('discount-${l.item.barcode}'),
-            style: OutlinedButton.styleFrom(
-              backgroundColor: off.paise == 0
-                  ? Colors.white
-                  : scheme.primaryContainer,
+          if (l.markedDown)
+            Container(
+              key: Key('sale-tag-${l.item.barcode}'),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: UiColors.amberSoft,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'Sale ${markdownLabel(markdown!)} off',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: UiColors.amberInk,
+                ),
+              ),
+            )
+          else
+            OutlinedButton(
+              key: Key('discount-${l.item.barcode}'),
+              style: OutlinedButton.styleFrom(
+                backgroundColor: off.paise == 0
+                    ? Colors.white
+                    : scheme.primaryContainer,
+              ),
+              onPressed: () => _editDiscount(l),
+              child: const Text('Discount'),
             ),
-            onPressed: () => _editDiscount(l),
-            child: const Text('Discount'),
-          ),
           const SizedBox(width: 12),
           ConstrainedBox(
             constraints: const BoxConstraints(minWidth: 110),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                if (off.paise != 0)
+                if (off.paise != 0 || markdownOff.paise != 0)
                   Text(
                     formatRupees(l.item.mrp),
                     style: const TextStyle(

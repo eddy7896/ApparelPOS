@@ -812,6 +812,125 @@ void main() {
     );
   });
 
+  group('a markdown set in Stock', () {
+    Future<void> markKurta(String pct) async {
+      await db.customStatement(
+        'INSERT INTO style_markdowns (product_id, percent_bp, ends_before, set_by, created_at, updated_at) '
+        "SELECT id, $pct, 4102444800, 'm', 1700000000, 1700000000 FROM products",
+      );
+    }
+
+    testWidgets('the line shows the sale, takes no discount and totals less', (
+      tester,
+    ) async {
+      await tester.runAsync(() => markKurta('2000'));
+      await open(tester);
+      await scan(tester, barcodes[0]);
+      expect(textOf(tester, 'price-${barcodes[0]}'), '₹399.20');
+      expect(textOf(tester, 'total-text'), '₹399.20');
+      expect(find.byKey(Key('sale-tag-${barcodes[0]}')), findsOneWidget);
+      expect(find.text('Sale 20% off'), findsOneWidget);
+      expect(find.byKey(Key('discount-${barcodes[0]}')), findsNothing);
+      expect(find.textContaining('markdown 20% -₹99.80'), findsOneWidget);
+    });
+
+    testWidgets('a garment of an unmarked style has the discount button', (
+      tester,
+    ) async {
+      await open(tester);
+      await scan(tester, barcodes[0]);
+      expect(find.byKey(Key('discount-${barcodes[0]}')), findsOneWidget);
+      expect(find.byKey(Key('sale-tag-${barcodes[0]}')), findsNothing);
+    });
+
+    testWidgets('the bill is saved at the marked-down price', (tester) async {
+      await tester.runAsync(() => markKurta('2000'));
+      await open(tester);
+      await scan(tester, barcodes[0]);
+      await tester.tap(find.byKey(const Key('exact-cash')));
+      await tester.pump();
+      await tapRunAsync(tester, 'complete-bill');
+      expect(find.byKey(const Key('saved-title')), findsOneWidget);
+      final b = await tester.runAsync(
+        () => db
+            .customSelect(
+              'SELECT l.markdown_paise AS m, b.total_paise AS t '
+              'FROM bill_lines l JOIN bills b ON b.id = l.bill_id',
+            )
+            .getSingle(),
+      );
+      expect(b!.read<int>('m'), 9980);
+      expect(b.read<int>('t'), 39920);
+    });
+
+    testWidgets('a markdown set while the bill is open stops the bill once', (
+      tester,
+    ) async {
+      await open(tester);
+      await scan(tester, barcodes[0]);
+      expect(textOf(tester, 'total-text'), '₹499.00');
+      await tester.runAsync(() => markKurta('2000'));
+      await tester.tap(find.byKey(const Key('exact-cash')));
+      await tester.pump();
+      await tapRunAsync(tester, 'complete-bill');
+      expect(find.byKey(const Key('saved-title')), findsNothing);
+      expect(
+        find.textContaining('A markdown changed while this bill was open'),
+        findsOneWidget,
+      );
+      expect(textOf(tester, 'total-text'), '₹399.20');
+      expect(find.byKey(Key('sale-tag-${barcodes[0]}')), findsOneWidget);
+      // pay the new total and complete
+      await tester.tap(find.byKey(const Key('exact-cash')));
+      await tester.pump();
+      await tapRunAsync(tester, 'complete-bill');
+      expect(find.byKey(const Key('saved-title')), findsOneWidget);
+    });
+
+    testWidgets('a discount typed before the markdown came is dropped', (
+      tester,
+    ) async {
+      await open(tester);
+      await scan(tester, barcodes[0]);
+      await tester.tap(find.byKey(Key('discount-${barcodes[0]}')));
+      await tester.pump();
+      await tester.enterText(find.byKey(const Key('discount-input')), '5%');
+      await tester.tap(find.byKey(const Key('discount-apply')));
+      await pump(tester);
+      expect(textOf(tester, 'total-text'), '₹474.05');
+      await tester.runAsync(() => markKurta('2000'));
+      await tester.tap(find.byKey(const Key('exact-cash')));
+      await tester.pump();
+      await tapRunAsync(tester, 'complete-bill');
+      expect(textOf(tester, 'total-text'), '₹399.20');
+      await tester.tap(find.byKey(const Key('exact-cash')));
+      await tester.pump();
+      await tapRunAsync(tester, 'complete-bill');
+      expect(find.byKey(const Key('saved-title')), findsOneWidget);
+      final b = await tester.runAsync(
+        () => db
+            .customSelect(
+              'SELECT discount_paise, markdown_paise FROM bill_lines',
+            )
+            .getSingle(),
+      );
+      expect(b!.read<int>('discount_paise'), 0);
+      expect(b.read<int>('markdown_paise'), 9980);
+    });
+
+    testWidgets('prices that did not change do not stop the bill', (
+      tester,
+    ) async {
+      await tester.runAsync(() => markKurta('2000'));
+      await open(tester);
+      await scan(tester, barcodes[0]);
+      await tester.tap(find.byKey(const Key('exact-cash')));
+      await tester.pump();
+      await tapRunAsync(tester, 'complete-bill');
+      expect(find.byKey(const Key('saved-title')), findsOneWidget);
+    });
+  });
+
   group('after the bill', () {
     Future<void> sellOneBill(WidgetTester tester) async {
       await open(tester);
