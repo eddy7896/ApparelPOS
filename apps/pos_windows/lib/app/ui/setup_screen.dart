@@ -127,7 +127,9 @@ class _SetupScreenState extends State<SetupScreen> {
                     onPressed: _busy
                         ? null
                         : () => widget.session.createPracticeUsers(),
-                    child: const Text('Add practice users (development only)'),
+                    child: const Text(
+                      'Add practice users and demo stock (development only)',
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
