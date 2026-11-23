@@ -6,6 +6,7 @@ import '../data/analytics_repository.dart';
 import '../data/auth_service.dart';
 import '../data/brand.dart';
 import '../data/category_repository.dart';
+import '../data/dues_repository.dart';
 import '../data/markdown_repository.dart';
 import '../data/backup/backup_models.dart';
 import '../data/recovery_key_repository.dart';
@@ -36,6 +37,7 @@ class AppServices {
     this.staff,
     this.categories,
     this.markdowns,
+    this.dues,
     this.brand,
     this.brandPreview = kDebugMode,
     this.backup,
@@ -63,6 +65,10 @@ class AppServices {
   /// Markdowns set ahead of time on a style (null in tests that do not need
   /// them: the Markdowns page is then hidden).
   final MarkdownRepository? markdowns;
+
+  /// Pay later (udhaar): who owes what, taking payments, write-offs (null in
+  /// tests that do not need it: the Pay later choice and page are then hidden).
+  final DuesRepository? dues;
 
   /// Adding and managing staff (null in tests that do not need it: the menu
   /// item that opens it is then hidden).

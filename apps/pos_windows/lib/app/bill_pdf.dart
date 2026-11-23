@@ -38,6 +38,7 @@ final class BillSheet {
     required this.totalText,
     required this.payments,
     required this.changeText,
+    this.balanceDueText,
   });
 
   /// Null when the shop name has not been set.
@@ -58,6 +59,10 @@ final class BillSheet {
 
   /// Null when no change was given.
   final String? changeText;
+
+  /// What the customer still has to pay (pay later), or null for a bill paid
+  /// in full.
+  final String? balanceDueText;
 }
 
 /// "20-11-2026 15:30" in India time.
@@ -121,6 +126,7 @@ BillSheet describeBill({
           '${_modeNames[mode]} ${formatRupees(bill.settlement.byMode[mode]!)}',
     ],
     changeText: change.paise == 0 ? null : formatRupees(change),
+    balanceDueText: bill.owed.paise > 0 ? formatRupees(bill.owed) : null,
   );
 }
 
@@ -213,6 +219,14 @@ Future<Uint8List> buildBillPdf(
           pw.Align(
             alignment: pw.Alignment.centerRight,
             child: pw.Text('Change given ${sheet.changeText}'),
+          ),
+        if (sheet.balanceDueText != null)
+          pw.Align(
+            alignment: pw.Alignment.centerRight,
+            child: pw.Text(
+              'Balance to pay later ${sheet.balanceDueText}',
+              style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+            ),
           ),
       ],
     ),

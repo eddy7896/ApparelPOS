@@ -16,6 +16,7 @@ import 'approval_dialog.dart';
 import 'register_screen.dart';
 import 'shift_gate.dart';
 import 'status_colors.dart';
+import 'ui_tokens.dart';
 
 /// How the customer is paid out. An exchange is a credit note that the
 /// register applies to the new bill at once.
@@ -81,6 +82,25 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
   Money get _total =>
       refundTotal([for (final l in _lines) l.candidate.netPrice]);
 
+  /// What these garments take off what customers still owe on pay-later bills
+  /// (the smaller of the refund for a bill's garments and what is owed on it).
+  Money get _offset {
+    final share = <String, Money>{};
+    final owed = <String, Money>{};
+    for (final l in _lines) {
+      final c = l.candidate;
+      share[c.billId] = (share[c.billId] ?? Money.zero) + c.netPrice;
+      owed[c.billId] = c.owedOnBill;
+    }
+    var total = Money.zero;
+    for (final e in share.entries) {
+      total += returnOffset(refundShare: e.value, owed: owed[e.key]!);
+    }
+    return total;
+  }
+
+  Money get _payout => _total - _offset;
+
   bool get _needsApproval =>
       _lines.any((l) => l.candidate.timing == ReturnTiming.needsApproval) &&
       !can(_role, Permission.approveLateReturn);
@@ -88,7 +108,7 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
   bool get _canComplete =>
       !_busy &&
       _lines.isNotEmpty &&
-      _choice != null &&
+      (_choice != null || _payout.paise == 0) &&
       _lines.every(
         (l) =>
             l.outcome == ReturnOutcome.restock || l.note.text.trim().isNotEmpty,
@@ -133,7 +153,9 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
   }
 
   Future<void> _complete() async {
-    final choice = _choice;
+    // With nothing to pay out (it all takes down what is owed) no way of
+    // paying out is chosen; cash is only the label stored on the return.
+    final choice = _choice ?? (_payout.paise == 0 ? RefundChoice.cash : null);
     if (choice == null || _busy) {
       return;
     }
@@ -428,22 +450,43 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 12),
-        const Text('Pay out as'),
-        const SizedBox(height: 6),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final c in RefundChoice.values)
-              ChoiceChip(
-                key: Key('refund-mode-${c.name}'),
-                label: Text(c.label),
-                selected: _choice == c,
-                onSelected: (_) => setState(() => _choice = c),
+        if (_offset.paise > 0) ...[
+          const SizedBox(height: 12),
+          Container(
+            key: const Key('return-offset-note'),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: UiColors.amberSoft,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              '${formatRupees(_offset)} takes down what the customer still '
+              'owes. ${_payout.paise == 0 ? 'Nothing to pay out.' : 'Pay out ${formatRupees(_payout)}.'}',
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: UiColors.amberInk,
               ),
-          ],
-        ),
+            ),
+          ),
+        ],
+        const SizedBox(height: 12),
+        if (_payout.paise > 0) ...[
+          const Text('Pay out as'),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final c in RefundChoice.values)
+                ChoiceChip(
+                  key: Key('refund-mode-${c.name}'),
+                  label: Text(c.label),
+                  selected: _choice == c,
+                  onSelected: (_) => setState(() => _choice = c),
+                ),
+            ],
+          ),
+        ],
         if (_lines.any((l) => l.candidate.timing == ReturnTiming.needsApproval))
           const Padding(
             padding: EdgeInsets.only(top: 12),
@@ -467,13 +510,18 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
     final choice = _savedChoice!;
     final t = Theme.of(context).textTheme;
     final note = saved.creditNote;
-    final String payout = switch (choice) {
-      RefundChoice.cash => 'Give back ${formatRupees(saved.total)} in cash.',
-      RefundChoice.upi => 'Send ${formatRupees(saved.total)} back by UPI.',
-      RefundChoice.card => 'Refund ${formatRupees(saved.total)} to the card.',
-      RefundChoice.creditNote || RefundChoice.exchange =>
-        'Credit note for ${formatRupees(saved.total)} issued.',
-    };
+    final String payout = saved.payout.paise == 0
+        ? 'Nothing to pay out.'
+        : switch (choice) {
+            RefundChoice.cash =>
+              'Give back ${formatRupees(saved.payout)} in cash.',
+            RefundChoice.upi =>
+              'Send ${formatRupees(saved.payout)} back by UPI.',
+            RefundChoice.card =>
+              'Refund ${formatRupees(saved.payout)} to the card.',
+            RefundChoice.creditNote || RefundChoice.exchange =>
+              'Credit note for ${formatRupees(saved.payout)} issued.',
+          };
     return Stack(
       children: [
         const ModalBarrier(color: Colors.black54, dismissible: false),
@@ -537,6 +585,14 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
                       ),
                     ),
                   ),
+                  if (saved.offset.paise > 0) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      '${formatRupees(saved.offset)} was taken off what the '
+                      'customer owes.',
+                      key: const Key('return-saved-offset'),
+                    ),
+                  ],
                   if (note != null) ...[
                     const SizedBox(height: 8),
                     Text('Code ${note.code}', key: const Key('note-code')),
@@ -565,7 +621,7 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
                           icon: const Icon(Icons.print),
                           label: const Text('Print credit note'),
                         ),
-                      if (choice == RefundChoice.exchange)
+                      if (choice == RefundChoice.exchange && note != null)
                         FilledButton(
                           key: const Key('start-exchange'),
                           onPressed: _startExchange,

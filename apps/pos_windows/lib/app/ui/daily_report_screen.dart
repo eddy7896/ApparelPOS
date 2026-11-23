@@ -239,6 +239,46 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
                   'refund-${m.dbValue}',
                 ),
           ]),
+          if (r.owedNew.paise > 0 ||
+              r.duesReceived.isNotEmpty ||
+              r.returnOffsets.paise > 0 ||
+              r.writtenOff.paise > 0 ||
+              r.totalOwedNow.paise > 0)
+            _section(context, 'Pay later', [
+              _line(
+                'Left to pay later today',
+                formatRupees(r.owedNew),
+                'dues-new',
+              ),
+              for (final m in [
+                PaymentMode.cash,
+                PaymentMode.upi,
+                PaymentMode.card,
+              ])
+                if (r.duesReceived[m] != null)
+                  _line(
+                    'Paid against dues: ${_paymentNames[m]!}',
+                    formatRupees(r.duesReceived[m]!),
+                    'dues-paid-${m.dbValue}',
+                  ),
+              if (r.returnOffsets.paise > 0)
+                _line(
+                  'Taken off what is owed by returns',
+                  formatRupees(r.returnOffsets),
+                  'dues-offsets',
+                ),
+              if (r.writtenOff.paise > 0)
+                _line(
+                  'Written off',
+                  formatRupees(r.writtenOff),
+                  'dues-written-off',
+                ),
+              _line(
+                'Everyone owes now',
+                formatRupees(r.totalOwedNow),
+                'dues-owed-now',
+              ),
+            ]),
           _section(context, 'Cash count at shift close', [
             if (r.shiftCloses.isEmpty)
               const Text('No shift closed on this day.', key: Key('no-closes')),

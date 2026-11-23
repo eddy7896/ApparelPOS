@@ -356,6 +356,150 @@ void main() {
     });
   });
 
+  group('a garment from a pay-later bill', () {
+    /// Bills [codes] with [paidNow] in cash and the rest owed (a manager allows it).
+    Future<void> owe(List<String> codes, {int paidNow = 0}) => sales.saveBill(
+      role: Role.cashier,
+      cashierId: cashierId,
+      lines: [for (final c in codes) BillLineInput(c)],
+      payments: [if (paidNow > 0) Payment(PaymentMode.cash, Money(paidNow))],
+      payLater: PayLaterInput(
+        customerName: 'Ravi Kumar',
+        customerPhone: '9876543210',
+        approverRole: Role.manager,
+        approvedBy: managerId,
+      ),
+    );
+
+    Future<int> owedNow() async =>
+        (await db
+                .customSelect(
+                  'SELECT COALESCE(SUM(amount_paise), 0) AS v FROM dues_ledger',
+                )
+                .getSingle())
+            .read<int>('v');
+
+    testWidgets(
+      'the refund panel says it takes down what is owed; no pay-out to choose',
+      (tester) async {
+        await tester.runAsync(() => owe([barcodes[0]])); // owes 499.00
+        await open(tester);
+        await goToReturns(tester);
+        await scanReturn(tester, barcodes[0]);
+        expect(textOf(tester, 'refund-total'), '₹499.00');
+        expect(
+          find.textContaining(
+            '₹499.00 takes down what the customer still owes. Nothing to pay out.',
+          ),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('refund-mode-cash')), findsNothing);
+        expect(canComplete(tester), isTrue);
+      },
+    );
+
+    testWidgets('returning it clears what is owed and pays nothing out', (
+      tester,
+    ) async {
+      await tester.runAsync(() => owe([barcodes[0]]));
+      await open(tester);
+      await goToReturns(tester);
+      await scanReturn(tester, barcodes[0]);
+      await tester.tap(find.byKey(const Key('complete-return')));
+      await pump(tester);
+      expect(textOf(tester, 'payout-text'), 'Nothing to pay out.');
+      expect(
+        textOf(tester, 'return-saved-offset'),
+        '₹499.00 was taken off what the customer owes.',
+      );
+      expect(await tester.runAsync(owedNow), 0);
+      expect(await tester.runAsync(() => statusOf(barcodes[0])), 'IN_STOCK');
+      expect(find.byKey(const Key('print-slip')), findsNothing);
+    });
+
+    testWidgets(
+      'when the garment is worth more than is owed, the rest is paid out',
+      (tester) async {
+        await tester.runAsync(
+          () => owe([barcodes[3]], paidNow: 80000),
+        ); // 999.00, owes 199.00
+        await open(tester);
+        await goToReturns(tester);
+        await scanReturn(tester, barcodes[3]);
+        expect(
+          find.textContaining(
+            '₹199.00 takes down what the customer still owes. Pay out ₹800.00.',
+          ),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('refund-mode-cash')), findsOneWidget);
+        expect(canComplete(tester), isFalse);
+        await chooseMode(tester, 'cash');
+        expect(canComplete(tester), isTrue);
+        await tester.tap(find.byKey(const Key('complete-return')));
+        await pump(tester);
+        expect(textOf(tester, 'payout-text'), 'Give back ₹800.00 in cash.');
+        expect(
+          textOf(tester, 'return-saved-offset'),
+          '₹199.00 was taken off what the customer owes.',
+        );
+        expect(await tester.runAsync(owedNow), 0);
+      },
+    );
+
+    testWidgets('a credit note is for the rest only', (tester) async {
+      await tester.runAsync(() => owe([barcodes[3]], paidNow: 80000));
+      await open(tester);
+      await goToReturns(tester);
+      await scanReturn(tester, barcodes[3]);
+      await chooseMode(tester, 'creditNote');
+      await tester.tap(find.byKey(const Key('complete-return')));
+      await pump(tester);
+      expect(textOf(tester, 'payout-text'), 'Credit note for ₹800.00 issued.');
+      expect(find.byKey(const Key('print-slip')), findsOneWidget);
+    });
+
+    testWidgets(
+      'an exchange with nothing to pay out has no credit note to start a bill with',
+      (tester) async {
+        await tester.runAsync(() => owe([barcodes[0]]));
+        await open(tester);
+        await goToReturns(tester);
+        await scanReturn(tester, barcodes[0]);
+        await tester.tap(find.byKey(const Key('complete-return')));
+        await pump(tester);
+        expect(find.byKey(const Key('start-exchange')), findsNothing);
+        expect(find.byKey(const Key('new-return')), findsOneWidget);
+      },
+    );
+
+    testWidgets('a garment from a bill paid in full shows no such note', (
+      tester,
+    ) async {
+      await tester.runAsync(() => sell([barcodes[0]]));
+      await open(tester);
+      await goToReturns(tester);
+      await scanReturn(tester, barcodes[0]);
+      expect(find.byKey(const Key('return-offset-note')), findsNothing);
+      expect(find.byKey(const Key('refund-mode-cash')), findsOneWidget);
+    });
+
+    testWidgets('removing the garment brings the pay-out choices back', (
+      tester,
+    ) async {
+      await tester.runAsync(() => owe([barcodes[0]]));
+      await tester.runAsync(() => sell([barcodes[1]]));
+      await open(tester);
+      await goToReturns(tester);
+      await scanReturn(tester, barcodes[0]);
+      expect(find.byKey(const Key('refund-mode-cash')), findsNothing);
+      await scanReturn(tester, barcodes[1]);
+      // 499.00 offset against what is owed, 499.00 paid out
+      expect(find.byKey(const Key('refund-mode-cash')), findsOneWidget);
+      expect(find.textContaining('Pay out ₹499.00.'), findsOneWidget);
+    });
+  });
+
   group('after 7 days', () {
     final long = DateTime.utc(2020, 1, 1, 6);
     testWidgets(
