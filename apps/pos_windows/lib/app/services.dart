@@ -10,6 +10,7 @@ import '../data/report_repository.dart';
 import '../data/returns_repository.dart';
 import '../data/sales_repository.dart';
 import '../data/shift_repository.dart';
+import '../data/stock_lookup_repository.dart';
 import '../data/stock_repository.dart';
 import 'brand_controller.dart';
 import 'label_printer.dart';
@@ -26,6 +27,7 @@ class AppServices {
     required this.auth,
     required this.printer,
     this.recovery,
+    this.stockLookup,
     this.brand,
     this.brandPreview = kDebugMode,
     this.backup,
@@ -41,6 +43,10 @@ class AppServices {
 
   /// Used by the register to check a manager's password for a big discount.
   final AuthService auth;
+
+  /// Stock lookup for cashiers and managers (null in tests that do not need
+  /// it: the buttons that open it are then hidden).
+  final StockLookupRepository? stockLookup;
 
   /// The recovery key (null in the browser preview, which has no encryption).
   final RecoveryKeyRepository? recovery;

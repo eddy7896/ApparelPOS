@@ -10,6 +10,7 @@ import 'register_screen.dart';
 import 'brand_mark.dart';
 import 'shift_gate.dart';
 import 'returns_screen.dart';
+import 'stock_lookup_screen.dart';
 
 /// What opens after sign-in: the register for a cashier; Billing and Stock
 /// entry buttons for a manager or owner. Reports are a later task.
@@ -133,6 +134,18 @@ class _HomeShellState extends State<HomeShell> {
           ],
         ),
         actions: [
+          if (sales && services.stockLookup != null)
+            _barButton(
+              key: const Key('stock-lookup-button'),
+              icon: Icons.search,
+              label: 'Stock',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      StockLookupScreen(session: session, services: services),
+                ),
+              ),
+            ),
           if (sales)
             TextButton.icon(
               key: const Key('returns-button'),
