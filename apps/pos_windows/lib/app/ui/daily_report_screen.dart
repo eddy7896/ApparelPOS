@@ -706,6 +706,12 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
               'counted ${formatRupees(c.counted)}',
             ),
           ),
+          Text(
+            'Breaks ${breakMinutesText(c.breakTime)}',
+            key: Key('close-breaks-${c.shiftId}'),
+            style: const TextStyle(color: UiColors.inkSoft),
+          ),
+          const SizedBox(width: 16),
           Text(label, key: Key('close-variance-${c.shiftId}')),
         ],
       ),

@@ -79,6 +79,30 @@ final class ShiftCloseReport {
   final Duration breakTime;
 }
 
+/// All the break time in a shift. A break with no end counts up to [upTo]
+/// (the close time for a closed shift, now for an open one).
+Future<Duration> shiftBreakTime(
+  AppDatabase db,
+  String shiftId, {
+  required DateTime upTo,
+}) async {
+  final rows = await db
+      .customSelect(
+        'SELECT b.started_at AS s, e.ended_at AS e FROM shift_breaks b '
+        'LEFT JOIN shift_break_ends e ON e.break_id = b.id '
+        'WHERE b.shift_id = ?',
+        variables: [Variable<String>(shiftId)],
+      )
+      .get();
+  return totalBreakTime([
+    for (final r in rows)
+      BreakSpan(
+        start: r.read<DateTime>('s').toUtc(),
+        end: r.read<DateTime?>('e')?.toUtc(),
+      ),
+  ], upTo.toUtc());
+}
+
 /// The id of [userId]'s open shift, for sales and returns made inside it.
 /// Throws [NoOpenShift] when there is none.
 Future<String> requireOpenShiftId(AppDatabase db, String userId) async {
@@ -435,23 +459,8 @@ class ShiftRepository {
     );
   }
 
-  Future<Duration> _breakTime(String shiftId) async {
-    final rows = await _db
-        .customSelect(
-          'SELECT b.started_at AS s, e.ended_at AS e FROM shift_breaks b '
-          'LEFT JOIN shift_break_ends e ON e.break_id = b.id '
-          'WHERE b.shift_id = ?',
-          variables: [Variable<String>(shiftId)],
-        )
-        .get();
-    return totalBreakTime([
-      for (final r in rows)
-        BreakSpan(
-          start: r.read<DateTime>('s').toUtc(),
-          end: r.read<DateTime?>('e')?.toUtc(),
-        ),
-    ], _now());
-  }
+  Future<Duration> _breakTime(String shiftId) =>
+      shiftBreakTime(_db, shiftId, upTo: _now());
 
   /// Closed shifts with expected cash and variance, newest first. Needs
   /// `viewDaybook` (manager, owner): a cashier must never see these.

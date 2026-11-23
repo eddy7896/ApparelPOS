@@ -20,3 +20,8 @@ Purpose: end-of-shift cash count and the money ledger.
 - **Evals first:** E-SHIFT-1, E-AUDIT-1.
 - **Not in scope:** supplier payouts, expenses beyond petty cash (decide later).
 - **Open decisions:** none.
+
+## Break time in the daily report (owner, 2026-11-23)
+- Each shift in "Cash count at shift close" shows its total break time ("Breaks 25 min", whole minutes rounded down, "Breaks 0 min" when none). It is the same figure the owner's list of closes already shows, from one shared function (`shiftBreakTime`). A break still going when the shift closes ends at the close.
+- Break time is not a separate headline number and is not in the charts.
+

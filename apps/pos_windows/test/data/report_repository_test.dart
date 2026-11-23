@@ -478,6 +478,56 @@ void main() {
     );
   });
 
+  group('break time per shift', () {
+    Future<Duration> breakOfOnlyShift() async {
+      final r = await report.dailyReport(role: Role.owner, day: day);
+      expect(r.shiftCloses.length, 1);
+      return r.shiftCloses.single.breakTime;
+    }
+
+    test('adds up every break in the shift', () async {
+      now = DateTime.utc(2026, 11, 20, 4, 30);
+      await shifts.pauseShift(role: Role.cashier, userId: 'cashier-1');
+      now = DateTime.utc(2026, 11, 20, 4, 50);
+      await shifts.resumeShift(role: Role.cashier, userId: 'cashier-1');
+      now = DateTime.utc(2026, 11, 20, 6);
+      await shifts.pauseShift(role: Role.cashier, userId: 'cashier-1');
+      now = DateTime.utc(2026, 11, 20, 6, 5);
+      await shifts.resumeShift(role: Role.cashier, userId: 'cashier-1');
+      now = DateTime.utc(2026, 11, 20, 12);
+      await shifts.closeShift(
+        role: Role.cashier,
+        userId: 'cashier-1',
+        counts: {Denomination.note500: 4},
+      );
+      expect(await breakOfOnlyShift(), const Duration(minutes: 25));
+    });
+
+    test('no break is zero', () async {
+      now = DateTime.utc(2026, 11, 20, 12);
+      await shifts.closeShift(
+        role: Role.cashier,
+        userId: 'cashier-1',
+        counts: {Denomination.note500: 4},
+      );
+      expect(await breakOfOnlyShift(), Duration.zero);
+    });
+
+    test('closing the shift ends a break that was still going', () async {
+      now = DateTime.utc(2026, 11, 20, 11);
+      await shifts.pauseShift(role: Role.cashier, userId: 'cashier-1');
+      now = DateTime.utc(2026, 11, 20, 11, 30);
+      await shifts.closeShift(
+        role: Role.cashier,
+        userId: 'cashier-1',
+        counts: {Denomination.note500: 4},
+      );
+      // read much later: the break still stops at the close, not at "now"
+      now = DateTime.utc(2026, 11, 22);
+      expect(await breakOfOnlyShift(), const Duration(minutes: 30));
+    });
+  });
+
   group('who may read it', () {
     test('a cashier and nobody are refused', () async {
       await expectLater(
