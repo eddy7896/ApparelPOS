@@ -17,6 +17,7 @@ import 'package:pos_windows/data/app_database.dart';
 import 'package:pos_windows/data/auth_service.dart';
 import 'package:pos_windows/data/report_repository.dart';
 import 'package:pos_windows/data/returns_repository.dart';
+import 'package:pos_windows/data/dues_repository.dart';
 import 'package:pos_windows/data/sales_repository.dart';
 import 'package:pos_windows/data/shift_repository.dart';
 import 'package:pos_windows/data/stock_repository.dart';
@@ -122,6 +123,7 @@ void main() {
     String? as,
     String? secret,
     bool withShift = true,
+    bool withDues = false,
   }) async {
     tester.view.physicalSize = const Size(1500, 1000);
     tester.view.devicePixelRatio = 1;
@@ -148,6 +150,7 @@ void main() {
           shifts: shifts,
           reports: ReportRepository(db),
           auth: auth,
+          dues: withDues ? DuesRepository(db, newId: newId) : null,
           printer: printer,
           fonts: () async => LabelFonts(
             regular: File('assets/fonts/NotoSans-Regular.ttf')
@@ -928,6 +931,269 @@ void main() {
       await tester.pump();
       await tapRunAsync(tester, 'complete-bill');
       expect(find.byKey(const Key('saved-title')), findsOneWidget);
+    });
+  });
+
+  group('pay later at the register', () {
+    Future<void> approve(WidgetTester tester, String password) async {
+      await tester.enterText(
+        find.byKey(const Key('approver-password')),
+        password,
+      );
+      await tester.tap(find.byKey(const Key('approver-ok')));
+      await pump(tester);
+    }
+
+    Future<void> chooseLater(WidgetTester tester) async {
+      await tester.tap(find.byKey(const Key('method-later')));
+      await pump(tester);
+    }
+
+    Future<void> laterApproved(WidgetTester tester) async {
+      await chooseLater(tester);
+      await approve(tester, managerPassword);
+    }
+
+    testWidgets('the choice is hidden when pay later is not set up', (
+      tester,
+    ) async {
+      await open(tester);
+      expect(find.byKey(const Key('method-later')), findsNothing);
+      expect(find.byKey(const Key('dues-button')), findsNothing);
+    });
+
+    testWidgets('a cashier is asked for a manager before Pay later opens', (
+      tester,
+    ) async {
+      await open(tester, withDues: true);
+      await scan(tester, barcodes[2]);
+      await chooseLater(tester);
+      expect(find.byKey(const Key('approver-password')), findsOneWidget);
+      await approve(tester, managerPassword);
+      expect(find.byKey(const Key('upi-field')), findsOneWidget);
+      expect(find.byKey(const Key('card-field')), findsOneWidget);
+      expect(textOf(tester, 'owed-later'), 'To pay later: ₹999.00');
+      expect(textOf(tester, 'later-note'), contains('name and phone'));
+    });
+
+    testWidgets('cancelling the approval leaves the way of paying alone', (
+      tester,
+    ) async {
+      await open(tester, withDues: true);
+      await scan(tester, barcodes[2]);
+      await chooseLater(tester);
+      await tester.tap(find.text('Cancel'));
+      await pump(tester);
+      expect(find.byKey(const Key('owed-later')), findsNothing);
+      expect(find.byKey(const Key('upi-field')), findsNothing);
+      expect(find.byKey(const Key('exact-cash')), findsOneWidget);
+    });
+
+    testWidgets('a wrong password does not open Pay later', (tester) async {
+      await open(tester, withDues: true);
+      await scan(tester, barcodes[2]);
+      await chooseLater(tester);
+      await approve(tester, 'not the password at all');
+      expect(find.byKey(const Key('approval-error')), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await pump(tester);
+      expect(find.byKey(const Key('owed-later')), findsNothing);
+    });
+
+    testWidgets('a manager signed in needs no approval', (tester) async {
+      await open(
+        tester,
+        as: managerId,
+        secret: managerPassword,
+        withDues: true,
+      );
+      await tester.tap(find.byKey(const Key('billing-button')));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      await pump(tester);
+      await scan(tester, barcodes[2]);
+      await chooseLater(tester);
+      expect(find.byKey(const Key('approver-password')), findsNothing);
+      expect(textOf(tester, 'owed-later'), 'To pay later: ₹999.00');
+      await type(tester, 'customer-name', 'Ravi');
+      await type(tester, 'customer-phone', '9876543210');
+      expect(textOf(tester, 'later-note'), 'Allowed by you.');
+    });
+
+    testWidgets('Complete bill waits for the name and the phone', (
+      tester,
+    ) async {
+      await open(tester, withDues: true);
+      await scan(tester, barcodes[2]);
+      await laterApproved(tester);
+      expect(canComplete(tester), isFalse);
+      await type(tester, 'customer-name', 'Ravi Kumar');
+      expect(canComplete(tester), isFalse);
+      await type(tester, 'customer-phone', '12345');
+      expect(canComplete(tester), isFalse);
+      await type(tester, 'customer-phone', '98765 43210');
+      expect(canComplete(tester), isTrue);
+      expect(textOf(tester, 'later-note'), 'Allowed by Meera.');
+      await type(tester, 'customer-name', '  ');
+      expect(canComplete(tester), isFalse);
+    });
+
+    testWidgets('part now, the rest is owed and the bill says so', (
+      tester,
+    ) async {
+      await open(tester, withDues: true);
+      await scan(tester, barcodes[2]);
+      await laterApproved(tester);
+      await type(tester, 'customer-name', 'Ravi Kumar');
+      await type(tester, 'customer-phone', '9876543210');
+      await type(tester, 'cash-field', '200');
+      expect(textOf(tester, 'owed-later'), 'To pay later: ₹799.00');
+      await tapRunAsync(tester, 'complete-bill');
+      expect(find.byKey(const Key('saved-title')), findsOneWidget);
+      expect(textOf(tester, 'saved-owed'), 'To pay later: ₹799.00');
+      final row = await tester.runAsync(
+        () => db
+            .customSelect(
+              'SELECT amount_paise, approved_by, actor_id FROM dues_ledger',
+            )
+            .getSingle(),
+      );
+      expect(row!.read<int>('amount_paise'), 79900);
+      expect(row.read<String>('approved_by'), managerId);
+      expect(row.read<String>('actor_id'), cashierId);
+      final c = await tester.runAsync(
+        () => db.customSelect('SELECT name, phone FROM customers').getSingle(),
+      );
+      expect(c!.read<String>('name'), 'Ravi Kumar');
+      expect(c.read<String>('phone'), '9876543210');
+    });
+
+    testWidgets('nothing paid now is allowed', (tester) async {
+      await open(tester, withDues: true);
+      await scan(tester, barcodes[0]);
+      await laterApproved(tester);
+      await type(tester, 'customer-name', 'Ravi');
+      await type(tester, 'customer-phone', '9876543210');
+      expect(textOf(tester, 'owed-later'), 'To pay later: ₹499.00');
+      await tapRunAsync(tester, 'complete-bill');
+      expect(textOf(tester, 'saved-owed'), 'To pay later: ₹499.00');
+    });
+
+    testWidgets('UPI now and the rest later', (tester) async {
+      await open(tester, withDues: true);
+      await scan(tester, barcodes[2]);
+      await laterApproved(tester);
+      await type(tester, 'customer-name', 'Ravi');
+      await type(tester, 'customer-phone', '9876543210');
+      await type(tester, 'upi-field', '500');
+      expect(textOf(tester, 'owed-later'), 'To pay later: ₹499.00');
+      await tapRunAsync(tester, 'complete-bill');
+      expect(textOf(tester, 'saved-owed'), 'To pay later: ₹499.00');
+    });
+
+    testWidgets('paying it all in Pay later is just a normal bill', (
+      tester,
+    ) async {
+      await open(tester, withDues: true);
+      await scan(tester, barcodes[0]);
+      await laterApproved(tester);
+      await type(tester, 'cash-field', '499');
+      expect(find.byKey(const Key('owed-later')), findsNothing);
+      expect(canComplete(tester), isTrue);
+      await tapRunAsync(tester, 'complete-bill');
+      expect(find.byKey(const Key('saved-title')), findsOneWidget);
+      expect(find.byKey(const Key('saved-owed')), findsNothing);
+      final c = await tester.runAsync(
+        () => db
+            .customSelect('SELECT COUNT(*) AS c FROM dues_ledger')
+            .getSingle(),
+      );
+      expect(c!.read<int>('c'), 0);
+    });
+
+    testWidgets('UPI and card more than the total is still refused', (
+      tester,
+    ) async {
+      await open(tester, withDues: true);
+      await scan(tester, barcodes[0]);
+      await laterApproved(tester);
+      await type(tester, 'customer-name', 'Ravi');
+      await type(tester, 'customer-phone', '9876543210');
+      await type(tester, 'upi-field', '600');
+      expect(find.byKey(const Key('payment-problem')), findsOneWidget);
+      expect(canComplete(tester), isFalse);
+    });
+
+    testWidgets('going back to Cash puts the normal payment back', (
+      tester,
+    ) async {
+      await open(tester, withDues: true);
+      await scan(tester, barcodes[0]);
+      await laterApproved(tester);
+      await tester.tap(find.byKey(const Key('method-cash')));
+      await pump(tester);
+      expect(find.byKey(const Key('owed-later')), findsNothing);
+      expect(find.byKey(const Key('exact-cash')), findsOneWidget);
+      expect(canComplete(tester), isFalse);
+      await tester.tap(find.byKey(const Key('exact-cash')));
+      await pump(tester);
+      expect(canComplete(tester), isTrue);
+      // and choosing Pay later again does not ask a second time
+      await chooseLater(tester);
+      expect(find.byKey(const Key('approver-password')), findsNothing);
+    });
+
+    testWidgets('the name and phone say they are required', (tester) async {
+      await open(tester, withDues: true);
+      await scan(tester, barcodes[0]);
+      expect(find.text('Customer name (optional)'), findsOneWidget);
+      await laterApproved(tester);
+      expect(find.text('Customer name (required)'), findsOneWidget);
+      expect(find.text('Phone (required)'), findsOneWidget);
+    });
+
+    testWidgets('a held bill keeps who allowed pay later', (tester) async {
+      await open(tester, withDues: true);
+      await scan(tester, barcodes[0]);
+      await laterApproved(tester);
+      await type(tester, 'customer-name', 'Ravi');
+      await type(tester, 'customer-phone', '9876543210');
+      await tester.tap(find.byKey(const Key('hold-bill')));
+      await pump(tester);
+      await tester.tap(find.byKey(const Key('held-resume-0')));
+      await pump(tester);
+      expect(textOf(tester, 'owed-later'), 'To pay later: ₹499.00');
+      expect(textOf(tester, 'later-note'), 'Allowed by Meera.');
+      await tapRunAsync(tester, 'complete-bill');
+      final row = await tester.runAsync(
+        () =>
+            db.customSelect('SELECT approved_by FROM dues_ledger').getSingle(),
+      );
+      expect(row!.read<String>('approved_by'), managerId);
+    });
+
+    testWidgets('a new bill starts on Cash and asks again', (tester) async {
+      await open(tester, withDues: true);
+      await scan(tester, barcodes[0]);
+      await laterApproved(tester);
+      await type(tester, 'customer-name', 'Ravi');
+      await type(tester, 'customer-phone', '9876543210');
+      await tapRunAsync(tester, 'complete-bill');
+      await tester.tap(find.byKey(const Key('new-bill')));
+      await tester.pump();
+      await scan(tester, barcodes[1]);
+      await chooseLater(tester);
+      expect(find.byKey(const Key('approver-password')), findsOneWidget);
+    });
+
+    testWidgets('Pay dues opens the Pay later page', (tester) async {
+      await open(tester, withDues: true);
+      await tester.tap(find.byKey(const Key('dues-button')));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      await pump(tester);
+      expect(find.byKey(const Key('dues-total')), findsOneWidget);
+      expect(find.byKey(const Key('write-off')), findsNothing);
     });
   });
 

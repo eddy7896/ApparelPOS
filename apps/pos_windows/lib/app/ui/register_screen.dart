@@ -12,6 +12,7 @@ import '../bill_pdf.dart';
 import 'approval_dialog.dart';
 import 'category_chips.dart';
 import 'close_shift_screen.dart';
+import 'dues_screen.dart';
 import 'shift_gate.dart';
 import 'status_colors.dart';
 import 'ui_tokens.dart';
@@ -49,8 +50,9 @@ class RegisterScreen extends StatelessWidget {
 }
 
 /// How the customer is paying (the mock-up's payment card): one mode for the
-/// whole bill, or Split across cash, UPI and card.
-enum _PayMethod { cash, upi, card, split }
+/// whole bill, Split across cash, UPI and card, or Pay later (part now, the rest
+/// owed; a manager or the owner allows it).
+enum _PayMethod { cash, upi, card, split, later }
 
 class _Line {
   _Line(this.item);
@@ -85,6 +87,7 @@ class _Held {
     required this.customerPhone,
     required this.approver,
     required this.method,
+    required this.laterApprover,
   });
 
   final List<_Line> lines;
@@ -93,6 +96,7 @@ class _Held {
   final String customerPhone;
   final Approver? approver;
   final _PayMethod method;
+  final Approver? laterApprover;
 
   Money get total => lines.fold<Money>(
     Money.zero,
@@ -139,6 +143,9 @@ class _RegisterPanelState extends State<RegisterPanel> {
   final _notes = <CreditNoteInfo>[];
   final _held = <_Held>[];
   Approver? _approver;
+
+  /// Who allowed pay later on this bill (null when the signed-in person may).
+  Approver? _laterApprover;
   String? _message;
   bool _busy = false;
   SavedBill? _saved;
@@ -262,8 +269,8 @@ class _RegisterPanelState extends State<RegisterPanel> {
     final out = <Payment>[];
     for (final (mode, c) in [
       (PaymentMode.cash, _cash),
-      if (_method == _PayMethod.split) (PaymentMode.upi, _upi),
-      if (_method == _PayMethod.split) (PaymentMode.card, _card),
+      if (_method == _PayMethod.split || _isLater) (PaymentMode.upi, _upi),
+      if (_method == _PayMethod.split || _isLater) (PaymentMode.card, _card),
     ]) {
       final t = c.text.trim();
       if (t.isEmpty) {
@@ -305,11 +312,24 @@ class _RegisterPanelState extends State<RegisterPanel> {
     return null;
   }
 
+  bool get _isLater => _method == _PayMethod.later;
+
+  /// Pay later needs the customer's name and phone.
+  bool get _laterCustomerOk =>
+      cleanCustomerName(_customerName.text) != null &&
+      customerPhoneKey(_customerPhone.text) != null;
+
+  /// True when this bill is being left partly unpaid (pay later chosen and
+  /// something is still due).
+  bool get _leavesOwed =>
+      _isLater && _lines.isNotEmpty && !(_settlement?.isPaid ?? true);
+
   bool get _canComplete =>
       !_busy &&
       _lines.isNotEmpty &&
       _paymentProblem == null &&
-      (_settlement?.isPaid ?? false);
+      _settlement != null &&
+      (_settlement!.isPaid || (_isLater && _laterCustomerOk));
 
   // ---- adding garments ------------------------------------------------------
 
@@ -578,6 +598,18 @@ class _RegisterPanelState extends State<RegisterPanel> {
         customerPhone: phone,
         discountApproverRole: _approver?.role,
         discountApprovedBy: _approver?.userId,
+        payLater: _leavesOwed
+            ? PayLaterInput(
+                customerName: name,
+                customerPhone: phone,
+                approverRole: can(_role, Permission.allowPayLater)
+                    ? null
+                    : _laterApprover?.role,
+                approvedBy: can(_role, Permission.allowPayLater)
+                    ? null
+                    : _laterApprover?.userId,
+              )
+            : null,
       );
       if (!mounted) {
         return;
@@ -679,6 +711,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
       customerPhone: _customerPhone.text,
       approver: _approver,
       method: _method,
+      laterApprover: _laterApprover,
     );
     _newBill();
     setState(() => _held.add(held));
@@ -701,6 +734,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
       _customerName.text = h.customerName;
       _customerPhone.text = h.customerPhone;
       _approver = h.approver;
+      _laterApprover = h.laterApprover;
       _method = h.method;
       _message = null;
     });
@@ -730,6 +764,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
       _lines.clear();
       _notes.clear();
       _approver = null;
+      _laterApprover = null;
       _saved = null;
       _message = null;
       for (final c in [
@@ -947,6 +982,20 @@ class _RegisterPanelState extends State<RegisterPanel> {
                           ),
                         ),
                       ),
+                      if (_s.dues != null)
+                        TextButton.icon(
+                          key: const Key('dues-button'),
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => DuesScreen(
+                                session: widget.session,
+                                services: _s,
+                              ),
+                            ),
+                          ),
+                          icon: const Icon(Icons.account_balance_wallet),
+                          label: const Text('Pay dues'),
+                        ),
                       TextButton.icon(
                         key: const Key('hold-bill'),
                         onPressed: _lines.isEmpty && _notes.isEmpty || _busy
@@ -1329,10 +1378,27 @@ class _RegisterPanelState extends State<RegisterPanel> {
     );
   }
 
-  void _setMethod(_PayMethod m) {
+  Future<void> _setMethod(_PayMethod m) async {
+    if (m == _PayMethod.later &&
+        !can(_role, Permission.allowPayLater) &&
+        _laterApprover == null) {
+      final approver = await askApprover(
+        context,
+        _s.auth,
+        permission: Permission.allowPayLater,
+        message:
+            'Leaving a bill to be paid later needs a manager or the owner. '
+            'They type their own password.',
+        onNobody: _say,
+      );
+      if (approver == null || !mounted) {
+        return;
+      }
+      _laterApprover = approver;
+    }
     setState(() {
       _method = m;
-      if (m != _PayMethod.split) {
+      if (m != _PayMethod.split && m != _PayMethod.later) {
         _upi.clear();
         _card.clear();
       }
@@ -1374,7 +1440,7 @@ class _RegisterPanelState extends State<RegisterPanel> {
               _cash.text = paise == 0
                   ? '$rupees'
                   : '$rupees.${paise.toString().padLeft(2, '0')}';
-              if (_method != _PayMethod.split) {
+              if (_method != _PayMethod.split && !_isLater) {
                 _upi.clear();
                 _card.clear();
               }
@@ -1504,6 +1570,8 @@ class _RegisterPanelState extends State<RegisterPanel> {
                           _methodChip('upi', 'UPI', _PayMethod.upi),
                           _methodChip('card', 'Card', _PayMethod.card),
                           _methodChip('split', 'Split', _PayMethod.split),
+                          if (_s.dues != null)
+                            _methodChip('later', 'Pay later', _PayMethod.later),
                         ],
                       ),
                       if (_method == _PayMethod.cash ||
@@ -1545,7 +1613,20 @@ class _RegisterPanelState extends State<RegisterPanel> {
                           _cash,
                         ),
                       ],
-                      if (_method == _PayMethod.split) ...[
+                      if (_isLater) ...[
+                        const SizedBox(height: 14),
+                        const Text(
+                          'Paid now (leave empty if nothing is paid yet)',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: UiColors.inkSoft,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _amountField('cash-field', 'Cash now', _cash),
+                      ],
+                      if (_method == _PayMethod.split || _isLater) ...[
                         _amountField('upi-field', 'UPI', _upi),
                         _amountField('card-field', 'Card', _card),
                       ],
@@ -1622,15 +1703,41 @@ class _RegisterPanelState extends State<RegisterPanel> {
                             color: UiColors.amberSoft,
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Text(
-                            'Still due: ${formatRupees(settlement.due)}',
-                            key: const Key('due-text'),
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(
-                                  color: UiColors.amberInk,
-                                  fontWeight: FontWeight.w700,
+                          child: _isLater
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'To pay later: ${formatRupees(settlement.due)}',
+                                      key: const Key('owed-later'),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleLarge
+                                          ?.copyWith(
+                                            color: UiColors.amberInk,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                    ),
+                                    Text(
+                                      _laterCustomerOk
+                                          ? 'Allowed by ${_laterApprover?.name ?? 'you'}.'
+                                          : "Type the customer's name and phone number below.",
+                                      key: const Key('later-note'),
+                                      style: const TextStyle(
+                                        color: UiColors.amberInk,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Text(
+                                  'Still due: ${formatRupees(settlement.due)}',
+                                  key: const Key('due-text'),
+                                  style: Theme.of(context).textTheme.titleLarge
+                                      ?.copyWith(
+                                        color: UiColors.amberInk,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                 ),
-                          ),
                         ),
                     ],
                   ),
@@ -1643,9 +1750,12 @@ class _RegisterPanelState extends State<RegisterPanel> {
                       child: TextField(
                         key: const Key('customer-name'),
                         controller: _customerName,
-                        decoration: const InputDecoration(
-                          labelText: 'Customer name (optional)',
+                        decoration: InputDecoration(
+                          labelText: _isLater
+                              ? 'Customer name (required)'
+                              : 'Customer name (optional)',
                         ),
+                        onChanged: (_) => setState(() {}),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -1653,9 +1763,12 @@ class _RegisterPanelState extends State<RegisterPanel> {
                       child: TextField(
                         key: const Key('customer-phone'),
                         controller: _customerPhone,
-                        decoration: const InputDecoration(
-                          labelText: 'Phone (optional)',
+                        decoration: InputDecoration(
+                          labelText: _isLater
+                              ? 'Phone (required)'
+                              : 'Phone (optional)',
                         ),
+                        onChanged: (_) => setState(() {}),
                         keyboardType: TextInputType.phone,
                       ),
                     ),
@@ -1827,6 +1940,24 @@ class _SavedPopup extends StatelessWidget {
                               ),
                             ),
                           ),
+                        if (bill.owed.paise > 0) ...[
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: UiColors.amberSoft,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Text(
+                              'To pay later: ${formatRupees(bill.owed)}',
+                              key: const Key('saved-owed'),
+                              style: t.headlineSmall?.copyWith(
+                                color: UiColors.amberInk,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 12),
                         for (final l in bill.lines)
                           Padding(

@@ -5,7 +5,7 @@ All notable changes to Apparel PoS. The format follows [Keep a Changelog](https:
 ## [Unreleased]
 
 ### Added
-- Pay later (udhaar), data and rules (screens follow): a manager or the owner may let a bill be left unpaid (customer name and phone required); customers pay later in cash, UPI or card, the oldest bill first; a return from an unpaid bill first takes down what is owed; only the owner writes a debt off. Money taken counts in the drawer and the daily report. Database version 11.
+- Pay later (udhaar): a manager or the owner may let a bill be left unpaid (customer name and phone required; a cashier asks a manager to type their password); customers pay later in cash, UPI or card, the oldest bill first (a Pay later page in Manager Mode and a Pay dues button at the register); a return from an unpaid bill first takes down what is owed; only the owner writes a debt off. The register, the bill, the returns screen, the blind close and the daily report all follow it. Database version 11.
 - Markdowns: a manager or the owner sets a percentage or an amount off a whole style until a last day (Manager Mode, Markdowns). The register applies it by itself and a marked-down garment takes no cashier discount. Database version 10.
 - Daily report: each closed shift shows its break time.
 - Register: F4 puts a bill aside (Hold bill) so another customer can be served, with Resume or drop for each held bill; F6 starts a fresh search; Esc closes the bill-done popup or the name list. A held bill is kept only in memory.
@@ -13,7 +13,7 @@ All notable changes to Apparel PoS. The format follows [Keep a Changelog](https:
 ### Changed
 - The app's text uses the Inter font, bundled with the app so every laptop looks the same; the bill and hangtag PDFs still use Noto Sans.
 
-Nothing yet. Planned next: the owner's runbook (P3-3b), GST setup (P3-4, off by default, rules unverified until the CA confirms), pay later (P2-4d). Release 2 (sync, cloud, owner mobile app) is not started.
+Nothing yet. Planned next: the owner's runbook (P3-3b) and GST setup (P3-4, off by default, rules unverified until the CA confirms). Release 2 (sync, cloud, owner mobile app) is not started.
 
 ## [0.9.0] - 2026-11-22
 

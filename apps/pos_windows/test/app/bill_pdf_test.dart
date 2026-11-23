@@ -12,6 +12,7 @@ SavedBill bill({
   List<SavedBillLine>? lines,
   required Settlement settlement,
   DateTime? at,
+  Money owed = Money.zero,
 }) => SavedBill(
   billId: 'b1',
   billNumber: BillNumber(yearLabel: '2026-27', counterNo: 1, serial: 7),
@@ -38,6 +39,7 @@ SavedBill bill({
         ),
       ],
   settlement: settlement,
+  owed: owed,
 );
 
 void main() {
@@ -121,6 +123,49 @@ void main() {
         billDateText(DateTime.utc(2026, 12, 31, 18, 30)),
         '01-01-2027 00:00',
       );
+    });
+  });
+
+  group('a bill left to be paid later', () {
+    // 1,948.10 bill: 500.00 paid now, 1,448.10 left
+    final part = settle(Money(194810), [
+      Payment(PaymentMode.cash, Money(50000)),
+    ]);
+    test('says what is still to be paid, and a paid bill says nothing', () {
+      final later = describeBill(
+        bill: bill(settlement: part, owed: part.due),
+        shopName: 'Sample Apparel',
+        operatorCode: 'OP001',
+        customerName: 'Ravi',
+        customerPhone: '9876543210',
+      );
+      expect(later.balanceDueText, '₹1,448.10');
+      expect(later.payments, ['Cash ₹500.00']);
+      expect(later.totalText, '₹1,948.10');
+      final paid = describeBill(
+        bill: bill(
+          settlement: settle(Money(194810), [
+            Payment(PaymentMode.cash, Money(194810)),
+          ]),
+        ),
+        shopName: 'Sample Apparel',
+        operatorCode: 'OP001',
+      );
+      expect(paid.balanceDueText, isNull);
+    });
+    test('nothing paid now still prints', () async {
+      final none = settle(Money(194810), const []);
+      final sheet = describeBill(
+        bill: bill(settlement: none, owed: none.due),
+        shopName: 'Sample Apparel',
+        operatorCode: 'OP001',
+        customerName: 'Ravi',
+        customerPhone: '9876543210',
+      );
+      expect(sheet.payments, isEmpty);
+      expect(sheet.balanceDueText, '₹1,948.10');
+      final bytes = await buildBillPdf(sheet, fonts);
+      expect(latin1.decode(bytes.sublist(0, 5)), '%PDF-');
     });
   });
 

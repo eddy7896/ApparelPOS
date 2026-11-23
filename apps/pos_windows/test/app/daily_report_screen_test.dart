@@ -14,6 +14,7 @@ import 'package:pos_windows/app/ui/daily_report_screen.dart';
 import 'package:pos_windows/data/app_database.dart';
 import 'package:pos_windows/data/auth_service.dart';
 import 'package:pos_windows/data/category_repository.dart';
+import 'package:pos_windows/data/dues_repository.dart';
 import 'package:pos_windows/data/report_repository.dart';
 import 'package:pos_windows/data/returns_repository.dart';
 import 'package:pos_windows/data/sales_repository.dart';
@@ -319,6 +320,60 @@ void main() {
             .dy;
         expect(cash, lessThan(card));
         expect(card, lessThan(upi)); // largest first
+      },
+    );
+
+    testWidgets('the Pay later section is hidden when nothing is owed', (
+      tester,
+    ) async {
+      await tester.runAsync(() async {
+        await busyDay();
+      });
+      await openReport(tester);
+      expect(find.byKey(const Key('dues-new')), findsNothing);
+    });
+
+    testWidgets(
+      'the Pay later section shows what was left, what came in and what is owed now',
+      (tester) async {
+        await tester.runAsync(() async {
+          await busyDay();
+          now = DateTime.utc(2026, 11, 20, 10);
+          await shifts.openShift(
+            role: Role.cashier,
+            userId: cashierId,
+            counts: {Denomination.note500: 1},
+          );
+          await sales.saveBill(
+            role: Role.cashier,
+            cashierId: cashierId,
+            lines: [BillLineInput(kurta[2])],
+            payments: [Payment(PaymentMode.cash, Money(10000))],
+            payLater: PayLaterInput(
+              customerName: 'Ravi Kumar',
+              customerPhone: '9876543210',
+              approverRole: Role.manager,
+              approvedBy: managerId,
+            ),
+          );
+          final id =
+              (await db.customSelect('SELECT id FROM customers').getSingle())
+                  .read<String>('id');
+          await DuesRepository(db, newId: newId, now: () => now).receivePayment(
+            role: Role.cashier,
+            userId: cashierId,
+            customerId: id,
+            payments: [Payment(PaymentMode.upi, Money(15000))],
+          );
+        });
+        await openReport(tester);
+        expect(find.text('Pay later'), findsOneWidget);
+        expect(find.byKey(const Key('dues-new')), findsOneWidget);
+        expect(textOf(tester, 'dues-new'), '₹399.00');
+        expect(textOf(tester, 'dues-paid-upi'), '₹150.00');
+        expect(textOf(tester, 'dues-owed-now'), '₹249.00');
+        expect(find.byKey(const Key('dues-written-off')), findsNothing);
+        expect(find.byKey(const Key('mismatch-warning')), findsNothing);
       },
     );
 

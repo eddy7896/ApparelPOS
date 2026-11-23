@@ -42,7 +42,7 @@ Purpose: phases and task IDs. Size S <= 1 day, M <= 3 days, L <= 1 week. Phases 
 | P2-4b | Sales tables, safe stock lookup for cashiers (no cost columns), save a bill in one transaction (E-SALE-1) | L | E-SALE-1, E-AUTHZ-1 | P2-4a | done |
 | P2-4c | Register screen: scan, bill lines, discount, pay, on-screen bill and PDF print | L | E-OFFLINE-1; screen tests | P2-4b | done |
 | P2-4e | Markdown set ahead of time on a style in Manager Mode (percent or amount, until a last day); the register applies it (owner changed this from "at the register", 2026-11-23) | M | rules, database, screen and register tests; schema v10 | P2-4c | done |
-| P2-4d | Pay later (udhaar): customer records, balance owed, later payments | L | rules, database v11, repositories, report and drawer (built); screens (next pull request) | P2-4c | in progress |
+| P2-4d | Pay later (udhaar): customer records, balance owed, later payments | L | rules, database v11, repositories, report and drawer, register choice, Pay later page, returns and report screens (built) | P2-4c | done |
 | P2-5a | Return rules: window, refund total, refund modes, credit note code, expiry and balance | S | unit tests; mutation-checked | P2-4a | done |
 | P2-5b | Return and credit note tables, save a return in one transaction (restock or damaged), use a credit note on a bill, exchange | L | E-RETURN-1, E-SALE-1, E-AUDIT-1 | P2-5a, P2-4c | done |
 | P2-5c | Returns screen, credit note slip print, credit note at the register | L | screen tests | P2-5b | done |

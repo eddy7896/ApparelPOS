@@ -16,6 +16,7 @@ import 'backup_screen.dart';
 import 'brand_preview_dialog.dart';
 import 'daily_report_screen.dart';
 import 'register_screen.dart';
+import 'dues_screen.dart';
 import 'markdowns_screen.dart';
 import 'returns_screen.dart';
 import 'shift_closes_screen.dart';
@@ -114,6 +115,13 @@ class _ManagerHomeState extends State<ManagerHome> {
         'Stock entry',
         () => _open(StockEntryScreen(session: _session, services: _s)),
       ),
+      if (_s.dues != null)
+        _NavItem(
+          'pay-later-button',
+          Icons.account_balance_wallet,
+          'Pay later',
+          () => _open(DuesScreen(session: _session, services: _s)),
+        ),
       if (_s.markdowns != null)
         _NavItem(
           'markdowns-button',
