@@ -169,6 +169,181 @@ void main() {
     });
   });
 
+  group('a GST invoice (P3-4, unverified until the CA confirms)', () {
+    final priced = [
+      priceLine(
+        mrp: Money(49900),
+        cashierDiscount: PriceCut.percentBp(1000),
+      ), // 449.10
+      priceLine(mrp: Money(149900)),
+    ];
+
+    SavedBill gstBill(GstSettings g, List<Payment> pay) {
+      final t = billTax([for (final p in priced) p.finalPrice], g);
+      final st = settle(t.total, pay);
+      return SavedBill(
+        billId: 'b1',
+        billNumber: BillNumber(yearLabel: '2026-27', counterNo: 1, serial: 7),
+        billedAt: DateTime.utc(2026, 11, 20, 10),
+        lines: [
+          for (var i = 0; i < priced.length; i++)
+            SavedBillLine(
+              barcode: '00000000001$i',
+              productName: i == 0 ? 'Cotton Kurta' : 'Denim Jeans',
+              size: 'M',
+              color: 'Blue',
+              priced: priced[i],
+              tax: t.lines[i],
+            ),
+        ],
+        settlement: st,
+        gst: g,
+      );
+    }
+
+    final base = GstSettings(
+      enabled: true,
+      gstin: '27ABCDE1234F1Z5',
+      address: '12 Market Road, Pune',
+      fields: GstInvoiceField.values.toSet(),
+    );
+
+    test('with everything switched on: title, address, GSTIN, tax columns and totals', () {
+      final b = gstBill(base, [Payment(PaymentMode.cash, Money(194900))]);
+      final sheet = describeBill(
+        bill: b,
+        shopName: 'Sample Apparel',
+        operatorCode: 'OP001',
+        customerName: 'Ravi',
+        customerPhone: '9876543210',
+      );
+      expect(sheet.title, 'TAX INVOICE');
+      expect(sheet.topLines, [
+        '12 Market Road, Pune',
+        'GSTIN: 27ABCDE1234F1Z5',
+      ]);
+      expect(billHeaderLines(sheet).take(2), sheet.topLines);
+      expect(
+        sheet.showTaxable &&
+            sheet.showRate &&
+            sheet.showTax &&
+            sheet.showMrp &&
+            sheet.showOff,
+        isTrue,
+      );
+      // 449.10 + 1,499.00 = 1,948.10 including 5% tax
+      expect(sheet.totalText, '₹1,948.10');
+      final r0 = sheet.rows.first;
+      expect(r0.price, '₹449.10');
+      expect(r0.rate, '5%');
+      expect(r0.taxable, '₹427.71'); // 449.10 / 1.05 = 427.714...
+      expect(r0.tax, '₹21.39');
+      expect(sheet.taxLines, [
+        'Taxable value ₹1,855.33',
+        startsWith('CGST '),
+        startsWith('SGST '),
+        'Total tax ₹92.77',
+      ]);
+      expect(
+        sheet.wordsLine,
+        'Rupees One Thousand Nine Hundred Forty-Eight and Ten Paise Only',
+      );
+      expect(sheet.termsLine, contains('7 days'));
+      expect(sheet.signatureLine, isTrue);
+      expect(sheet.customer, 'Ravi, 9876543210');
+    });
+
+    test('a field switched off is not printed', () {
+      final g = base.copyWith(
+        fields: {
+          GstInvoiceField.shopGstin,
+          GstInvoiceField.totalTax,
+          GstInvoiceField.discount,
+        },
+      );
+      final sheet = describeBill(
+        bill: gstBill(g, [Payment(PaymentMode.cash, Money(194900))]),
+        shopName: 'Sample Apparel',
+        operatorCode: 'OP001',
+        customerName: 'Ravi',
+        customerPhone: '9876543210',
+      );
+      expect(sheet.topLines, ['GSTIN: 27ABCDE1234F1Z5']);
+      expect(
+        sheet.showTaxable || sheet.showRate || sheet.showTax || sheet.showMrp,
+        isFalse,
+      );
+      expect(sheet.rows.first.taxable, '');
+      expect(sheet.taxLines, ['Total tax ₹92.77']);
+      expect(sheet.wordsLine, isNull);
+      expect(sheet.termsLine, isNull);
+      expect(sheet.signatureLine, isFalse);
+      expect(sheet.customer, isNull);
+      expect(sheet.payments, isEmpty);
+      expect(sheet.showServedBy, isFalse);
+      expect(
+        billHeaderLines(sheet).any((l) => l.startsWith('Served by')),
+        isFalse,
+      );
+    });
+
+    test(
+      'tax added on top: each garment shows what it came to with the tax',
+      () {
+        final g = base.copyWith(mode: GstMode.exclusive);
+        final b = gstBill(g, [Payment(PaymentMode.cash, Money(204600))]);
+        final sheet = describeBill(
+          bill: b,
+          shopName: 'S',
+          operatorCode: 'OP001',
+        );
+        // 1,948.10 plus 5% = 2,045.51 (49.10 + ... per item)
+        expect(b.total, b.tax.total);
+        expect(sheet.totalText, formatRupees(b.total));
+        expect(sheet.rows.first.price, formatRupees(b.tax.lines.first.paid));
+        expect(
+          b.tax.lines.fold<int>(0, (a, l) => a + l.paid.paise),
+          b.total.paise,
+        );
+      },
+    );
+
+    test('a bill made with GST off keeps the plain look', () {
+      final sheet = describeBill(
+        bill: gstBill(const GstSettings(), [
+          Payment(PaymentMode.cash, Money(194810)),
+        ]),
+        shopName: 'S',
+        operatorCode: 'OP001',
+        customerName: 'Ravi',
+      );
+      expect(sheet.title, isNull);
+      expect(sheet.topLines, isEmpty);
+      expect(sheet.taxLines, isEmpty);
+      expect(sheet.wordsLine, isNull);
+      expect(sheet.showOff && sheet.showMrp, isTrue);
+      expect(sheet.showTaxable || sheet.showRate || sheet.showTax, isFalse);
+      expect(sheet.showServedBy, isTrue);
+      expect(sheet.customer, 'Ravi');
+      expect(sheet.payments, ['Cash ₹1,948.10']);
+    });
+
+    test('the PDF builds, with and without the tax columns', () async {
+      for (final g in [
+        base,
+        base.copyWith(fields: {GstInvoiceField.shopGstin}),
+      ]) {
+        final sheet = describeBill(
+          bill: gstBill(g, [Payment(PaymentMode.cash, Money(194900))]),
+          shopName: 'Sample Apparel',
+          operatorCode: 'OP001',
+        );
+        final bytes = await buildBillPdf(sheet, fonts);
+        expect(latin1.decode(bytes.sublist(0, 5)), '%PDF-');
+      }
+    });
+  });
+
   group('buildBillPdf', () {
     final settlement = settle(Money(194810), [
       Payment(PaymentMode.cash, Money(194810)),

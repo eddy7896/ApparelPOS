@@ -207,6 +207,19 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
               'discounts',
             ),
             _line('Markdowns', formatRupees(r.markdownsTotal), 'markdowns'),
+            if (r.gstOnSales.paise > 0 || r.gstOnReturns.paise > 0) ...[
+              _line(
+                'GST in these sales (unverified)',
+                formatRupees(r.gstOnSales),
+                'gst-on-sales',
+              ),
+              _line(
+                'GST in garments returned',
+                formatRupees(r.gstOnReturns),
+                'gst-on-returns',
+              ),
+              _line('GST to pass on', formatRupees(r.netGst), 'gst-net'),
+            ],
           ]),
           _section(context, 'Returns', [
             _line('Returns taken', '${r.returnCount}', 'return-count'),

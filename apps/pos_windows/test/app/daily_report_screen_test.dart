@@ -15,6 +15,7 @@ import 'package:pos_windows/data/app_database.dart';
 import 'package:pos_windows/data/auth_service.dart';
 import 'package:pos_windows/data/category_repository.dart';
 import 'package:pos_windows/data/dues_repository.dart';
+import 'package:pos_windows/data/gst_repository.dart';
 import 'package:pos_windows/data/report_repository.dart';
 import 'package:pos_windows/data/returns_repository.dart';
 import 'package:pos_windows/data/sales_repository.dart';
@@ -373,6 +374,46 @@ void main() {
         expect(textOf(tester, 'dues-paid-upi'), '₹150.00');
         expect(textOf(tester, 'dues-owed-now'), '₹249.00');
         expect(find.byKey(const Key('dues-written-off')), findsNothing);
+        expect(find.byKey(const Key('mismatch-warning')), findsNothing);
+      },
+    );
+
+    testWidgets('with GST off the report has no GST lines', (tester) async {
+      await tester.runAsync(busyDay);
+      await openReport(tester);
+      expect(find.byKey(const Key('gst-on-sales')), findsNothing);
+    });
+
+    testWidgets(
+      'with GST on it shows the tax in the sales, in returns, and what to pass on',
+      (tester) async {
+        await tester.runAsync(() async {
+          await GstRepository(db, newId: newId).save(
+            role: Role.owner,
+            actorId: 'owner-1',
+            settings: const GstSettings(
+              enabled: true,
+              gstin: '27ABCDE1234F1Z5',
+              address: 'x',
+            ),
+          );
+          await sell(
+            DateTime.utc(2026, 11, 20, 5),
+            [BillLineInput(kurta[0]), BillLineInput(kurta[1])],
+            [Payment(PaymentMode.cash, Money(99800))],
+          );
+          now = DateTime.utc(2026, 11, 20, 6);
+          await returns.saveReturn(
+            role: Role.cashier,
+            cashierId: cashierId,
+            items: [ReturnItemInput(kurta[0], ReturnOutcome.restock)],
+            refundMode: RefundMode.cash,
+          );
+        });
+        await openReport(tester);
+        expect(textOf(tester, 'gst-on-sales'), '₹47.52'); // 2 x 23.76
+        expect(textOf(tester, 'gst-on-returns'), '₹23.76');
+        expect(textOf(tester, 'gst-net'), '₹23.76');
         expect(find.byKey(const Key('mismatch-warning')), findsNothing);
       },
     );

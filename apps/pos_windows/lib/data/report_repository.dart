@@ -38,6 +38,8 @@ final class DailyReport {
     this.returnOffsets = Money.zero,
     this.writtenOff = Money.zero,
     this.totalOwedNow = Money.zero,
+    this.gstOnSales = Money.zero,
+    this.gstOnReturns = Money.zero,
   });
 
   final ShopDay day;
@@ -85,6 +87,13 @@ final class DailyReport {
   final Money returnOffsets;
   final Money writtenOff;
   final Money totalOwedNow;
+
+  /// GST (unverified until the CA confirms): the tax in the day's bills, the
+  /// tax in the garments returned that day, and what is left. All zero while
+  /// GST is off. Sales and net sales above include this tax; profit does not.
+  final Money gstOnSales;
+  final Money gstOnReturns;
+  Money get netGst => gstOnSales - gstOnReturns;
 
   Money get duesReceivedTotal =>
       duesReceived.values.fold<Money>(Money.zero, (a, b) => a + b);
@@ -279,12 +288,33 @@ class ReportRepository {
 
     final closes = await _closesOn(day);
     final net = netSales(sales: salesTotal, refunds: refundsTotal);
+    final gstOnSales = Money(
+      await _int(
+        'SELECT COALESCE(SUM(l.tax_paise), 0) AS v FROM bill_lines l '
+        'JOIN bills b ON b.id = l.bill_id '
+        'WHERE b.billed_at >= ? AND b.billed_at < ?',
+        day,
+      ),
+    );
+    final gstOnReturns = Money(
+      await _int(
+        'SELECT COALESCE(SUM(bl.tax_paise), 0) AS v FROM return_lines rl '
+        'JOIN returns r ON r.id = rl.return_id '
+        'JOIN bill_lines bl ON bl.id = rl.bill_line_id '
+        'WHERE r.returned_at >= ? AND r.returned_at < ?',
+        day,
+      ),
+    );
 
     Money? cost;
     Money? profit;
     if (can(role, Permission.viewMargins)) {
       cost = await _costOfGoods(day);
-      profit = grossProfit(netSales: net, costOfGoods: cost);
+      // The shop keeps the sale less the tax it must pass on.
+      profit = grossProfit(
+        netSales: net - (gstOnSales - gstOnReturns),
+        costOfGoods: cost,
+      );
     }
 
     return DailyReport(
@@ -317,6 +347,8 @@ class ReportRepository {
       returnOffsets: returnOffsets,
       writtenOff: writtenOff,
       totalOwedNow: totalOwedNow,
+      gstOnSales: gstOnSales,
+      gstOnReturns: gstOnReturns,
     );
   }
 

@@ -193,7 +193,7 @@ class ReturnsRepository {
     final rows = await _db
         .customSelect(
           'SELECT l.id AS line_id, l.product_name AS name, l.size AS size, '
-          'l.color AS color, l.final_paise AS net, b.bill_no AS bill_no, '
+          'l.color AS color, (l.final_paise + l.extra_tax_paise) AS net, b.bill_no AS bill_no, '
           'b.billed_at AS billed_at, b.id AS bill_id, '
           '(SELECT COALESCE(SUM(d.amount_paise), 0) FROM dues_ledger d '
           'WHERE d.bill_id = b.id) AS owed '

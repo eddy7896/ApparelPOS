@@ -18,6 +18,7 @@ import 'package:pos_windows/data/auth_service.dart';
 import 'package:pos_windows/data/report_repository.dart';
 import 'package:pos_windows/data/returns_repository.dart';
 import 'package:pos_windows/data/dues_repository.dart';
+import 'package:pos_windows/data/gst_repository.dart';
 import 'package:pos_windows/data/sales_repository.dart';
 import 'package:pos_windows/data/shift_repository.dart';
 import 'package:pos_windows/data/stock_repository.dart';
@@ -1195,6 +1196,150 @@ void main() {
       expect(find.byKey(const Key('dues-total')), findsOneWidget);
       expect(find.byKey(const Key('write-off')), findsNothing);
     });
+  });
+
+  group('GST at the register (P3-4, unverified until the CA confirms)', () {
+    Future<void> setGst({
+      bool enabled = true,
+      GstMode mode = GstMode.inclusive,
+      int rateBp = 500,
+    }) => GstRepository(db, newId: newId).save(
+      role: Role.owner,
+      actorId: 'owner-1',
+      settings: GstSettings(
+        enabled: enabled,
+        mode: mode,
+        rateBp: rateBp,
+        gstin: '27ABCDE1234F1Z5',
+        address: '12 Market Road, Pune',
+      ),
+    );
+
+    testWidgets(
+      'with GST off there is no tax line and the total is the price',
+      (tester) async {
+        await open(tester);
+        await scan(tester, barcodes[0]);
+        expect(textOf(tester, 'total-text'), '₹499.00');
+        expect(find.byKey(const Key('gst-line')), findsNothing);
+      },
+    );
+
+    testWidgets('tax included: the total is the price and the tax is shown', (
+      tester,
+    ) async {
+      await tester.runAsync(setGst);
+      await open(tester);
+      await scan(tester, barcodes[0]);
+      expect(textOf(tester, 'total-text'), '₹499.00');
+      expect(textOf(tester, 'gst-line'), 'Includes GST ₹23.76');
+      await tester.tap(find.byKey(const Key('exact-cash')));
+      await tester.pump();
+      await tapRunAsync(tester, 'complete-bill');
+      expect(find.byKey(const Key('saved-title')), findsOneWidget);
+      final r = await tester.runAsync(
+        () => db
+            .customSelect(
+              'SELECT gst_bp, taxable_paise, tax_paise, extra_tax_paise FROM bill_lines',
+            )
+            .getSingle(),
+      );
+      expect(r!.read<int>('gst_bp'), 500);
+      expect(r.read<int>('tax_paise'), 2376);
+      expect(r.read<int>('extra_tax_paise'), 0);
+    });
+
+    testWidgets('tax added: the total is bigger and exact cash is that total', (
+      tester,
+    ) async {
+      await tester.runAsync(() => setGst(mode: GstMode.exclusive));
+      await open(tester);
+      await scan(tester, barcodes[0]);
+      expect(textOf(tester, 'total-text'), '₹523.95');
+      expect(
+        textOf(tester, 'gst-line'),
+        'Includes GST ₹24.95 added to the prices',
+      );
+      await tester.tap(find.byKey(const Key('exact-cash')));
+      await tester.pump();
+      await tapRunAsync(tester, 'complete-bill');
+      expect(find.byKey(const Key('saved-title')), findsOneWidget);
+      final b = await tester.runAsync(
+        () => db.customSelect('SELECT total_paise FROM bills').getSingle(),
+      );
+      expect(b!.read<int>('total_paise'), 52395);
+    });
+
+    testWidgets(
+      'several garments are taxed together under the owner\'s rounding choice',
+      (tester) async {
+        await tester.runAsync(() => setGst(mode: GstMode.exclusive));
+        await open(tester);
+        await scan(tester, barcodes[0]);
+        await scan(tester, barcodes[1]);
+        expect(textOf(tester, 'total-text'), '₹1,047.90'); // 998.00 + 49.90
+        expect(
+          textOf(tester, 'gst-line'),
+          'Includes GST ₹49.90 added to the prices',
+        );
+      },
+    );
+
+    testWidgets(
+      'turning GST on while a bill is open stops the bill once, with the new total',
+      (tester) async {
+        await open(tester);
+        await scan(tester, barcodes[0]);
+        expect(textOf(tester, 'total-text'), '₹499.00');
+        await tester.runAsync(() => setGst(mode: GstMode.exclusive));
+        await tester.tap(find.byKey(const Key('exact-cash')));
+        await tester.pump();
+        await tapRunAsync(tester, 'complete-bill');
+        expect(find.byKey(const Key('saved-title')), findsNothing);
+        expect(
+          find.textContaining(
+            'The GST settings changed while this bill was open',
+          ),
+          findsOneWidget,
+        );
+        expect(textOf(tester, 'total-text'), '₹523.95');
+        await tester.tap(find.byKey(const Key('exact-cash')));
+        await tester.pump();
+        await tapRunAsync(tester, 'complete-bill');
+        expect(find.byKey(const Key('saved-title')), findsOneWidget);
+      },
+    );
+
+    testWidgets('a bill that was not affected goes straight through', (
+      tester,
+    ) async {
+      await tester.runAsync(setGst);
+      await open(tester);
+      await scan(tester, barcodes[0]);
+      await tester.tap(find.byKey(const Key('exact-cash')));
+      await tester.pump();
+      await tapRunAsync(tester, 'complete-bill');
+      expect(find.byKey(const Key('saved-title')), findsOneWidget);
+    });
+
+    testWidgets(
+      'a return of a taxed garment refunds what was paid, tax included',
+      (tester) async {
+        await tester.runAsync(() => setGst(mode: GstMode.exclusive));
+        await open(tester);
+        await scan(tester, barcodes[0]);
+        await tester.tap(find.byKey(const Key('exact-cash')));
+        await tester.pump();
+        await tapRunAsync(tester, 'complete-bill');
+        final c = await tester.runAsync(
+          () => ReturnsRepository(
+            db,
+            newId: newId,
+          ).lookup(role: Role.cashier, barcode: barcodes[0]),
+        );
+        expect(c!.netPrice, Money(52395));
+      },
+    );
   });
 
   group('after the bill', () {

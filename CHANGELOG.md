@@ -5,6 +5,7 @@ All notable changes to Apparel PoS. The format follows [Keep a Changelog](https:
 ## [Unreleased]
 
 ### Added
+- GST, switched off: the owner (only) can switch GST on in Settings (GSTIN, address, rate, tax included or added, rounding, which fields to print). New bills then work out and keep the tax per garment, the total adds it when tax is added on top, the bill prints as a TAX INVOICE with the fields the owner chose, returns refund the tax too, and the daily report shows GST and leaves it out of profit. Every GST rule is unverified until your CA confirms it. GST reports are not built yet. Database version 12.
 - Pay later (udhaar): a manager or the owner may let a bill be left unpaid (customer name and phone required; a cashier asks a manager to type their password); customers pay later in cash, UPI or card, the oldest bill first (a Pay later page in Manager Mode and a Pay dues button at the register); a return from an unpaid bill first takes down what is owed; only the owner writes a debt off. The register, the bill, the returns screen, the blind close and the daily report all follow it. Database version 11.
 - Markdowns: a manager or the owner sets a percentage or an amount off a whole style until a last day (Manager Mode, Markdowns). The register applies it by itself and a marked-down garment takes no cashier discount. Database version 10.
 - Daily report: each closed shift shows its break time.
@@ -13,7 +14,7 @@ All notable changes to Apparel PoS. The format follows [Keep a Changelog](https:
 ### Changed
 - The app's text uses the Inter font, bundled with the app so every laptop looks the same; the bill and hangtag PDFs still use Noto Sans.
 
-Nothing yet. Planned next: the owner's runbook (P3-3b) and GST setup (P3-4, off by default, rules unverified until the CA confirms). Release 2 (sync, cloud, owner mobile app) is not started.
+Nothing yet. Planned next: the owner's runbook (P3-3b) and the GST reports. Release 2 (sync, cloud, owner mobile app) is not started.
 
 ## [0.9.0] - 2026-11-22
 

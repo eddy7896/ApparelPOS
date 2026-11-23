@@ -307,6 +307,22 @@ class BillLines extends Table {
   IntColumn get finalPaise =>
       integer().check(finalPaise.isBiggerOrEqualValue(0))();
 
+  // GST (P3-4; unverified until the CA confirms): the tax on this garment as it
+  // was on the day of the bill. All zero while GST is off, and for every bill
+  // made before version 12. `finalPaise + extraTaxPaise` is what was paid.
+  /// The rate used, in basis points (500 is 5%); 0 when GST was off.
+  IntColumn get gstBp => integer().withDefault(const Constant(0))();
+
+  /// The value the tax was charged on.
+  IntColumn get taxablePaise => integer().withDefault(const Constant(0))();
+
+  /// The tax (CGST plus SGST).
+  IntColumn get taxPaise => integer().withDefault(const Constant(0))();
+
+  /// Tax added on top of the price (exclusive billing); 0 when the price
+  /// included it.
+  IntColumn get extraTaxPaise => integer().withDefault(const Constant(0))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -624,7 +640,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -690,6 +706,25 @@ class AppDatabase extends _$AppDatabase {
         ).get()).any((r) => r.read<String>('name') == 'category_id');
         if (!hasCol) {
           await m.addColumn(products, products.categoryId);
+        }
+      }
+      if (from < 12 && to >= 12) {
+        // version 12: GST fields on every bill line (P3-4; GST stays off). The
+        // columns default to 0, so older bills read as "no GST".
+        final have = (await customSelect(
+          'PRAGMA table_info(bill_lines)',
+        ).get()).map((r) => r.read<String>('name')).toSet();
+        if (!have.contains('gst_bp')) {
+          await m.addColumn(billLines, billLines.gstBp);
+        }
+        if (!have.contains('taxable_paise')) {
+          await m.addColumn(billLines, billLines.taxablePaise);
+        }
+        if (!have.contains('tax_paise')) {
+          await m.addColumn(billLines, billLines.taxPaise);
+        }
+        if (!have.contains('extra_tax_paise')) {
+          await m.addColumn(billLines, billLines.extraTaxPaise);
         }
       }
       if (from < 11 && to >= 11) {

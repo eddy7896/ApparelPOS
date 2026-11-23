@@ -71,8 +71,12 @@ const Set<Permission> _cashierPermissions = {
 
 /// What only the owner may do. Every other back-office permission is shared
 /// with the manager (same person today; owner decision). The first difference
-/// is writing off what a customer owes (owner, 2026-11-23, ADR-0003 amended).
-const Set<Permission> _ownerOnlyPermissions = {Permission.writeOffDebt};
+/// is writing off what a customer owes, and the second is switching on or
+/// changing GST (owner, 2026-11-23, ADR-0003 amended).
+const Set<Permission> _ownerOnlyPermissions = {
+  Permission.writeOffDebt,
+  Permission.configureGst,
+};
 
 /// Written as a separate entry per role so they can diverge further.
 final Map<Role, Set<Permission>> _matrix = {
